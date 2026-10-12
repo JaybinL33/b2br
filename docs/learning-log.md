@@ -29,23 +29,26 @@
 
 ## 2026-10-12 — 최신 디스크 구성과 확인할 화면
 
-사용자가 반복 실습에서 재배치와 축소 가능성을 우선해 ext4를 선택했다. 이에 따라 이전 XFS·root 15 GiB·home 잔여 전부 배정안은 아래 안으로 변경했다. 새 30 GB VDI에 적용할 최신 기준은 이 표다. **실습용 설계 선택이며 과제의 고정 용량 조건이나 적용 완료 기록이 아니다.**
+사용자는 보너스를 목표로 하지 않되 필수 서버 관리·모니터링에 적절한 구성을 원한다고 명확히 했다. 재배치와 축소 가능성을 고려한 ext4 선택을 유지하고, home을 4 GiB로 잡고 `/var/log`용 LV를 분리하는 안으로 정리했다. 보너스 그림 전체를 복제하는 안은 아니다. 새 30 GB VDI에 적용할 최신 기준은 이 표다. **실습용 설계 선택이며 과제의 고정 용량 조건이나 적용 완료 기록이 아니다.**
 
 | 대상 | 선택 | 이유 |
 |---|---|---|
 | `/boot` | 2 GiB, Standard Partition, ext4, 비암호화 | initramfs와 커널 업데이트 여유를 둔다. LVM 밖의 일반 파티션이므로 이후 크기 조정이 더 까다롭다. |
-| 나머지 디스크 | LUKS 암호화 장치 위에 PV와 VG `LVM` 구성 | root·swap·home을 공통 암호화 계층 안에 둔다. |
+| 나머지 디스크 | LUKS 암호화 장치 위에 PV와 VG `LVM` 구성 | root·home·var_log·swap을 공통 암호화 계층 안에 둔다. |
 | LV `root` | 10 GiB, ext4, `/`에 마운트 | 실측 최소값이 아닌 초기 배정이다. 설치 후 사용량과 업데이트 여유를 확인한다. |
 | LV `swap` | 4 GiB, swap | RAM 4 GiB에 대한 RHEL 일반 권장표를 참고했다. 최대절전용 크기로 정한 것은 아니다. |
-| LV `home` | 2 GiB, ext4, `/home`에 마운트 | 작은 초기 공간으로 시작하고 필요에 따라 늘린다. |
-| VG 잔여 공간 | LV에 배정하지 않고 유지 | 이후 root·home 확장이나 새 LV 실습에 사용한다. 디스크 바깥의 미분할 공간이 아니라 VG 안의 여유 공간이다. |
+| LV `home` | 4 GiB, ext4, `/home`에 마운트 | 한 명의 실습 파일을 위한 초기 예산이다. |
+| LV `var_log` | 2 GiB, ext4, `/var/log`에 마운트 | sudo 입출력 로그와 시스템 로그 증가를 root 공간과 분리한다. |
+| VG 잔여 공간 | 약 8 GiB를 LV에 배정하지 않고 유지 | 이후 root·home 확장이나 새 LV 실습에 사용한다. 디스크 바깥의 미분할 공간이 아니라 VG 안의 여유 공간이다. |
 | BIOS Boot (`biosboot`) | GPT+BIOS일 때 1 MiB, 일반 파티션, 파일시스템·마운트·암호화 없음 | 부트로더용 영역이며 `/boot`나 EFI 시스템 파티션과 다르다. 설치기에서는 BIOS Boot 유형을 선택한다. |
 
-유일한 VG는 LVM 관리 영역임을 알아보기 쉽도록 대문자 `LVM`으로 이름 짓기로 했다. LV 이름은 `root`, `home`, `swap`이다. LVM은 관리 기술의 이름이고, 여기서 VG 이름으로도 사용한다. VG는 PV의 공간을 묶어 LV에 할당한다. 실제 VM에는 아직 적용하지 않았다.
+`/var` 전체·`/tmp`·`/srv`는 별도 마운트하지 않는다. root 10 GiB에는 OS·패키지·캐시·임시파일 등이 함께 들어가므로 home보다 큰 초기 예산을 둔다. `/srv`에는 현재 서비스 데이터를 둘 계획이 없다. 로그 2 GiB는 무한 보관을 보장하지 않으며 보관 정책과 사용량 점검이 필요하다. 가득 차면 sudo에도 영향을 줄 수 있다. 모든 용량은 실측 최소값이 아니며 설치 후 확인해 VG 여유 공간으로 확장한다. 약 8 GiB의 여유는 디스크가 약 30 GiB일 때의 계산으로, 단위·메타데이터·반올림에 따라 달라진다. [목표 문서](targets.md)에 대조할 구조와 확인 방법을 정리했다.
 
-학습자료로 설명한 관계는 `파티션 → LUKS → 열린 암호화 장치 → LVM PV → VG LVM → 각 LV`다. root와 home의 LV에는 ext4 파일시스템을 만들고 각각 `/`와 `/home`에 연결한다. swap에는 디렉터리 마운트 지점을 두지 않는다. 원문 인쇄 7쪽도 암호화 장치 안에 여러 LVM 볼륨을 두는 예시이므로 이 계층을 기준으로 삼았다. 사용자가 이 구조를 이해하거나 실제로 구성했는지는 아직 확인하지 않았다.
+유일한 VG는 LVM 관리 영역임을 알아보기 쉽도록 대문자 `LVM`으로 이름 짓기로 했다. LV 이름은 `root`, `home`, `var_log`, `swap`이다. LVM은 관리 기술의 이름이고, 여기서 VG 이름으로도 사용한다. VG는 PV의 공간을 묶어 LV에 할당한다. 실제 VM에는 아직 적용하지 않았다.
 
-설치기에서는 `Volume Group` 옆 `Modify`로 연 **VG 설정 창의 `Encrypt`**를 사용하고, `Size policy`는 `As large as possible`로 선택하도록 안내했다. root·swap·home은 같은 VG에 두고 개별 LV에 추가 암호화는 설정하지 않는 계획이다. VG는 가능한 크게 확보하되 LV는 각각 10·4·2 GiB만 배정한다. home 용량을 비워 잔여 전부를 배정하지 않는다. 마운트 지점 편집 영역의 개별 `Encrypt`와 혼동하지 않도록, **`Begin Installation` 전에 파티션 목록과 VG 설정 화면을 요청했다.** 실제 화면과 적용 상태는 아직 미확인이다.
+학습자료로 설명한 관계는 `파티션 → LUKS → 열린 암호화 장치 → LVM PV → VG LVM → 각 LV`다. root·home·var_log에는 ext4 파일시스템을 만들고 각각 `/`, `/home`, `/var/log`에 연결한다. swap에는 디렉터리 마운트 지점을 두지 않는다. 원문 인쇄 7쪽도 암호화 장치 안에 여러 LVM 볼륨을 두는 예시이므로 이 계층을 기준으로 삼았다. 사용자가 이 구조를 이해하거나 실제로 구성했는지는 아직 확인하지 않았다.
+
+설치기에서는 `Volume Group` 옆 `Modify`로 연 **VG 설정 창의 `Encrypt`**를 사용하고, `Size policy`는 `As large as possible`로 선택하도록 안내했다. 네 LV는 같은 VG에 두고 개별 LV에 추가 암호화는 설정하지 않는 계획이다. VG는 가능한 크게 확보하되 root·home·var_log·swap에 각각 10·4·2·4 GiB만 배정한다. home 용량을 비워 잔여 전부를 배정하지 않는다. 마운트 지점 편집 영역의 개별 `Encrypt`와 혼동하지 않도록, **`Begin Installation` 전에 파티션 목록과 VG 설정 화면을 요청했다.** 실제 화면과 적용 상태는 아직 미확인이다.
 
 근거는 [과제 원문](../en.subject.pdf), [RHEL 10 설치기 문서의 10.5절](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interactively_installing_rhel_from_installation_media/customizing-the-system-in-the-installer), [RHEL 10 LUKS 안내](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/managing_storage_devices/encrypting-block-devices-by-using-luks)다. `/boot` 2 GiB는 RHEL의 베어메탈 권장을 참고해 실습 여유로 선택했으며 VM의 필수값은 아니다. LUKS2가 RHEL 기본값이라는 설명도 실제 생성 결과와 구분한다. [Rocky 10 설치 안내](https://docs.rockylinux.org/guides/installation/)는 자동 파티션을 설명하므로 Custom의 세부 조작은 RHEL 문서를 참고했다. 사용 중인 Rocky 설치기의 정확한 UI와 암호화 계층은 화면과 설치 결과로 확인할 예정이다.
 
