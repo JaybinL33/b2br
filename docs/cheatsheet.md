@@ -44,9 +44,43 @@ exit
 id
 ```
 
-## 3. 이후 순서 — 명령은 진행하며 추가
+## 3. 비밀번호 기간 정책 — 적용 미확인
 
-1. 비밀번호·PAM: 품질·기간 정책, root 예외, 기존 계정 갱신.
+새 계정의 기본값을 편집한다.
+
+```bash
+sudoedit /etc/login.defs
+```
+
+기존의 아래 세 항목을 **중복 없이 수정**한다. 파일 전체를 대체하지 않는다.
+
+```text
+PASS_MAX_DAYS 30
+PASS_MIN_DAYS 2
+PASS_WARN_AGE 7
+```
+
+이미 있는 계정에는 별도로 적용한다.
+
+```bash
+sudo chage -M 30 -m 2 -W 7 root
+sudo chage -M 30 -m 2 -W 7 jungblee
+```
+
+기간 값이 최대 30일·최소 2일·경고 7일인지 확인한다.
+
+```bash
+sudo chage -l root
+chage -l jungblee
+```
+
+`Account expires`는 비밀번호 만료와 별개이므로 이번에는 설정하지 않는다. `chage`는 비밀번호 자체를 바꾸지 않는다. 최소 2일 설정 후 일반 사용자의 재변경이 제한될 수 있다. 품질 정책과 최종 기존 비밀번호 갱신은 다음 단위에서 진행한다.
+
+참고: [chage(1)](https://man7.org/linux/man-pages/man1/chage.1.html), [login.defs(5)](https://man7.org/linux/man-pages/man5/login.defs.5.html).
+
+## 4. 이후 순서 — 명령은 진행하며 추가
+
+1. 비밀번호·PAM: 품질 정책, root 예외, 기존 계정 비밀번호 갱신.
 2. sudo: 인증 제한·TTY·경로·입출력 로그. 그룹 가입만으로 완료되지 않는다.
 3. SSH·firewalld·SELinux: 4242, root SSH 금지, 재부팅 후 정책 유지.
 4. monitoring.sh·cron·wall: 필수 지표, 부팅 시·10분마다 방송, 수정 없는 중단.
