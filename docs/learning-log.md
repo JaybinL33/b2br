@@ -66,3 +66,31 @@ ext4 축소 조건은 학습자료로 안내했다. 마운트를 해제하고 �
 ## 2026-10-12 — 설치 시작 보고
 
 **사용자 보고:** 안내한 구성으로 설치를 시작했다고 알렸다. 실제 파티션 배치·설치 완료·첫 부팅은 아직 검증하지 않았다. 이전 설치 요약 화면은 설치 시작 전의 관찰 기록이다. 다음 학습은 [전체 지도](targets.md)에 따라 설치 결과 확인부터 계정·PAM·sudo·접속 보안·모니터링·평가 재현 순서로 진행한다. 이번에는 학습 지도를 정리했으며 VM 설정이나 실행 검증은 하지 않았다.
+
+
+## 2026-10-12 — 설치 후 디스크 구조 화면 확인
+
+**대화에서 사용자 스크린샷으로 확인:** 설치 후 `jungblee@jungblee42` 셸에서 `lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS`와 `sudo vgs` 결과가 표시되었다. `sudo vgs` 실행은 성공했다. 아래는 화면의 값이며 암호화 장치의 UUID만 생략했다. 앞선 설치 전·시작 단계의 미확인 상태는 당시 기록이다.
+
+```text
+NAME              SIZE TYPE  FSTYPE      MOUNTPOINTS
+sda                30G disk
+├─sda1              1M part
+├─sda2              2G part  ext4        /boot
+└─sda3             28G part  crypto_LUKS
+  └─luks-<UUID>    28G crypt LVM2_member
+    ├─LVM-root     10G lvm   ext4        /
+    ├─LVM-swap      4G lvm   swap        [SWAP]
+    ├─LVM-var_log   2G lvm   ext4        /var/log
+    └─LVM-home      4G lvm   ext4        /home
+```
+
+| VG | #PV | #LV | #SN | Attr | VSize | VFree |
+|---|---|---|---|---|---|---|
+| LVM | 1 | 4 | 0 | wz--n- | 27.98g | 7.98g |
+
+화면에서 확인한 계층·LV 용량·파일시스템·마운트 지점은 최신 목표와 일치한다. VG의 `VFree 7.98g`는 아직 LV에 배정하지 않은 공간이다. 각 파일시스템 안의 빈 공간과는 다르며 그 사용량은 별도로 확인해야 한다. 이 차이는 학습 설명으로 다뤘고 사용자의 이해 완료까지 확인한 것은 아니다.
+
+**아직 확인하지 않은 것:** `sda1`의 BIOS Boot 유형은 이 출력만으로 증명되지 않는다. LUKS 버전, 설치된 OS 버전, 전체 보안 정책과 그룹 멤버십도 이번 화면으로 확인하지 않았다. 프롬프트 표시는 관찰했지만 hostname 설정의 별도 조회·지속성 검증을 대신하지 않는다. `sudo vgs` 성공은 sudo 사용 가능 여부의 증거이며 그룹 구성이나 모든 sudo 정책 충족의 증거는 아니다. `#SN 0`은 LVM 스냅샷 수로 VirtualBox 스냅샷 규정 검증과도 다르다.
+
+다음으로 `id` 출력을 요청했다. 이번 문서 작업에서 VM을 직접 조작하거나 비밀번호·암호문구를 기록하지 않았다.
