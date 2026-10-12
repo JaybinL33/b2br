@@ -26,3 +26,22 @@
 새 디스크의 저장 경로는 학교 화면에 나온 `/home/jungblee/goinfre/VirtualBox VMs/b2br/b2br.vdi`를 유지하기로 했다. `goinfre`의 보존 정책은 아직 확인하지 않았다. 보관이 필요한 VM은 완전히 종료한 뒤 별도 위치에 복사해 두는 것을 권장했으며, 실제 복사 여부도 미확인이다. VM 파일은 Git에 넣지 않는다.
 
 참고한 공식 자료는 [Rocky Linux 10 하드웨어 요구사항](https://docs.rockylinux.org/guides/minimum_hardware_requirements/)과 [Oracle VirtualBox 7.2 가상 저장장치 문서](https://docs.oracle.com/en/virtualization/virtualbox/7.2/user/storage.html)다. Rocky 자료는 10.0 기준이며 RAM 수치가 본문과 요약표 사이에 다르게 적혀 있어 하나의 최소값으로 단정하지 않았다. 이번 4 GB·2 vCPU·30 GB는 해당 문서를 참고한 실습용 판단이다. Oracle 문서에서는 고정 크기와 동적 할당의 차이를 확인했다. 실제 호스트나 VM 설정을 변경한 기록은 아니다.
+
+## 2026-10-12 — 디스크 구성 선택과 확인할 화면
+
+필수 과제를 먼저 실습하기 위해 새 30 GB VDI의 구성을 아래처럼 정해 안내했다. **실습용 설계 선택이며 과제의 고정 용량 조건이나 적용 완료 기록이 아니다.**
+
+| 대상 | 선택 | 이유 |
+|---|---|---|
+| `/boot` | 2 GiB, Standard Partition, XFS, 비암호화 | 부팅 파일을 따로 두고 커널 업데이트 공간을 확보한다. |
+| 나머지 디스크 | LUKS 암호화 장치 위에 PV와 VG `b2br` 구성 | root·swap·home을 공통 암호화 계층 안에 둔다. |
+| LV `root` | 15 GiB, XFS, `/`에 마운트 | Minimal 시스템과 필수 서비스에 사용할 공간을 둔다. |
+| LV `swap` | 4 GiB, swap | RAM 4 GiB에 대한 RHEL 일반 권장표를 참고했다. 최대절전용 크기로 정한 것은 아니다. |
+| LV `home` | 잔여 공간, XFS, `/home`에 마운트 | 사용자 데이터를 시스템 파일과 나누어 관리한다. 실제 잔여량은 설치기에서 확인한다. |
+| BIOS Boot | GPT+BIOS일 때 1 MiB, 비암호화 일반 파티션 | 이 조합의 부트로더에 필요한 영역이다. `/boot`나 EFI 시스템 파티션과는 다르다. |
+
+학습자료로 설명한 관계는 `파티션 → LUKS → 열린 암호화 장치 → LVM PV → VG b2br → 각 LV`다. root와 home의 LV에는 XFS 파일시스템을 만들고 각각 `/`와 `/home`에 연결한다. swap에는 디렉터리 마운트 지점을 두지 않는다. 원문 인쇄 7쪽도 암호화 장치 안에 여러 LVM 볼륨을 두는 예시이므로 이 계층을 기준으로 삼았다. 사용자가 이 구조를 이해하거나 실제로 구성했는지는 아직 확인하지 않았다.
+
+설치기에서는 `Volume Group` 옆 `Modify`로 연 **VG 설정 창의 `Encrypt`**를 사용하고, `Size policy`는 `As large as possible`로 선택하도록 안내했다. root·swap·home은 같은 VG에 두고 개별 LV에 추가 암호화는 설정하지 않는 계획이다. 마운트 지점 편집 영역의 개별 `Encrypt`와 혼동하지 않도록, **`Begin Installation` 전에 파티션 목록과 VG 설정 화면을 요청했다.** 실제 화면과 적용 상태는 아직 미확인이다.
+
+근거는 [과제 원문](../en.subject.pdf), [RHEL 10 설치기 문서의 10.5절](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/interactively_installing_rhel_from_installation_media/customizing-the-system-in-the-installer), [RHEL 10 LUKS 안내](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/managing_storage_devices/encrypting-block-devices-by-using-luks)다. `/boot` 2 GiB는 RHEL의 베어메탈 권장을 참고해 실습 여유로 선택했으며 VM의 필수값은 아니다. LUKS2가 RHEL 기본값이라는 설명도 실제 생성 결과와 구분한다. [Rocky 10 설치 안내](https://docs.rockylinux.org/guides/installation/)는 자동 파티션을 설명하므로 Custom의 세부 조작은 RHEL 문서를 참고했다. 사용 중인 Rocky 설치기의 정확한 UI와 암호화 계층은 화면과 설치 결과로 확인할 예정이다.
