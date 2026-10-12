@@ -1,0 +1,99 @@
+# Born2beRoot — 직접 만들고 대조할 목표
+
+**아래는 목표 상태와 확인 방법이다. 실제 실행 결과나 완료 기록이 아니다.** 한 단위씩 직접 구성하고 관찰한 결과를 [학습 기록](learning-log.md)에 남긴다. 요구사항은 [원문 v5.2](../en.subject.pdf), 자세한 항목은 [기존 가이드](ko/Born2beRoot-v5.2-ko-guide.md)를 기준으로 한다. 보너스는 제외한다.
+
+## 1. 디스크: 먼저 이 구조를 목표로 만들기
+
+**과제 필수:** LVM을 사용한 암호화 파티션 최소 2개. **우리 선택:** BIOS+GPT, 새 30 GB VDI, VG 이름 `LVM`, ext4, VG 미할당 공간 유지. 아래 용량과 이름은 과제 고정값이 아니다.
+
+다음은 `lsblk` 형태로 만든 **가상 목표 예시**다. `약`과 `<UUID>`는 설명용 표기이며 실제 출력이 아니다.
+
+```text
+NAME               SIZE TYPE  FSTYPE      MOUNTPOINTS
+sda                 30G disk
+├─sda1               1M part
+├─sda2               2G part  ext4        /boot
+└─sda3             약28G part  crypto_LUKS
+  └─luks-<UUID>    약28G crypt LVM2_member
+    ├─LVM-root       10G lvm   ext4        /
+    ├─LVM-home        2G lvm   ext4        /home
+    └─LVM-swap        4G lvm   swap        [SWAP]
+```
+
+- `sda1`은 BIOS+GPT에 필요한 1 MiB BIOS Boot 영역이다. 일반 파일시스템·마운트·암호화가 없다. 위 열만으로 BIOS Boot 유형까지 판별할 수는 없다.
+- `/boot`는 비암호화 Standard Partition이다. 나머지는 **LUKS → 열린 암호화 장치 → PV → VG → LV** 순서다. 개별 LV마다 LUKS를 추가하는 구조가 아니다.
+- VG `LVM`에는 **약 12 GiB의 VFree**를 남긴다. VG 미할당 공간은 `lsblk`에 별도 행으로 나오지 않는다. 메타데이터·반올림에 따라 실제 값은 다르다. 계산은 디스크가 약 `30G`로 보이는 경우이며 GB/GiB 표기 차이가 있으면 잔여량도 달라진다.
+- 장치명, 파티션 번호·순서, UUID, 암호화 매핑 이름은 달라질 수 있다. 글자 그대로보다 계층·파일시스템·마운트·용량을 비교한다. 설치 ISO의 `sr0` 등은 생략했다.
+- root 10 GiB는 설치 후 사용량을 확인할 초기 배정이다. 용량 선택 이유와 ext4 축소 조건은 학습 기록에 둔다.
+
+설치기에서는 VG의 `Modify → Encrypt`, 크기 정책 `As large as possible`을 확인하고 LV에 각각 10·2·4 GiB만 배정한다. **VG를 크게 만드는 것과 home에 잔여 전부를 주는 것은 다르다.** 설치 시작 전 파티션 목록과 VG 설정을 대조한다.
+
+직접 설치한 VM에서 확인할 명령:
+
+```bash
+lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS
+sudo vgs
+sudo pvs
+sudo lvs
+```
+
+`vgs`에서 이름 `LVM`, LV 3개, 남아 있는 VFree를 확인한다. BIOS Boot 유형은 설치기 또는 파티션 정보로, LUKS2 여부는 실제 암호화 파티션의 헤더 정보로 별도 확인한다.
+
+## 2. OS·계정·호스트명
+
+| 구분 | 도달할 상태 | 확인 방법 |
+|---|---|---|
+| 과제 필수 | 최신 안정 Debian/Rocky, 최소 서비스, X.org·Wayland 등 그래픽 서버 없음 | `cat /etc/os-release`, 설치 패키지·실행 서비스 확인. 버전 출력만으로 최신 안정 여부나 그래픽 서버 부재를 증명하지는 못한다. |
+| 우리 선택 | Rocky Minimal | 설치기 화면의 10.2 표시와 실제 설치·부팅 검증을 구분하고 공식 릴리스 정보와 대조 |
+| 과제 필수 + 로그인 대입 | root 외에 `jungblee`, 소속 그룹에 `user42`와 `sudo` 포함 | `id jungblee`, `getent group user42`, `getent group sudo`. Rocky의 `wheel`만으로 대신하지 않는다. |
+| 과제 필수 + 로그인 대입 | hostname `jungblee42` | `hostnamectl --static`; 재부팅 뒤에도 확인 |
+
+평가 목표는 새 사용자를 만들고 그룹에 넣으며 호스트명을 변경할 수 있는 것이다. hostname은 현재 사용자 보고만 있으며 성공 결과를 가정하지 않는다. Rocky의 Kdump 설정은 과제에서 요구하지 않는다.
+
+## 3. 원격 접속·보안
+
+| 과제 필수 목표 | 확인 명령·행동 |
+|---|---|
+| SSH가 VM의 4242번 포트에서 실행, root SSH 로그인 불가 | `sudo ss -lntp`, `sudo sshd -T`. 조건별 설정도 확인하고 외부에서 일반 사용자 접속 성공·root 거절을 직접 비교한다. 평가 때 만든 새 계정으로도 접속할 수 있어야 한다. |
+| Rocky는 firewalld 사용, VM 부팅 시 활성, 필수 구성에서 4242만 개방 | `systemctl is-active firewalld`, `systemctl is-enabled firewalld`, `sudo firewall-cmd --get-active-zones`, `sudo firewall-cmd --list-all-zones`, `sudo firewall-cmd --permanent --list-all-zones` |
+| SELinux가 부팅 시 실행되며 과제에 맞게 구성 | `sestatus`, 재부팅 후 상태와 SSH 등 필요한 기능의 동작 확인 |
+
+방화벽은 포트 목록뿐 아니라 활성 zone의 서비스·규칙·허용 범위도 본다. 기본 `ssh` 서비스가 22번을 열고 있지 않은지 확인한다. 현재 실행 설정과 영구 설정을 구분한다. SSH 설정·리스닝·실제 접속은 각각 확인하며 호스트의 포트 전달과 VM 내부 4242도 구분한다. SELinux의 구체적인 최종 정책은 아직 미선택이며 비활성화로 문제를 해결한 상태를 완료로 기록하지 않는다.
+
+## 4. 비밀번호·sudo
+
+**비밀번호 필수 목표:** 만료 30일, 변경 최소 간격 2일, 만료 7일 전 경고. 최소 10자이며 대문자·소문자·숫자를 포함하고 사용자명을 포함하지 않는다. 동일 문자 연속은 최대 3개다. 이전 비밀번호에 없던 문자 최소 7개가 필요하며 **이 조건만 root 예외**다. 정책 구성 후 root를 포함해 VM의 모든 계정 비밀번호를 변경해야 한다.
+
+`sudo chage -l jungblee`, `sudo chage -l root`로 기간 정책을 확인한다. 문자 조건은 실제 적용되는 인증·품질 정책과 허용/거절 동작을 대조한다. `chage`만으로 길이·문자 조건은 검증되지 않는다. 비밀번호 자체는 문서나 증거에 남기지 않는다.
+
+**sudo 필수 목표:** 인증 실패 시 시도 3회 제한, 직접 정한 오류 메시지, 작업의 입력·출력 모두 `/var/log/sudo/` 아래 기록, TTY 모드 활성화, sudo에서 사용 가능한 경로 제한. 오류 메시지 내용과 제한 경로의 최종 값은 아직 미선택이다.
+
+`sudo visudo -c`로 문법, `sudo -l`로 적용 정책을 살핀다. 별도로 실패 시도 제한·메시지·TTY 요구를 확인하고 직접 수행한 sudo 작업의 입출력 로그와 대조한다. 문법 통과만으로 동작 검증을 대신하지 않는다.
+
+## 5. monitoring.sh
+
+**필수 동작:** Bash로 작성한 `monitoring.sh`가 서버 시작 시와 이후 10분마다 모든 터미널에 아래 정보를 표시한다. 오류는 표시하지 않으며 배너는 선택이다. 코드를 설명하고 스크립트를 수정하지 않고 실행을 중단할 수 있어야 한다. 원문은 `wall`과 `cron`을 살펴보도록 안내한다.
+
+| 표시할 정보 | 대조할 대상·도구 예시 |
+|---|---|
+| OS 아키텍처·커널 버전 | `uname -a` |
+| 물리 프로세서 수·가상 프로세서 수 | `lscpu`; VM의 토폴로지와 호스트 물리 CPU 수를 혼동하지 않는다. |
+| RAM의 사용 가능한 양·사용률 | `free -m`과 계산 기준 |
+| 저장 공간의 사용 가능한 양·사용률 | `df -h`와 집계 대상 파일시스템 |
+| 현재 CPU 사용률 | 일정 구간의 CPU 통계. load average와 구분 |
+| 마지막 재부팅 날짜·시간 | `uptime -s` |
+| LVM 활성 여부 | `lsblk`, `sudo lvs` |
+| 활성 연결 수 | `ss -tn state established` 등 실제 연결 상태 |
+| 서버 사용 사용자 수 | `who`; 세션 수와 사용자 수의 해석 확인 |
+| IPv4·MAC 주소 | `ip -4 addr`, `ip link` |
+| sudo로 실행한 명령 수 | 실제 sudo 로그와 직접 실행한 작업 대조 |
+
+도구는 **대조용 예시이며 완성 구현이나 계산식이 아니다.** 원문은 RAM·디스크의 “사용 가능한 양”을 쓰지만 출력 예시는 사용량/전체 형식이다. 연결 예시도 TCP ESTABLISHED다. 이 차이는 평가 기준과 함께 확인한다. 임의 수치를 실측 출력처럼 채우지 않는다.
+
+부팅 직후 방송, 10분 간격, 여러 터미널 수신, 오류 부재, 값의 근거, 스크립트 수정 없는 중단을 직접 관찰한다. 예약 설정 조회만으로 방송 성공을 판정하지 않는다.
+
+## 6. 마지막에 확인할 것
+
+재부팅 후 각 목표를 다시 대조하고 선택 이유를 설명한다. README와 실제 디스크 SHA-1을 담은 `signature.txt`가 최종 제출 대상이다. VM은 Git에 넣지 않는다. 각 평가는 스냅샷 없이 시작하고 평가용 스냅샷은 이후 생성해 종료 시 삭제한다. VM 재실행으로 서명이 달라질 수 있으므로 실제 디스크와 제출 서명을 대조한다. README 등 제출 세부 조건은 기존 가이드에서 확인한다. 현재 서명 생성이나 VM 검증을 완료했다는 뜻은 아니다.
+
+명령 참고: [firewall-cmd 공식 문서](https://firewalld.org/documentation/man-pages/firewall-cmd.html), [OpenSSH sshd 공식 매뉴얼](https://man.openbsd.org/sshd.8). 설치된 버전의 도움말도 함께 확인한다. 여기에 적은 VM 확인 명령은 이번 문서 작업에서 실행하지 않았다.
