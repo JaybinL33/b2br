@@ -154,7 +154,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 ## 4. sudo 정책과 감사 로그
 
-**반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 9쪽과 [RHEL 10 Managing sudo access](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/security_hardening/managing-sudo-access) 8.1 `User authorizations in sudoers`, 8.2 `Granting sudo access to a user`로 권한 위임을 이해한다. 먼저 VM의 `man sudoers`에서 `User specification`, `Defaults`와 include 지시를 읽는다. [공식 sudoers 매뉴얼 원본](https://github.com/sudo-project/sudo/blob/main/docs/sudoers.man.in)에서도 같은 제목을 찾을 수 있다. 설정 시에는 `passwd_tries`, `badpass_message`, `requiretty`, `secure_path`, `log_input`, `log_output`, `iolog_dir`를 찾고, [공식 visudo 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/visudo.man.in)과 VM의 `man visudo`에서 `DESCRIPTION`, `-f`, `-c`를 읽는다. visudo는 동시 편집을 잠그고 저장 전 문법을 검사한다. 별도 파일은 다음 설정 단계에서 visudo로 편집할 예정이다.
+**반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 9쪽과 [RHEL 10 Managing sudo access](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/security_hardening/managing-sudo-access) 8.1 `User authorizations in sudoers`, 8.2 `Granting sudo access to a user`로 권한 위임을 이해한다. 먼저 VM의 `man sudoers`에서 `User specification`, `Defaults`와 include 지시를 읽는다. [공식 sudoers 매뉴얼 원본](https://github.com/sudo-project/sudo/blob/main/docs/sudoers.man.in)에서도 같은 제목을 찾을 수 있다. 설정 시에는 `passwd_tries`, `badpass_message`, `requiretty`, `secure_path`, `log_input`, `log_output`, `iolog_dir`를 찾고, [공식 visudo 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/visudo.man.in)과 VM의 `man visudo`에서 `DESCRIPTION`, `-f`, `-c`를 읽는다. visudo는 동시 편집을 잠그고 저장 전 문법을 검사한다. 아래 별도 파일 작성에서는 visudo의 `-f`를 사용하고 저장 뒤 `-c`로 포함 파일까지 검사한다. `Including other files from within sudoers`의 파일명 규칙과 `I/O LOGGING`도 해당 부분만 읽는다.
 
 **설명할 수 있어야 할 것:** 실행 사용자·대상 사용자·허용 명령, TTY, 명령 검색 경로, 명령 기록과 입출력 기록의 차이다. 이들은 원문이 직접 요구하는 제한과 로그를 검증하는 데 필요하다. 문법 검사 성공과 실패 시도·메시지·로그 동작 성공은 따로 확인한다.
 
@@ -166,13 +166,27 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 전체 목표를 세 묶음으로 나눈다. **권한 허용**은 누가 어느 호스트에서 어떤 사용자 권한으로 어떤 명령을 실행할 수 있는지, **실행 조건**은 실패 3회·오류 메시지·TTY·제한된 경로, **기록**은 입력·출력을 `/var/log/sudo/`에 남기는 것이다. 지금은 첫 묶음의 현재 상태부터 읽는다.
 
-`sudo -l`로 jungblee에 적용되는 허용 명령과 Defaults를 보고, `sudo cat /etc/sudoers`에서 해당 규칙의 근거를 찾고, `sudo ls /etc/sudoers.d`로 별도 파일 목록을 본다. `wheel`·`sudo` 그룹 가입은 확인했지만 실제 권한은 적용되는 sudoers 규칙이 결정한다. `%wheel`처럼 그룹을 가리키는 활성 규칙에서 **누가 → 어느 호스트 → 어떤 사용자로 → 어떤 명령**을 읽는다. 우리 VM에 어떤 규칙이 있는지는 조회 결과로 확인한다.
+`sudo -l`로 jungblee에 적용되는 허용 명령과 Defaults를 보고, `sudo cat /etc/sudoers`에서 해당 규칙의 근거를 찾고, `sudo ls /etc/sudoers.d`로 별도 파일 목록을 본다. `wheel`·`sudo` 그룹 가입은 확인했지만 실제 권한은 적용되는 sudoers 규칙이 결정한다. `%wheel`처럼 그룹을 가리키는 활성 규칙에서 **누가 → 어느 호스트 → 어떤 사용자로 → 어떤 명령**을 읽는다. 화면에서 `sudo -l`의 `(ALL) ALL`, `secure_path=/sbin:/bin:/usr/sbin:/usr/bin`과 기본 환경 항목을 확인했다. 본체에는 활성 `%wheel ALL=(ALL) ALL`, `root ALL=(ALL) ALL`, `#includedir /etc/sudoers.d`가 있고 wheel의 NOPASSWD 규칙은 주석이었다. 별도 디렉터리가 비었다는 것은 사용자 보고다.
 
-본체의 `@include`·`@includedir` 또는 이전 표기 `#include`·`#includedir`도 찾는다. 후자의 `#`를 일반 주석으로 넘기지 않는다. 디렉터리에 파일이 있다는 것과 정책으로 읽힌다는 것은 다르므로 include 지시와 목록을 연결한다. `Defaults`는 실행 조건·동작 옵션을 정하며 허용 명령 규칙과 구분한다. 조회 결과를 확인한 뒤 필요한 별도 설정을 정한다. 이번 단계에서는 새 sudo 정책을 작성하지 않는다.
+본체의 `@include`·`@includedir` 또는 이전 표기 `#include`·`#includedir`도 찾는다. 후자의 `#`를 일반 주석으로 넘기지 않는다. 디렉터리에 파일이 있다는 것과 정책으로 읽힌다는 것은 다르므로 include 지시와 목록을 연결한다. `Defaults`는 실행 조건·동작 옵션을 정하며 허용 명령 규칙과 구분한다. `%wheel ALL=(ALL) ALL`은 wheel 구성원 → 모든 호스트 → 모든 대상 사용자 → 모든 명령이라는 네 부분으로 읽는다. 기존 `secure_path`는 sudo가 사용하는 PATH이며 절대 경로로 지정한 명령을 막는 허용 목록이 아니다. 기존 권한 규칙과 이 경로 값은 유지하고 중복 추가하지 않는다.
 
-**sudo 필수 목표:** 인증 실패 시 시도 3회 제한, 직접 정한 오류 메시지, 작업의 입력·출력 모두 `/var/log/sudo/` 아래 기록, TTY 모드 활성화, sudo에서 사용 가능한 경로 제한(`secure_path` 관련 개념). 오류 메시지 내용과 제한 경로의 최종 값은 아직 미선택이다.
+**sudo 필수 목표:** 인증 실패 시 시도 3회 제한, 직접 정한 오류 메시지, 작업의 입력·출력 모두 `/var/log/sudo/` 아래 기록, TTY 모드 활성화, sudo에서 사용 가능한 경로 제한(`secure_path` 관련 개념). 오류 문구는 아래 간결한 문장을 선택했고, 경로는 확인한 기존 값을 유지한다.
 
 `sudo visudo -c`로 문법, `sudo -l`로 적용 정책을 살핀다. 별도로 실패 시도 제한·메시지·TTY 요구를 확인하고 직접 수행한 sudo 작업의 입출력 로그와 대조한다. 문법 통과만으로 동작 검증을 대신하지 않는다.
+
+### 별도 sudo 파일 작성 안내
+
+`sudo visudo -f /etc/sudoers.d/90-b2br`로 아래 옵션을 작성하도록 안내했다. 파일 내용은 [치트시트](cheatsheet.md#8-sudo-실행-조건과-입출력-로그-설정)에 둔다. `includedir`는 이름에 점이 들어간 파일을 건너뛰므로 `.conf` 확장자를 붙이지 않는다. 근거는 위 공식 sudoers·visudo 매뉴얼의 해당 옵션과 include 설명이다.
+
+| 설정 | 선택 이유 |
+|---|---|
+| `passwd_tries=3` | 비밀번호 인증 실패 시 최대 3회 시도를 명시한다. |
+| `badpass_message` | `Authentication failed. Please try again.`을 선택했다. 과제 고정 문구가 아닌 우리 선택이다. |
+| `requiretty` | 호출 사용자의 TTY를 요구한다. 명령을 별도 가상 터미널에서 실행하는 `use_pty`와 다르다. |
+| `log_input, log_output` | 입력과 출력을 모두 기록한다. |
+| `iolog_dir="/var/log/sudo"` | 과제의 입출력 로그 경로다. 필요한 로그 디렉터리는 sudo가 생성하므로 별도 mkdir 단계는 두지 않는다. |
+
+저장 뒤 현재 터미널을 유지한 채 `sudo visudo -c`로 전체 문법을 검사하고 `sudo -l`로 적용 목록을 확인한다. 파일 하나의 검사만으로 전체 정책 검사를 대신하지 않는다. 현재는 작성 안내이며 실제 저장·검사 결과와 실패 횟수·TTY 거절·로그 동작은 아직 확인하지 않았다. 입출력 로그에는 민감한 내용이 포함될 수 있으므로 공개 Git에 올리지 않는다.
 
 ## 5. SSH·firewalld·SELinux
 

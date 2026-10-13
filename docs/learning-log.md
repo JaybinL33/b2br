@@ -204,3 +204,12 @@ jungblee의 변경 성공과 두 계정의 변경일·30일 뒤 만료일·기�
 다음 학습은 sudo의 권한 허용·실행 조건·입출력 기록 세 묶음이다. 먼저 `sudo -l`, `sudo cat /etc/sudoers`, `sudo ls /etc/sudoers.d`를 조회하도록 안내했다. 확인된 그룹 가입과 실제 허용 규칙을 구분하고, 활성 wheel 그룹 규칙과 include 지시를 찾아 읽는다. 공식 sudoers·visudo 매뉴얼의 읽을 부분은 [목표 문서](targets.md#4-sudo-정책과-감사-로그)에 연결했다.
 
 현재 정책 조회 출력은 아직 받지 않았다. 별도 파일의 visudo 편집은 다음 단계이며 새 sudo 정책 적용이나 VM 조작은 하지 않았다.
+
+
+## 2026-10-13 — sudo 권한 확인과 별도 설정 안내
+
+**화면 확인:** `sudo -l`에 `(ALL) ALL`, `secure_path=/sbin:/bin:/usr/sbin:/usr/bin`과 기본 환경 항목이 보였다. sudoers 본체에는 활성 `%wheel ALL=(ALL) ALL`, `root ALL=(ALL) ALL`, `#includedir /etc/sudoers.d`가 있었고 NOPASSWD wheel 규칙은 주석이었다. **사용자 보고:** `/etc/sudoers.d` 목록은 비어 있었다.
+
+wheel 규칙을 구성원·호스트·대상 사용자·명령의 네 부분으로 읽었다. secure_path는 sudo의 PATH이며 절대 경로 명령의 허용 목록은 아니라는 점을 설명했다. 기존 권한과 경로는 유지하고 별도 파일 `90-b2br`에 인증 3회·선택한 오류 문구·TTY 요구·입출력 로그와 경로를 작성하도록 안내했다. 구체적인 내용은 [치트시트](cheatsheet.md#8-sudo-실행-조건과-입출력-로그-설정)에 둔다.
+
+저장 후 현재 터미널을 유지하며 전체 문법 검사와 적용 목록을 확인하는 순서다. 실제 저장·검사 출력, 실패 횟수·TTY 거절·입출력 로그 동작은 아직 확인하지 않았다. 이번 작업은 문서 갱신이며 VM 설정은 변경하지 않았다.

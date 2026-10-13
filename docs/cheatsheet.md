@@ -160,4 +160,31 @@ sudo ls /etc/sudoers.d
 
 현재 사용자에게 허용된 명령과 Defaults를 본다. 본체에서 활성 `%wheel` 규칙과 include 지시를 찾아 별도 파일 목록과 연결한다. 그룹 가입 자체와 권한 허용은 다르다. [읽을 부분과 세 묶음의 목표](targets.md#현재-정책부터-읽기)를 참고한다.
 
-조회 결과를 보고 다음에 별도 파일을 visudo로 편집한다. 아직 새 sudo 설정은 작성하지 않았다. 이후에는 실행 조건·입출력 로그 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행한다.
+## 8. sudo 실행 조건과 입출력 로그 설정
+
+확인한 wheel 권한과 기존 secure_path는 유지한다. 점 없는 파일명으로 편집한다.
+
+```bash
+sudo visudo -f /etc/sudoers.d/90-b2br
+```
+
+다음 다섯 줄을 적는다.
+
+```text
+Defaults passwd_tries=3
+Defaults badpass_message="Authentication failed. Please try again."
+Defaults requiretty
+Defaults log_input, log_output
+Defaults iolog_dir="/var/log/sudo"
+```
+
+저장 뒤 **현재 터미널을 유지**하고 전체 문법과 적용 목록을 확인한다.
+
+```bash
+sudo visudo -c
+sudo -l
+```
+
+오류가 있으면 다음 단계로 넘어가지 않고 메시지를 확인한다. 실제 실패 제한·TTY 거절·로그 동작은 별도로 검증한다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
+
+이후에는 sudo 동작 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행한다.
