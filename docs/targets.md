@@ -158,7 +158,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 **설명할 수 있어야 할 것:** 실행 사용자·대상 사용자·허용 명령, TTY, 명령 검색 경로, 명령 기록과 입출력 기록의 차이다. 이들은 원문이 직접 요구하는 제한과 로그를 검증하는 데 필요하다. 문법 검사 성공과 실패 시도·메시지·로그 동작 성공은 따로 확인한다.
 
-**존재와 용도만:** `sudoreplay`는 입출력 기록을 재생하는 도구다. 로그가 남았는지를 넘어 세션 내용을 검토할 때 해당 매뉴얼을 읽는다.
+**로그 검증에서 읽을 범위:** [공식 sudoreplay 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/sudoreplay.man.in)과 설치된 `man sudoreplay`의 `DESCRIPTION`에서 ID·TSID 관계, `-d`의 디렉터리 지정, `-l`의 세션 목록을 읽는다. `-f` 설명에서는 기본 재생 대상이 출력 스트림이라는 점까지만 확인한다. 고급 검색식·속도 조절은 로그가 많아지거나 긴 세션을 조사할 때 읽는다.
 
 **이번에 미룰 것과 이유:** 중앙 로그 서버·LDAP sudo 규칙·RHEL system roles는 단일 VM의 로컬 정책에 필요하지 않다. 여러 서버에 같은 권한을 배포하거나 로그를 외부 보존할 때 돌아온다. 이 안내는 sudo 정책 구현 완료 기록이 아니다.
 
@@ -186,9 +186,15 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 | `log_input, log_output` | 입력과 출력을 모두 기록한다. |
 | `iolog_dir="/var/log/sudo"` | 과제의 입출력 로그 경로다. 필요한 로그 디렉터리는 sudo가 생성하므로 별도 mkdir 단계는 두지 않는다. |
 
-현재 화면에서 `/etc/sudoers: parsed OK`와 `/etc/sudoers.d/90-b2br: bad permissions, should be mode 0440`를 확인했다. `sudo -l`에는 `passwd_tries=3`, 지정 오류 문구, `requiretty`, `log_input`, `log_output`, `iolog_dir=/var/log/sudo`가 모두 보였지만, 이것은 전체 검사 통과와 다르다.
+앞선 모드 오류는 사용자가 `sudo chmod 0440 /etc/sudoers.d/90-b2br`를 실행해 교정했다. 최신 화면의 `sudo visudo -c`에서 본체와 `90-b2br` 모두 `parsed OK`였고, `sudo -l`에도 안내한 다섯 설정 줄의 항목이 유지됐다. 전체 파일 검사와 적용 목록 확인을 완료했다.
 
-기본 재실습 흐름은 `sudo visudo -P -f /etc/sudoers.d/90-b2br` → 저장 → `sudo visudo -c` → `sudo -l`이다. 현재 터미널을 유지한다. 이미 발생한 모드 오류에는 `sudo chmod 0440 /etc/sudoers.d/90-b2br`가 유효하지만 매번 필요한 후처리는 아니다. 이미 chmod로 교정했다면 다시 편집하지 않고 전체 검사부터 진행한다. 소유권은 추측해 바꾸지 않는다. 본체와 별도 파일 모두 `parsed OK`이고 오류가 없어야 검사 완료로 기록한다. 교정 성공 출력은 아직 받지 않았다. 실패 횟수·TTY 거절·로그 동작은 별도 검증이며 입출력 로그는 공개 Git에 올리지 않는다.
+기본 재실습 흐름은 `sudo visudo -P -f /etc/sudoers.d/90-b2br` → 저장 → `sudo visudo -c` → `sudo -l`이다. 현재 터미널을 유지한다. 이미 발생한 모드 오류에는 `sudo chmod 0440 /etc/sudoers.d/90-b2br`가 유효하지만 매번 필요한 후처리는 아니다. 이미 chmod로 교정했다면 다시 편집하지 않고 전체 검사부터 진행한다. 소유권은 추측해 바꾸지 않는다. 본체와 별도 파일 모두 `parsed OK`이고 오류가 없어야 검사 완료로 기록한다. 이번 실제 교정은 chmod로 완료했으며 재실습 기본 절차와 구분한다. 실패 횟수·TTY 거절·로그 동작은 별도 검증이며 입출력 로그는 공개 Git에 올리지 않는다.
+
+### 로그 생성과 출력 재생 확인
+
+전체 검사 다음에는 비밀이 아닌 문장으로 기록을 만들어 본다. `sudo cat`을 실행하고 `b2br-log-test`를 입력해 Enter를 누르면 cat이 입력을 그대로 출력한다. 빈 줄에서 Ctrl+D로 종료한다. 이어 `sudo sudoreplay -d /var/log/sudo -l`로 세션 목록을 보고 cat 명령의 TSID를 찾는다. 재생 명령의 ID에는 그 실제 값을 넣는다. `-d`가 필요한 이유는 우리가 기본 경로 대신 `/var/log/sudo`를 선택했기 때문이다.
+
+재생에서 문장을 확인하면 해당 기록 생성과 출력 재생을 확인한 것이다. 목록만 보거나 기본 재생을 했다고 모든 입력 스트림까지 검증한 것으로 기록하지 않는다. 현재는 [치트시트의 절차](cheatsheet.md#9-로그-생성과-출력-재생)를 안내했으며 로그 결과는 아직 없다. 이후 인증 실패 횟수와 TTY 조건을 검증한다.
 
 ## 5. SSH·firewalld·SELinux
 

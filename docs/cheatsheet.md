@@ -185,6 +185,26 @@ sudo visudo -c
 sudo -l
 ```
 
-`/etc/sudoers`와 `/etc/sudoers.d/90-b2br`가 모두 `parsed OK`이고 오류가 없어야 전체 검사 완료다. 이미 발생한 모드 오류에는 `sudo chmod 0440 /etc/sudoers.d/90-b2br`도 유효한 교정 방법이지만 기본 필수 후처리는 아니다. 소유권은 추측해 바꾸지 않는다. 오류가 있으면 다음 단계로 넘어가지 않고 메시지를 확인한다. 실제 실패 제한·TTY 거절·로그 동작은 별도로 검증한다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
+최신 화면에서 `/etc/sudoers`와 `/etc/sudoers.d/90-b2br` 모두 `parsed OK`와 설정 목록 유지를 확인했다. 실제 교정은 chmod로 완료했으며 위 재실습 기본 절차는 유지한다. 이미 발생한 모드 오류에는 `sudo chmod 0440 /etc/sudoers.d/90-b2br`도 유효한 교정 방법이지만 기본 필수 후처리는 아니다. 소유권은 추측해 바꾸지 않는다. 오류가 있으면 다음 단계로 넘어가지 않고 메시지를 확인한다. 실제 실패 제한·TTY 거절·로그 동작은 별도로 검증한다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
 
-이후에는 sudo 동작 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행한다.
+## 9. 로그 생성과 출력 재생
+
+```bash
+sudo cat
+```
+
+비밀이 아닌 `b2br-log-test`를 입력하고 Enter를 누른다. cat이 같은 문장을 출력하면 빈 줄에서 Ctrl+D로 종료한다.
+
+```bash
+sudo sudoreplay -d /var/log/sudo -l
+```
+
+목록에서 cat 명령의 TSID를 찾고 아래 `ID`를 **그 실제 값으로 바꿔** 재생한다.
+
+```bash
+sudo sudoreplay -d /var/log/sudo ID
+```
+
+`-d`는 우리가 설정한 로그 디렉터리, `-l`은 세션 목록이다. 재생에서 문장이 보이는지 확인한다. 이는 기록 생성·출력 재생 확인이며 모든 입력 스트림의 검증을 뜻하지 않는다. 아직 이 절차의 실행 결과는 받지 않았다. [설명과 공식 읽기 범위](targets.md#로그-생성과-출력-재생-확인).
+
+이후에는 인증 실패 횟수·TTY 조건 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행한다.
