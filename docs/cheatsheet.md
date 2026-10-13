@@ -162,10 +162,10 @@ sudo ls /etc/sudoers.d
 
 ## 8. sudo 실행 조건과 입출력 로그 설정
 
-확인한 wheel 권한과 기존 secure_path는 유지한다. 점 없는 파일명으로 편집한다.
+확인한 wheel 권한과 기존 secure_path는 유지한다. 점 없는 파일명으로 편집하며 `-P`로 저장 시 기본 sudoers 모드도 맞춘다. 이미 chmod로 권한을 교정했다면 다시 편집하지 않고 아래 전체 검사로 넘어간다.
 
 ```bash
-sudo visudo -f /etc/sudoers.d/90-b2br
+sudo visudo -P -f /etc/sudoers.d/90-b2br
 ```
 
 다음 다섯 줄을 적는다.
@@ -178,14 +178,13 @@ Defaults log_input, log_output
 Defaults iolog_dir="/var/log/sudo"
 ```
 
-저장 뒤 **현재 터미널을 유지**하고 파일 모드를 맞춘 다음 전체 문법·파일 속성과 적용 목록을 확인한다.
+저장 뒤 **현재 터미널을 유지**하고 전체 문법·파일 속성과 적용 목록을 확인한다.
 
 ```bash
-sudo chmod 0440 /etc/sudoers.d/90-b2br
 sudo visudo -c
 sudo -l
 ```
 
-`/etc/sudoers`와 `/etc/sudoers.d/90-b2br`가 모두 `parsed OK`이고 오류가 없어야 전체 검사 완료다. 현재 화면의 권한 오류만 교정하며 소유권은 추측해 바꾸지 않는다. 오류가 있으면 다음 단계로 넘어가지 않고 메시지를 확인한다. 실제 실패 제한·TTY 거절·로그 동작은 별도로 검증한다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
+`/etc/sudoers`와 `/etc/sudoers.d/90-b2br`가 모두 `parsed OK`이고 오류가 없어야 전체 검사 완료다. 이미 발생한 모드 오류에는 `sudo chmod 0440 /etc/sudoers.d/90-b2br`도 유효한 교정 방법이지만 기본 필수 후처리는 아니다. 소유권은 추측해 바꾸지 않는다. 오류가 있으면 다음 단계로 넘어가지 않고 메시지를 확인한다. 실제 실패 제한·TTY 거절·로그 동작은 별도로 검증한다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
 
 이후에는 sudo 동작 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행한다.
