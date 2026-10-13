@@ -87,6 +87,11 @@ PAM은 서비스가 인증·계정·비밀번호·세션 처리를 연결하는 
 
 authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프로필과 구성 상태, 실제 `password` 연결을 먼저 읽는다. [RHEL 10 authselect 공식 문서](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/configuring_authentication_and_authorization_in_rhel/configuring-user-authentication-using-authselect)도 관리 파일의 수동 편집을 경고한다. `cat /etc/pam.d/passwd`로 진입점을 읽고, 그 파일의 `password` 항목이 참조하는 `system-auth`를 `cat /etc/pam.d/system-auth`로 따라간다. `authselect current`와 `authselect check`는 관리 상태를 확인하는 조회다. 구체적인 순서는 [치트시트](cheatsheet.md)에 둔다.
 
+사용자 화면에서 authselect는 `local` 프로필, 추가 기능 없음, 구성 유효 상태였다. `passwd`가 `system-auth`의 비밀번호 스택을 호출하고, 그 안에는 `pam_pwquality.so` → `pam_unix.so` → `pam_deny.so`가 연결되어 있다. `requisite`인 품질 모듈이 실패하면 해당 스택은 즉시 실패로 돌아간다. `pam_unix.so`의 `use_authtok`는 앞에서 받은 새 비밀번호를 이용해 로컬 비밀번호 갱신을 이어 간다. 품질 모듈이 이미 연결되어 있으므로 이번 단계에서 PAM 파일을 직접 편집할 필요는 없다. 정확한 화면 내용은 [학습 기록](learning-log.md)에 둔다.
+
+다음에는 `cat /etc/security/pwquality.conf`와 `ls /etc/security/pwquality.conf.d`로 기존 설정과 분리 파일 목록을 읽고 규칙을 정한다. libpwquality는 drop-in을 먼저 파일명 ASCII 순서로 읽고 본체를 나중에 읽으므로, 본체에 같은 활성 항목이 있으면 drop-in 값을 덮는다. PAM 모듈 인수는 설정 파일보다 우선한다. 따라서 본체의 중복 설정도 확인한다. 이는 앞의 login.defs/libeconf와 읽기 순서가 다르다. 근거: [pwquality.conf 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod), [pam_pwquality 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod). 품질 규칙 작성과 동작 검증은 다음 단계다.
+
+
 `/etc/login.defs.d/*.defs` 지원은 shadow-utils의 libeconf 사용 빌드에 달려 있다. [shadow 4.15.0의 읽기 코드](https://github.com/shadow-maint/shadow/blob/4.15.0/lib/getdef.c)는 `USE_ECONF` 조건으로 libeconf를 호출하며, [libeconf 공식 설명](https://github.com/openSUSE/libeconf/blob/master/README.md)은 분리된 설정 파일의 읽기 구조를 설명한다. libeconf는 기본 파일 뒤에 drop-in을 읽으며 파일명 사전순으로 처리한 뒤의 값이 앞의 값을 덮는다. 따라서 `/etc/login.defs.d/90-local.defs`에 세 기간 값을 모을 수 있지만, 더 뒤의 파일에 같은 키가 있으면 그 값이 우선한다. VM에서는 패키지 의존성으로 지원 빌드인지 확인하고 별도 파일 방식을 사용한다. 미지원이면 원본 파일 편집을 대안으로 선택하며 두 절차를 연달아 수행하지 않는다. 원본의 기존 변경을 복구하거나 삭제할 필요는 없다. 어느 방식도 기존 계정의 기간 값을 바꾸는 `chage`를 대신하지 않는다.
 
 **비밀번호 필수 목표:** 만료 30일, 변경 최소 간격 2일, 만료 7일 전 경고. 최소 10자이며 대문자·소문자·숫자를 포함하고 사용자명을 포함하지 않는다. 동일 문자 연속은 최대 3개다. 이전 비밀번호에 없던 문자 최소 7개가 필요하며 **이 조건만 root 예외**다. 정책 구성 후 root를 포함해 VM의 모든 계정 비밀번호를 변경해야 한다.

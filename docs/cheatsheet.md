@@ -89,6 +89,15 @@ sudo authselect current
 sudo authselect check
 ```
 
+품질 모듈은 이미 연결되어 있다. PAM 파일을 직접 편집하지 않고 기존 품질 설정을 읽는다.
+
+```bash
+cat /etc/security/pwquality.conf
+ls /etc/security/pwquality.conf.d
+```
+
+libpwquality는 drop-in → 본체 순으로 읽으며 PAM 인수가 우선한다. 본체에 같은 활성 설정이 있는지 함께 확인한 뒤 규칙을 작성한다. [확인된 연결과 우선순위 설명](targets.md#3-비밀번호pam).
+
 ## 5. 다음 비밀번호 단계
 
 품질 정책을 구성한 뒤 root와 jungblee의 실제 비밀번호를 변경하고 다음 조회로 **마지막 변경 날짜·30일 뒤 만료일·2/30/7**을 확인한다.

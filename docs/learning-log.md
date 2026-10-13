@@ -133,3 +133,28 @@ root와 jungblee의 `chage -l` 화면에서 두 계정 모두 최소 2일·최�
 PAM은 `cat /etc/pam.d/passwd`로 시작하고 그 파일이 참조하는 `system-auth`를 따라 읽는다. authselect 조회는 관리 상태를 확인하는 용도로 유지했다. 품질 정책 다음에 root와 jungblee의 비밀번호를 실제 변경하고 날짜와 2/30/7을 대조하는 순서도 유지했다. 이전 비밀번호 비교 경로를 확인하기 전에는 최종 변경 명령을 확정하지 않았다.
 
 이는 학습 절차의 갱신이며 새 VM 실행 결과를 추가한 것은 아니다. 앞서 확인한 그룹·기간 값과 `never` 출력은 위 기록에 남긴다. 사용자가 다음 단계로 진행하면 학습을 이어가되, 그 진행 자체를 출력 검증으로 간주하지 않는다. 이번 작업에서는 문서만 수정했다.
+
+
+## 2026-10-13 — authselect와 PAM 품질 모듈 연결 확인
+
+**사용자 화면에서 확인:** `authselect current`는 `Profile ID: local`, `Enabled features: None`을 표시했고, `authselect check`는 `Current configuration is valid.`를 반환했다.
+
+`/etc/pam.d/passwd`의 비밀번호 처리 부분은 다음 순서였다.
+
+```text
+password substack system-auth
+password optional pam_gnome_keyring.so use_authtok
+password substack postlogin
+```
+
+`system-auth`에는 authselect가 생성한 파일이라는 경고와 다음 비밀번호 스택이 있었다.
+
+```text
+password requisite pam_pwquality.so
+password sufficient pam_unix.so yescrypt shadow nullok use_authtok
+password required pam_deny.so
+```
+
+**화면을 바탕으로 설명한 흐름:** `passwd`가 `system-auth`를 호출한다. 품질 모듈이 실패를 반환하면 `requisite` 제어로 해당 스택이 실패하고, 통과한 새 비밀번호는 `pam_unix.so`가 `use_authtok`로 받아 로컬 갱신에 사용한다. 품질 모듈은 이미 연결되어 있어 PAM 직접 편집은 필요하지 않다. 구성 유효와 모듈 연결 확인을 과제의 품질 규칙 적용 완료로 보지는 않는다.
+
+다음 조회는 `cat /etc/security/pwquality.conf`와 `ls /etc/security/pwquality.conf.d`다. drop-in보다 본체가 나중에 읽히고 PAM 인수가 우선하므로 본체의 중복 설정도 살핀 뒤 규칙을 작성할 예정이다. 이 두 조회의 출력과 품질 규칙 작성·적용 결과는 아직 추가되지 않았다. 이번 작업은 사용자 화면 근거의 문서화이며 VM 설정은 변경하지 않았다.
