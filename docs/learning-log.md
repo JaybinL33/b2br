@@ -273,3 +273,19 @@ targets 전체에서 실제 출력·날짜·사용자 보고·진행 상태를 �
 사용자 첨부 화면을 확인한 주 대화의 전달 근거: jungblee 일반 셸에서 `setsid -w sudo -n true </dev/null` 실행 뒤 `sudo: sorry, you must have a tty to run sudo`가 표시됐다. 명시적인 TTY 거절로 requiretty 체크포인트를 완료했다. 화면에 `echo $?` 결과는 없지만 이를 이유로 추가 재검사를 요구하지 않는다.
 
 다음 검사인 `passwd_tries=3`·`badpass_message`에 앞서 `cat /etc/pam.d/sudo`를 안내했다. 앞서 본 system-auth에는 faillock이 없었지만 sudo의 실제 auth·account 호출 경로를 확인해야 한다. 이번 조회 결과는 아직 받지 않았다. 공식 sudo·sudoers·Linux-PAM 매뉴얼을 대조해 인증 경로 조회와 잠금 위험 확인을 선행 조건으로 둔 실패 검사 절차를 준비했다. 실패 횟수·사용자 지정 오류 메시지의 실제 동작은 미검증이다. 이번 문서 작업에서 VM은 조작하지 않았다.
+
+
+## 2026-10-13 — sudo의 system-auth 연결 확인
+
+사용자 첨부 화면을 확인한 주 대화의 전달 근거: `cat /etc/pam.d/sudo` 출력은 PAM-1.0 헤더 아래 다음 네 줄이었다.
+
+```text
+auth include system-auth
+account include system-auth
+password include system-auth
+session include system-auth
+```
+
+sudo의 auth·account 처리도 `system-auth`로 연결됨을 확인했다. 앞서 확인한 system-auth auth 스택에는 `pam_faillock`이 없었다. 이를 근거로 일반 사용자 터미널에서 `sudo -k` 다음 `sudo -v`를 실행하고, 틀린 입력 세 번으로 지정 오류 문구와 네 번째 요청 없이 종료되는지를 한 번만 확인하도록 안내했다. 기존 targets·치트시트의 인증 경로 확인 후 검사 순서와 일치한다.
+
+검사 결과는 아직 받지 않았으므로 `passwd_tries=3`·`badpass_message`의 동작 검증은 미완료다. 이번 작업은 전달된 화면 근거의 문서화이며 VM 명령 실행이나 보안 설정 변경은 하지 않았다.
