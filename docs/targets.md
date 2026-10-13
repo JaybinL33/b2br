@@ -194,6 +194,14 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 재생에서 문장을 확인하면 해당 기록 생성과 출력 재생을 확인한 것이다. 목록만 보거나 기본 재생을 했다고 모든 입력 스트림까지 검증한 것으로 기록하지 않는다. 문장이 두 번 보이더라도 터미널 에코와 cat 출력일 수 있으므로 입력 스트림의 독립적인 증거로 보지 않는다. `stdin`은 표준입력, `ttyin`은 터미널 입력으로 기록된 스트림이다. 같은 세션에 `-f stdin,ttyin`을 지정해 두 입력 종류를 함께 선택하고 테스트 문장을 대조한다. 문장이 보이면 선택한 입력 중에 기록된 증거지만 두 종류 각각의 성공을 뜻하지는 않는다. 재실습은 [치트시트](cheatsheet.md#9-로그-생성과-출력-재생), 실제 관찰은 [학습 기록](learning-log.md)에 둔다. 이후 인증 실패 횟수와 TTY 조건을 검증한다.
 
+### TTY 실행 조건 확인
+
+**읽을 범위:** VM의 `man sudoers`에서 `requiretty`·`use_pty`, [공식 sudo 매뉴얼](https://raw.githubusercontent.com/sudo-project/sudo/main/docs/sudo.man.in)과 `man sudo`에서 `-n`, [util-linux 공식 setsid 매뉴얼](https://raw.githubusercontent.com/util-linux/util-linux/master/sys-utils/setsid.1.adoc)과 `man setsid`에서 `DESCRIPTION`·`-w`·`-c`를 읽는다. [Linux setsid(2) 매뉴얼](https://man7.org/linux/man-pages/man2/setsid.2.html)의 `DESCRIPTION`에서 새 세션에는 처음에 제어 터미널이 없다는 점까지만 확인한다. 세션·프로세스 그룹의 내부 구현은 작업 제어를 학습할 때로 미룬다.
+
+`requiretty`는 sudo 호출자에게 TTY를 요구한다. 명령 실행용 PTY를 만드는 `use_pty`와 목적이 다르다. 일반 사용자 셸에서 `setsid -w sudo -n true </dev/null`로 제어 터미널 없는 새 세션에서 sudo를 호출한다. `-c`를 넣으면 제어 터미널을 다시 설정하므로 사용하지 않는다. `-w`는 실행 종료를 기다리고 해당 종료 상태를 전달한다. 표준입력은 `/dev/null`로 연결하고 sudo의 `-n`은 비밀번호 등 입력 요청을 막는다. `true`는 실행되더라도 별도 작업을 하지 않는 검사 대상이다.
+
+**판단 기준:** TTY가 필요하다는 명시적 거절과 0이 아닌 종료 상태를 함께 확인한다. 메시지는 설치 버전·언어에 따라 다를 수 있다. `a password is required`만 나오거나 다른 오류로 실패한 경우에는 TTY 조건 검증 성공으로 판단하지 않는다. 출력이 계속 화면에 보이는 것과 호출 세션에 제어 터미널이 있는 것은 별개다. 재실습 명령은 [치트시트](cheatsheet.md#10-tty-실행-조건-검증)에 둔다.
+
 ## 5. SSH·firewalld·SELinux
 
 **반드시 읽을 범위 — 이 구간에 들어갈 때:** [RHEL 10 OpenSSH](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/securing_networks/using-secure-communications-between-two-systems-with-openssh) 1.1 `SSH and OpenSSH`와 1.5.3 `Setting a non-default port for SSH`를 읽는다. [Rocky firewalld for Beginners](https://docs.rockylinux.org/guides/security/firewalld-beginners/)는 `Basic Usage`, `Saving your changes`, `Managing Zones`, `Managing Ports`, `Managing Services`까지 읽는다. [RHEL 10 SELinux 입문](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/using_selinux/getting-started-with-selinux)은 1.1–1.3과 1.5 `SELinux states and modes`를 읽는다. 원문 근거는 7–8쪽이다.

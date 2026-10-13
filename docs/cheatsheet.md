@@ -217,6 +217,17 @@ sudo sudoreplay -d /var/log/sudo -f stdin,ttyin ID
 
 `-d`는 우리가 설정한 로그 디렉터리, `-l`은 세션 목록이다. 재생에서 문장이 보이는지 확인한다. 기본 재생은 출력, `-f stdin,ttyin` 재생은 입력 확인이다. 문장이 보여도 두 종류 각각에 모두 기록됐다고 단정하지 않는다. [설명과 공식 읽기 범위](targets.md#로그-생성과-출력-재생-확인).
 
+## 10. TTY 실행 조건 검증
+
+`requiretty`가 적용되는 일반 사용자 셸에서 실행한다. 앞에 sudo를 추가하거나 root 셸에서 실행하지 않는다.
+
+```bash
+setsid -w sudo -n true </dev/null
+echo $?
+```
+
+두 번째 줄은 첫 명령 직후 실행한다. `sudo: sorry, you must have a tty to run sudo`처럼 **TTY가 필요하다는 거절**과 0이 아닌 종료 상태가 기대 결과다. `a password is required`만 나오거나 다른 오류로 실패하면 통과로 판단하지 않고 적용 정책·명령·오류를 확인한다. `-c`는 추가하지 않는다. [개념과 공식 읽기 범위](targets.md#tty-실행-조건-확인).
+
 ## 이후 단위
 
-인증 실패 횟수·TTY 조건 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
+인증 실패 횟수·오류 메시지 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
