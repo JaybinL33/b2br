@@ -98,15 +98,40 @@ ls /etc/security/pwquality.conf.d
 
 libpwquality는 drop-in → 본체 순으로 읽으며 PAM 인수가 우선한다. 본체에 같은 활성 설정이 있는지 함께 확인한 뒤 규칙을 작성한다. [확인된 연결과 우선순위 설명](targets.md#3-비밀번호pam).
 
-## 5. 다음 비밀번호 단계
+## 5. 별도 품질 설정 파일 작성
 
-품질 정책을 구성한 뒤 root와 jungblee의 실제 비밀번호를 변경하고 다음 조회로 **마지막 변경 날짜·30일 뒤 만료일·2/30/7**을 확인한다.
+본체에 활성 설정이 없고 분리 파일 디렉터리가 비어 있다는 사용자 보고를 바탕으로 안내한 단계다.
+
+```bash
+sudoedit /etc/security/pwquality.conf.d/90-local.conf
+```
+
+다음 내용을 적는다. `enforce_for_root`는 값 없이 적는다. 옵션의 의미는 [품질 규칙 설명](targets.md#이번에-안내한-품질-규칙)에 둔다.
+
+```text
+minlen = 10
+ucredit = -1
+lcredit = -1
+dcredit = -1
+ocredit = 0
+maxrepeat = 3
+usercheck = 1
+difok = 7
+enforcing = 1
+enforce_for_root
+```
+
+사전 검사 등 나머지 기본 설정은 유지한다. 지금은 파일 작성 안내까지이며 적용·동작 검증 완료를 뜻하지 않는다.
+
+## 6. 다음 비밀번호 단계
+
+품질 파일 작성 뒤 root와 jungblee의 실제 비밀번호 변경·허용/거절 동작을 검증하고 다음 조회로 **마지막 변경 날짜·30일 뒤 만료일·2/30/7**을 확인한다.
 
 ```bash
 sudo chage -l root
 chage -l jungblee
 ```
 
-품질 정책은 다음 학습 단계다. 최종 비밀번호 변경 명령은 이전 비밀번호 비교가 적용되는 경로를 확인한 뒤 정한다.
+일반 사용자 `difok` 검증은 `jungblee`가 직접 `passwd`를 실행하는 경로로 진행해야 한다. 관리자가 대신 바꾸면 이전 비밀번호 비교가 생략될 수 있다. 구체적인 변경·검증 순서는 다음 묶음에서 다루고 비밀번호 자체는 기록하지 않는다.
 
 이후에는 sudo 정책·로그 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행하며 명령을 추가한다.

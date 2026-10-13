@@ -109,7 +109,7 @@ sudo lvs
 
 **반드시 읽을 범위:** 원문 8–9쪽의 기간·품질·root 예외·기존 비밀번호 갱신 조건을 기준으로 [Rocky User Management](https://docs.rockylinux.org/books/admin_guide/06-users/)의 `passwd command`, `chage command`, `/etc/shadow file`, `/etc/login.defs file`을 읽는다. [Rocky PAM 입문](https://docs.rockylinux.org/guides/security/pam/)은 `Introduction`부터 `Control Indicators`까지 읽어 네 처리 유형과 제어 흐름을 잡는다. 뒤의 `pam_cracklib`·`pam_tally` 예시는 현재 Rocky 10 구성의 설치·설정 지침으로 사용하지 않는다. [RHEL 10 authselect](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/configuring_authentication_and_authorization_in_rhel/configuring-user-authentication-using-authselect)에서는 2.1과 2.1.1, 2.2의 **현재 구성 조회 부분만** 읽는다. 프로필 전환 예시는 지금 실행하지 않는다.
 
-**설정할 때 반드시 찾을 항목:** VM의 `man chage`에서 `-l`, `-m`, `-M`, `-W`, `man login.defs`에서 `PASS_MAX_DAYS`, `PASS_MIN_DAYS`, `PASS_WARN_AGE`를 찾는다. 아래 연결한 libpwquality 공식 매뉴얼의 `DESCRIPTION`과 `minlen`, `dcredit`, `ucredit`, `lcredit`, `ocredit`, `maxrepeat`, `usercheck`, `difok`, `enforce_for_root`, `use_authtok`를 읽고 설치 버전과 대조한다. 값의 의미를 정한 뒤 작성하며, 아직 완성 설정을 붙여 넣는 단계는 아니다.
+**설정할 때 반드시 찾을 항목:** VM의 `man chage`에서 `-l`, `-m`, `-M`, `-W`, `man login.defs`에서 `PASS_MAX_DAYS`, `PASS_MIN_DAYS`, `PASS_WARN_AGE`를 찾는다. 아래 연결한 libpwquality 공식 매뉴얼의 `DESCRIPTION`과 `minlen`, `dcredit`, `ucredit`, `lcredit`, `ocredit`, `maxrepeat`, `usercheck`, `difok`, `enforce_for_root`, `use_authtok`를 읽고 설치 버전과 대조한다. 값의 의미는 아래 품질 규칙 설명과 대조하며 작성한다. 파일 작성 안내와 실제 적용·검증은 구분한다.
 
 **설명할 수 있어야 할 것:** 새 계정 기본값과 기존 계정 기간 값, 품질 검사와 저장, `passwd` → `system-auth`의 호출 관계, `requisite` 실패와 `use_authtok` 전달이다. root의 이전 비밀번호 비교 예외와 다른 품질 조건 적용도 구분한다. 특히 **login.defs/libeconf는 기본 파일 뒤 drop-in, libpwquality는 drop-in 뒤 본체이며 PAM 인수가 우선**이라는 차이는 반드시 알아야 한다. 아래 공식 근거처럼 실제 적용 값이 달라지므로 파일을 만들었다는 사실만으로 정책 적용을 판단할 수 없기 때문이다. 2/30/7과 마지막 변경일·실제 만료일도 함께 대조한다.
 
@@ -125,7 +125,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 사용자 화면에서 authselect는 `local` 프로필, 추가 기능 없음, 구성 유효 상태였다. `passwd`가 `system-auth`의 비밀번호 스택을 호출하고, 그 안에는 `pam_pwquality.so` → `pam_unix.so` → `pam_deny.so`가 연결되어 있다. `requisite`인 품질 모듈이 실패하면 해당 스택은 즉시 실패로 돌아간다. `pam_unix.so`의 `use_authtok`는 앞에서 받은 새 비밀번호를 이용해 로컬 비밀번호 갱신을 이어 간다. 품질 모듈이 이미 연결되어 있으므로 이번 단계에서 PAM 파일을 직접 편집할 필요는 없다. 정확한 화면 내용은 [학습 기록](learning-log.md)에 둔다.
 
-다음에는 `cat /etc/security/pwquality.conf`와 `ls /etc/security/pwquality.conf.d`로 기존 설정과 분리 파일 목록을 읽고 규칙을 정한다. libpwquality는 drop-in을 먼저 파일명 ASCII 순서로 읽고 본체를 나중에 읽으므로, 본체에 같은 활성 항목이 있으면 drop-in 값을 덮는다. PAM 모듈 인수는 설정 파일보다 우선한다. 따라서 본체의 중복 설정도 확인한다. 이는 앞의 login.defs/libeconf와 읽기 순서가 다르다. 근거: [pwquality.conf 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod), [pam_pwquality 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod). 품질 규칙 작성과 동작 검증은 다음 단계다.
+`cat /etc/security/pwquality.conf`와 `ls /etc/security/pwquality.conf.d` 결과에 대해 사용자는 본체가 모두 주석이고 디렉터리는 비어 있다고 보고했다. 앞서 확인한 PAM 품질 모듈에도 인수가 없어 별도 품질 파일 작성을 안내했다. libpwquality는 drop-in을 먼저 파일명 ASCII 순서로 읽고 본체를 나중에 읽으므로, 본체에 같은 활성 항목이 있으면 drop-in 값을 덮는다. PAM 모듈 인수는 설정 파일보다 우선한다. 따라서 본체의 중복 설정도 확인한다. 이는 앞의 login.defs/libeconf와 읽기 순서가 다르다. 근거: [pwquality.conf 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod), [pam_pwquality 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod). 품질 파일 작성은 아래 안내 단계이며, 실제 적용과 허용·거절 검증은 다음에 확인한다.
 
 `/etc/login.defs.d/*.defs` 지원은 shadow-utils의 libeconf 사용 빌드에 달려 있다. [shadow 4.15.0의 읽기 코드](https://github.com/shadow-maint/shadow/blob/4.15.0/lib/getdef.c)는 `USE_ECONF` 조건으로 libeconf를 호출하며, [libeconf 공식 설명](https://github.com/openSUSE/libeconf/blob/master/README.md)은 분리된 설정 파일의 읽기 구조를 설명한다. libeconf는 기본 파일 뒤에 drop-in을 읽으며 파일명 사전순으로 처리한 뒤의 값이 앞의 값을 덮는다. 따라서 `/etc/login.defs.d/90-local.defs`에 세 기간 값을 모을 수 있지만, 더 뒤의 파일에 같은 키가 있으면 그 값이 우선한다. VM에서는 패키지 의존성으로 지원 빌드인지 확인하고 별도 파일 방식을 사용한다. 미지원이면 원본 파일 편집을 대안으로 선택하며 두 절차를 연달아 수행하지 않는다. 원본의 기존 변경을 복구하거나 삭제할 필요는 없다. 어느 방식도 기존 계정의 기간 값을 바꾸는 `chage`를 대신하지 않는다.
 
@@ -134,6 +134,23 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 `sudo chage -l jungblee`, `sudo chage -l root`로 기간 정책을 확인한다. 문자 조건은 실제 적용되는 인증·품질 정책과 허용/거절 동작을 대조한다. `chage`만으로 길이·문자 조건은 검증되지 않는다. 비밀번호 자체는 문서나 증거에 남기지 않는다.
 
 10월 13일 사용자 화면에서 root와 jungblee 모두 최소 2일·최대 30일·경고 7일을 확인했다. 두 계정의 `Last password change`와 `Password expires`는 `never`였다. 기간 숫자 확인과 실제 만료 검증을 구분한다. 다음 순서는 **품질 정책 구성 → root와 jungblee의 실제 비밀번호 변경 → 마지막 변경 날짜·30일 뒤 만료일·2/30/7 재확인**이다. 관리자가 일반 계정의 비밀번호를 변경하면 이전 비밀번호 비교가 생략될 수 있으므로, 최종 변경 명령은 해당 경로를 확인한 뒤 정한다.
+
+### 이번에 안내한 품질 규칙
+
+사용자 보고를 바탕으로 `/etc/security/pwquality.conf.d/90-local.conf` 작성을 안내했다. 정확한 파일 내용과 명령은 [치트시트](cheatsheet.md#5-별도-품질-설정-파일-작성)에 둔다. 아래는 설정값의 선택 이유이며, 파일 저장이나 검증 성공을 기록한 표가 아니다. 근거는 [pwquality.conf 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod)의 각 옵션과 [pam_pwquality 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod)의 credit·비교·root 처리 설명이다.
+
+| 항목 | 의미와 선택 이유 |
+|---|---|
+| `minlen = 10` | 길이 기준을 10으로 둔다. 아래 credit을 모두 0 이하로 두어 문자 종류에 따른 길이 가산 없이 실제 길이를 검사한다. |
+| `ucredit = -1`, `lcredit = -1`, `dcredit = -1` | 대문자·소문자·숫자를 각각 최소 1개 요구한다. 음수의 절댓값은 최소 개수이고, 양수는 길이 계산에 줄 수 있는 가산의 한도다. |
+| `ocredit = 0` | 특수문자 등 기타 문자 종류를 강제하지 않고 길이 가산도 주지 않는다. 사용을 금지하는 뜻은 아니다. |
+| `maxrepeat = 3` | 같은 문자 3개 연속은 이 규칙으로 거절하지 않고 4개 연속부터 거절한다. 다른 품질 검사까지 통과한다는 뜻은 아니다. |
+| `usercheck = 1` | 사용자명 포함 여부를 검사한다. 기본값도 1이지만 과제 정책을 명시하려고 적는다. |
+| `difok = 7` | 이전·새 비밀번호의 차이를 요구한다. PAM 매뉴얼은 삽입·삭제·치환에 따른 문자 변경 수로 설명하므로 단순 문자열 길이 차이나 집합 차이로 이해하지 않는다. |
+| `enforcing = 1` | 품질 실패를 경고만 하고 넘기지 않고 거절한다. 기본값 1을 정책에 명시한다. |
+| `enforce_for_root` | 값 없이 켜는 항목이다. root가 변경할 때도 품질 실패를 거절하지만, root는 이전 암호를 입력하지 않아 이전·새 비밀번호 비교는 생략된다. |
+
+사전 검사 등 나머지 기본값은 유지한다. 일반 계정의 이전 비밀번호 비교는 사용자가 직접 `passwd`를 실행하는 경로에서 검증해야 한다. 관리자의 대리 변경으로는 `difok` 동작을 입증할 수 없다. 다음 묶음에서 실제 비밀번호 변경과 허용·거절 결과, 마지막 변경일·30일 뒤 만료·2/30/7을 확인한다. 비밀번호는 기록하지 않는다.
 
 ## 4. sudo 정책과 감사 로그
 
