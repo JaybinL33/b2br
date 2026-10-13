@@ -110,7 +110,7 @@ sudo mkdir -p /etc/security/pwquality.conf.d
 sudoedit /etc/security/pwquality.conf.d/90-local.conf
 ```
 
-다음 내용을 적는다. `enforce_for_root`는 값 없이 적는다. 옵션의 의미는 [품질 규칙 설명](targets.md#이번에-안내한-품질-규칙)에 둔다.
+다음 내용을 적는다. `enforce_for_root`는 값 없이 적는다. 옵션의 의미는 [품질 규칙 설명](targets.md#품질-규칙과-선택-이유)에 둔다.
 
 ```text
 minlen = 10
@@ -213,10 +213,10 @@ sudo sudoreplay -d /var/log/sudo ID
 sudo sudoreplay -d /var/log/sudo -f stdin,ttyin ID
 ```
 
-입력 재생에서 `b2br-log-test`가 보이는지 확인한다. `-f stdin,ttyin`은 두 입력 종류를 함께 선택한다. 문장이 없으면 입력 검증을 완료하지 말고 해당 세션의 로그 파일 구성을 확인한다.
+입력 재생에서 `b2br-log-test`가 보이는지 확인한다. `-f stdin,ttyin`은 두 입력 종류를 함께 선택한다.
 
 `-d`는 우리가 설정한 로그 디렉터리, `-l`은 세션 목록이다. 재생에서 문장이 보이는지 확인한다. 기본 재생은 출력, `-f stdin,ttyin` 재생은 입력 확인이다. 문장이 보여도 두 종류 각각에 모두 기록됐다고 단정하지 않는다. [설명과 공식 읽기 범위](targets.md#로그-생성과-출력-재생-확인).
 
 ## 이후 단위
 
-인증 실패 횟수·TTY 조건 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#남은-학습의-전체-지도)에서 확인한다.
+인증 실패 횟수·TTY 조건 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

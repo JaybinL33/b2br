@@ -1,10 +1,10 @@
 # Born2beRoot — 직접 만들고 대조할 목표
 
-**이 문서는 목표·읽을 범위·확인 방법을 정리한다. 화면으로 확인한 내용은 별도로 표시하며, 읽기 안내 자체는 완료 기록이 아니다.** 한 단위씩 직접 구성하고 관찰한 결과를 [학습 기록](learning-log.md)에 남긴다. 요구사항은 [원문 v5.2](../en.subject.pdf), 자세한 항목은 [기존 가이드](ko/Born2beRoot-v5.2-ko-guide.md)를 기준으로 한다. 사용자는 보너스를 목표로 하지 않기로 했다. 아래는 필수 서버 관리·모니터링 실습에 맞춘 선택이며 보너스 그림을 복제하지 않는다.
+**이 문서는 목표 상태·개념·선택 근거·읽을 범위·검증 기준을 정리한다.** 한 단위씩 직접 구성하고 관찰한 결과를 [학습 기록](learning-log.md)에 남긴다. 요구사항은 [원문 v5.2](../en.subject.pdf), 자세한 항목은 [기존 가이드](ko/Born2beRoot-v5.2-ko-guide.md)를 기준으로 한다. 학습 범위는 보너스를 제외한 필수 과제다. 아래는 필수 서버 관리·모니터링 실습에 맞춘 선택이며 보너스 그림을 복제하지 않는다.
 
-## 남은 학습의 전체 지도
+## 전체 학습 지도
 
-설치 후 사용자 화면에서 셸 진입과 디스크 배치·VG 수치를 확인했다. 확인 범위와 남은 검증은 [학습 기록](learning-log.md)에 구분한다. 아래는 계속 대조할 목표다. 아래 순서로 **전체 역할 파악 → 필요한 개념 읽기 → 한 부분 직접 적용 → 결과 확인 → 배운 내용 기록**을 반복한다. 필수 조건의 숫자와 확인 방법은 이어지는 각 구간에 둔다.
+현재 진행 상태는 [README](../README.md), 실행 증거와 이력은 [학습 기록](learning-log.md), 반복 실습 절차는 [치트시트](cheatsheet.md)에 둔다. 아래 순서로 **전체 역할 파악 → 필요한 개념 읽기 → 한 부분 직접 적용 → 결과 확인 → 배운 내용 기록**을 반복한다. 필수 조건의 숫자와 확인 방법은 이어지는 각 구간에 둔다.
 
 | 구간 | 목적·핵심 개념 | 끝났다고 판단할 상태 | 확인의 중심 | 이번에 미룰 심화 |
 |---|---|---|---|---|
@@ -22,7 +22,7 @@
 
 자료는 **공식 입문·개념 가이드 → 설정할 때 설치 버전의 man/reference → 문서로 해결되지 않는 쟁점에만 구현 소스** 순으로 고른다. 매뉴얼 전체를 외우지 않고 적힌 제목·옵션을 찾는다. 단순 `cat` 조회와 실제 출력에서 출발하며 소스코드 분석이나 복잡한 검색식을 입문 조건으로 삼지 않는다.
 
-2026-10-13에 아래 Rocky 공식 가이드와 RHEL **10** 문서의 제목·읽을 절을 확인했다. Rocky 관리 입문서는 릴리스별로 고정된 책이 아니므로 개념에 사용하고, 설치 안내는 제목이 *Installing Rocky Linux 10*인 문서를 사용한다. RHEL 10의 설명도 Rocky의 패키지 빌드·기본값·현재 설정을 대신 증명하지 않는다. 설정 시 VM의 설치 버전과 해당 `man`을 대조한다. 최신 upstream 매뉴얼의 새 옵션을 Rocky 10에 그대로 있다고 가정하지 않는다.
+자료 기준은 Rocky 공식 가이드와 RHEL **10** 문서다. Rocky 관리 입문서는 릴리스별로 고정된 책이 아니므로 개념에 사용하고, 설치 안내는 제목이 *Installing Rocky Linux 10*인 문서를 사용한다. RHEL 10의 설명도 Rocky의 패키지 빌드·기본값·현재 설정을 대신 증명하지 않는다. 설정 시 VM의 설치 버전과 해당 `man`을 대조한다. 최신 upstream 매뉴얼의 새 옵션을 Rocky 10에 그대로 있다고 가정하지 않는다.
 
 **존재만 알기**는 용도와 필요해질 상황을 말할 수 있으면 충분하다. **이번에 미루기**는 현재 단일 VM·필수 과제의 범위에서 내부 원리나 확장 설정을 생략한다는 뜻이다. 각 구간에 다시 읽을 시점을 적었다. 읽거나 안내받은 내용과 직접 수행·검증한 내용은 [학습 기록](learning-log.md)에서 구분한다.
 
@@ -57,7 +57,7 @@ sda                 30G disk
 - `/boot`는 비암호화 Standard Partition이다. 나머지는 **LUKS → 열린 암호화 장치 → PV → VG → LV** 순서다. 개별 LV마다 LUKS를 추가하는 구조가 아니다.
 - VG `LVM`에는 **약 8 GiB의 VFree**를 남긴다. VG 미할당 공간은 `lsblk`에 별도 행으로 나오지 않는다. 메타데이터·반올림에 따라 실제 값은 다르다. 계산은 디스크가 약 `30G`로 보이는 경우이며 GB/GiB 표기 차이가 있으면 잔여량도 달라진다.
 - 장치명, 파티션 번호·순서, UUID, 암호화 매핑 이름은 달라질 수 있다. 글자 그대로보다 계층·파일시스템·마운트·용량을 비교한다. 설치 ISO의 `sr0` 등은 생략했다.
-- root 10 GiB는 설치 후 사용량을 확인할 초기 배정이다. 용량 선택 이유와 ext4 축소 조건은 학습 기록에 둔다.
+- root 10 GiB는 설치 후 사용량을 확인할 초기 배정이다. 용량 선택 이유는 아래 표와 대조한다. ext4 축소는 파일시스템을 언마운트하고 먼저 줄인 뒤 LV를 줄이는 순서이므로 실행 중인 root는 별도 부팅 환경이 필요하다.
 
 ### 이 목록과 크기를 고른 이유
 
@@ -99,11 +99,11 @@ sudo lvs
 | 구분 | 도달할 상태 | 확인 방법 |
 |---|---|---|
 | 과제 필수 | 최신 안정 Debian/Rocky, 최소 서비스, X.org·Wayland 등 그래픽 서버 없음 | `cat /etc/os-release`, 설치 패키지·실행 서비스 확인. 버전 출력만으로 최신 안정 여부나 그래픽 서버 부재를 증명하지는 못한다. |
-| 우리 선택 | Rocky Minimal | 설치기 화면의 10.2 표시와 실제 설치·부팅 검증을 구분하고 공식 릴리스 정보와 대조 |
+| 우리 선택 | Rocky Minimal | 설치 매체와 실제 설치 OS 버전을 공식 릴리스 정보와 대조하고 최소 구성으로 부팅되는지 확인 |
 | 과제 필수 + 로그인 대입 | root 외에 `jungblee`, 소속 그룹에 `user42`와 `sudo` 포함 | `id jungblee`, `getent group user42`, `getent group sudo`. Rocky의 `wheel`만으로 대신하지 않는다. |
 | 과제 필수 + 로그인 대입 | hostname `jungblee42` | `hostnamectl --static`; 재부팅 뒤에도 확인 |
 
-평가에서는 새 사용자를 만들고 그룹에 넣으며 호스트명을 변경할 수 있어야 한다. 이를 준비하며 사용자·그룹 생성, 기본·보조 그룹, 파일 소유권과 권한을 작은 실습으로 확인한다. hostname 설정은 사용자 보고와 셸 프롬프트 표시를 확인했으며 별도 조회·재부팅 지속성 검증은 남아 있다. Rocky의 Kdump 설정은 과제에서 요구하지 않는다.
+평가에서는 새 사용자를 만들고 그룹에 넣으며 호스트명을 변경할 수 있어야 한다. 이를 준비하며 사용자·그룹 생성, 기본·보조 그룹, 파일 소유권과 권한을 작은 실습으로 확인한다. 호스트명은 셸 프롬프트만 보지 않고 별도 조회와 재부팅 후 지속성을 확인한다. Rocky의 Kdump 설정은 과제에서 요구하지 않는다.
 
 ## 3. 비밀번호·PAM
 
@@ -115,7 +115,7 @@ sudo lvs
 
 **존재와 용도만:** `auth`, `account`, `session`은 각각 인증·계정 허용·세션 처리를 맡고, authselect에는 사용자 정의 프로필이 있다. 로그인 실패 원인을 분리하거나 기존 프로필로 표현 못 하는 요구가 생길 때 더 읽는다.
 
-**이번에 미룰 것과 이유:** PAM 모듈 C 구현, yescrypt 계산 내부, MFA·원격 인증 설계는 현재 연결된 품질 모듈에 과제 규칙을 적용하는 데 필요하지 않다. 자체 인증 개발이나 해시·인증 방식 변경 때 학습한다. shadow 소스는 문서만으로 불명확했던 drop-in 지원 빌드를 확인한 보조 근거이며 필독 소스 분석 과제가 아니다.
+**이번에 미룰 것과 이유:** PAM 모듈 C 구현, yescrypt 계산 내부, MFA·원격 인증 설계는 현재 연결된 품질 모듈에 과제 규칙을 적용하는 데 필요하지 않다. 자체 인증 개발이나 해시·인증 방식 변경 때 학습한다. shadow 소스는 drop-in 지원이 빌드 조건에 달려 있음을 확인하는 보조 근거이며 필독 소스 분석 과제가 아니다.
 
 PAM은 서비스가 인증·계정·비밀번호·세션 처리를 연결하는 틀이다. 비밀번호 품질 검사와 계정별 만료 정보는 따로 확인한다. Rocky의 authselect 관리 여부와 실제 PAM 경로를 파악하고, 기본값 변경만으로 기존 계정도 바뀌었다고 가정하지 않는다.
 
@@ -123,9 +123,9 @@ PAM은 서비스가 인증·계정·비밀번호·세션 처리를 연결하는 
 
 authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프로필과 구성 상태, 실제 `password` 연결을 먼저 읽는다. [RHEL 10 authselect 공식 문서](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/configuring_authentication_and_authorization_in_rhel/configuring-user-authentication-using-authselect)도 관리 파일의 수동 편집을 경고한다. `cat /etc/pam.d/passwd`로 진입점을 읽고, 그 파일의 `password` 항목이 참조하는 `system-auth`를 `cat /etc/pam.d/system-auth`로 따라간다. `authselect current`와 `authselect check`는 관리 상태를 확인하는 조회다. 구체적인 순서는 [치트시트](cheatsheet.md)에 둔다.
 
-사용자 화면에서 authselect는 `local` 프로필, 추가 기능 없음, 구성 유효 상태였다. `passwd`가 `system-auth`의 비밀번호 스택을 호출하고, 그 안에는 `pam_pwquality.so` → `pam_unix.so` → `pam_deny.so`가 연결되어 있다. `requisite`인 품질 모듈이 실패하면 해당 스택은 즉시 실패로 돌아간다. `pam_unix.so`의 `use_authtok`는 앞에서 받은 새 비밀번호를 이용해 로컬 비밀번호 갱신을 이어 간다. 품질 모듈이 이미 연결되어 있으므로 이번 단계에서 PAM 파일을 직접 편집할 필요는 없다. 정확한 화면 내용은 [학습 기록](learning-log.md)에 둔다.
+`passwd`가 참조하는 비밀번호 스택에서 품질 검사와 로컬 갱신의 연결을 확인한다. 예를 들어 `pam_pwquality.so` → `pam_unix.so` → `pam_deny.so` 구조라면, `requisite`인 품질 모듈의 실패는 해당 스택을 즉시 실패로 돌려보낸다. `pam_unix.so`의 `use_authtok`는 앞에서 받은 새 비밀번호를 이용한다. 필요한 품질 모듈이 이미 연결되어 있다면 규칙 설정을 위해 PAM 파일 자체를 다시 편집할 필요는 없다.
 
-`cat /etc/security/pwquality.conf`와 `ls /etc/security/pwquality.conf.d` 결과에 대해 사용자는 본체가 모두 주석이고 디렉터리는 비어 있다고 보고했다. 앞서 확인한 PAM 품질 모듈에도 인수가 없어 별도 품질 파일 작성을 안내했다. libpwquality는 drop-in을 먼저 파일명 ASCII 순서로 읽고 본체를 나중에 읽으므로, 본체에 같은 활성 항목이 있으면 drop-in 값을 덮는다. PAM 모듈 인수는 설정 파일보다 우선한다. 따라서 본체의 중복 설정도 확인한다. 이는 앞의 login.defs/libeconf와 읽기 순서가 다르다. 근거: [pwquality.conf 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod), [pam_pwquality 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod). 이후 화면에서 값 없는 `enforce_for_root` 저장·편집 종료와 jungblee의 정상 변경 성공을 확인했다. 각 품질 위반 조건의 거절은 별도로 검증한다.
+품질 규칙 작성 전 본체·분리 파일·PAM 인수의 활성 설정을 함께 읽는다. libpwquality는 drop-in을 먼저 파일명 ASCII 순서로 읽고 본체를 나중에 읽으므로, 본체에 같은 활성 항목이 있으면 drop-in 값을 덮는다. PAM 모듈 인수는 설정 파일보다 우선한다. 따라서 본체의 중복 설정도 확인한다. 이는 앞의 login.defs/libeconf와 읽기 순서가 다르다. 근거: [pwquality.conf 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod), [pam_pwquality 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod). 각 품질 위반 조건의 거절은 별도로 검증한다.
 
 `/etc/login.defs.d/*.defs` 지원은 shadow-utils의 libeconf 사용 빌드에 달려 있다. [shadow 4.15.0의 읽기 코드](https://github.com/shadow-maint/shadow/blob/4.15.0/lib/getdef.c)는 `USE_ECONF` 조건으로 libeconf를 호출하며, [libeconf 공식 설명](https://github.com/openSUSE/libeconf/blob/master/README.md)은 분리된 설정 파일의 읽기 구조를 설명한다. libeconf는 기본 파일 뒤에 drop-in을 읽으며 파일명 사전순으로 처리한 뒤의 값이 앞의 값을 덮는다. 따라서 `/etc/login.defs.d/90-local.defs`에 세 기간 값을 모을 수 있지만, 더 뒤의 파일에 같은 키가 있으면 그 값이 우선한다. VM에서는 패키지 의존성으로 지원 빌드인지 확인하고 별도 파일 방식을 사용한다. 미지원이면 원본 파일 편집을 대안으로 선택하며 두 절차를 연달아 수행하지 않는다. 원본의 기존 변경을 복구하거나 삭제할 필요는 없다. 어느 방식도 기존 계정의 기간 값을 바꾸는 `chage`를 대신하지 않는다.
 
@@ -133,11 +133,11 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 `sudo chage -l jungblee`, `sudo chage -l root`로 기간 정책을 확인한다. 문자 조건은 실제 적용되는 인증·품질 정책과 허용/거절 동작을 대조한다. `chage`만으로 길이·문자 조건은 검증되지 않는다. 비밀번호 자체는 문서나 증거에 남기지 않는다.
 
-최신 사용자 화면에서 jungblee가 sudo 없이 `passwd`를 실행해 이전 비밀번호 입력을 거친 뒤 변경에 성공했다. `chage -l jungblee`와 `sudo chage -l root`는 모두 마지막 변경일 **2026-10-13**, 만료일 **2026-11-12**, 최소 **2**·최대 **30**·경고 **7**을 표시했다. 이 날짜·기간 체크포인트는 완료했다. root 변경 명령 자체의 성공 메시지는 제공되지 않았으므로 두 계정의 조회 결과와 jungblee의 변경 성공 출력을 구분한다. 이전 `never` 출력은 학습 기록의 과거 상태다. `Password inactive`와 `Account expires`의 `never`는 각각 비밀번호 만료 후 비활성 기한과 계정 만료일을 설정하지 않았다는 뜻이며 이번에는 추가 설정하지 않는다.
+기간 검증 기준은 두 계정의 마지막 변경일이 실제 변경 날짜이고 만료일은 그로부터 30일 뒤이며 최소 2일·최대 30일·경고 7일이 유지되는 것이다. `Password inactive`와 `Account expires`는 각각 비밀번호 만료 후 비활성 기한과 계정 만료일로, 비밀번호 만료와 별개다. 이 과제 범위에서는 추가 만료 기한을 설정하지 않는다.
 
-### 이번에 안내한 품질 규칙
+### 품질 규칙과 선택 이유
 
-사용자 보고를 바탕으로 `/etc/security/pwquality.conf.d/90-local.conf` 작성을 안내했다. 정확한 파일 내용과 명령은 [치트시트](cheatsheet.md#5-별도-품질-설정-파일-작성)에 둔다. 아래는 설정값의 선택 이유이며, 파일 저장이나 검증 성공을 기록한 표가 아니다. 근거는 [pwquality.conf 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod)의 각 옵션과 [pam_pwquality 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod)의 credit·비교·root 처리 설명이다.
+품질 규칙은 `/etc/security/pwquality.conf.d/90-local.conf`에 모으는 구성을 선택한다. 정확한 파일 내용과 명령은 [치트시트](cheatsheet.md#5-별도-품질-설정-파일-작성)에 둔다. 아래는 각 설정값이 과제 조건과 연결되는 이유다. 근거는 [pwquality.conf 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod)의 각 옵션과 [pam_pwquality 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod)의 credit·비교·root 처리 설명이다.
 
 | 항목 | 의미와 선택 이유 |
 |---|---|
@@ -150,7 +150,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 | `enforcing = 1` | 품질 실패를 경고만 하고 넘기지 않고 거절한다. 기본값 1을 정책에 명시한다. |
 | `enforce_for_root` | 안내에서는 값 없이 켜는 표기를 사용한다. root가 변경할 때도 품질 실패를 거절하지만, root는 이전 암호를 입력하지 않아 이전·새 비밀번호 비교는 생략된다. |
 
-사전 검사 등 나머지 기본값은 유지한다. 일반 계정의 이전 비밀번호 비교는 사용자가 직접 `passwd`를 실행하는 경로에서 검증해야 한다. 관리자의 대리 변경으로는 `difok` 동작을 입증할 수 없다. 재실습 순서는 jungblee의 `passwd` 성공 → `sudo passwd root` 성공 → `chage -l jungblee`와 `sudo chage -l root` 조회다. 마지막 변경일이 실제 날짜로 바뀌고 만료일은 30일 뒤이며 2/30/7이 유지되는지 확인한다. 정상 변경 성공은 각 위반 조건을 거절한다는 증거와 별개다. 이후 재변경에는 최소 2일 제한이 영향을 줄 수 있다. 오류가 나면 비밀번호를 제외한 메시지를 보고 판단한다. 비밀번호는 기록하지 않는다. 다음 학습은 sudo 권한·감사 로그이며, 품질 위반 거절 테스트는 남은 검증으로 유지한다.
+사전 검사 등 나머지 기본값은 유지한다. 일반 계정의 이전 비밀번호 비교는 사용자가 직접 `passwd`를 실행하는 경로에서 검증해야 한다. 관리자의 대리 변경으로는 `difok` 동작을 입증할 수 없다. 재실습 순서는 jungblee의 `passwd` 성공 → `sudo passwd root` 성공 → `chage -l jungblee`와 `sudo chage -l root` 조회다. 마지막 변경일이 실제 날짜로 바뀌고 만료일은 30일 뒤이며 2/30/7이 유지되는지 확인한다. 정상 변경 성공은 각 위반 조건을 거절한다는 증거와 별개다. 이후 재변경에는 최소 2일 제한이 영향을 줄 수 있다. 오류가 나면 비밀번호를 제외한 메시지를 보고 판단한다. 비밀번호는 기록하지 않는다.
 
 ## 4. sudo 정책과 감사 로그
 
@@ -160,17 +160,17 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 **로그 검증에서 읽을 범위:** [공식 sudoreplay 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/sudoreplay.man.in)과 설치된 `man sudoreplay`의 `DESCRIPTION`에서 ID·TSID 관계, `-d`의 디렉터리 지정, `-l`의 세션 목록을 읽는다. `-f`의 쉼표로 구분한 스트림 선택과 `stdin`·`ttyin`을 읽는다. 기본 재생 대상은 출력 스트림이며 입력은 별도로 선택한다. 고급 검색식·속도 조절은 로그가 많아지거나 긴 세션을 조사할 때 읽는다.
 
-**이번에 미룰 것과 이유:** 중앙 로그 서버·LDAP sudo 규칙·RHEL system roles는 단일 VM의 로컬 정책에 필요하지 않다. 여러 서버에 같은 권한을 배포하거나 로그를 외부 보존할 때 돌아온다. 이 안내는 sudo 정책 구현 완료 기록이 아니다.
+**이번에 미룰 것과 이유:** 중앙 로그 서버·LDAP sudo 규칙·RHEL system roles는 단일 VM의 로컬 정책에 필요하지 않다. 여러 서버에 같은 권한을 배포하거나 로그를 외부 보존할 때 돌아온다.
 
 ### 현재 정책부터 읽기
 
-전체 목표를 세 묶음으로 나눈다. **권한 허용**은 누가 어느 호스트에서 어떤 사용자 권한으로 어떤 명령을 실행할 수 있는지, **실행 조건**은 실패 3회·오류 메시지·TTY·제한된 경로, **기록**은 입력·출력을 `/var/log/sudo/`에 남기는 것이다. 지금은 첫 묶음의 현재 상태부터 읽는다.
+전체 목표를 세 묶음으로 나눈다. **권한 허용**은 누가 어느 호스트에서 어떤 사용자 권한으로 어떤 명령을 실행할 수 있는지, **실행 조건**은 실패 3회·오류 메시지·TTY·제한된 경로, **기록**은 입력·출력을 `/var/log/sudo/`에 남기는 것이다. 첫 묶음의 기존 정책을 읽은 뒤 실행 조건과 기록을 구성한다.
 
-`sudo -l`로 jungblee에 적용되는 허용 명령과 Defaults를 보고, `sudo cat /etc/sudoers`에서 해당 규칙의 근거를 찾고, `sudo ls /etc/sudoers.d`로 별도 파일 목록을 본다. `wheel`·`sudo` 그룹 가입은 확인했지만 실제 권한은 적용되는 sudoers 규칙이 결정한다. `%wheel`처럼 그룹을 가리키는 활성 규칙에서 **누가 → 어느 호스트 → 어떤 사용자로 → 어떤 명령**을 읽는다. 화면에서 `sudo -l`의 `(ALL) ALL`, `secure_path=/sbin:/bin:/usr/sbin:/usr/bin`과 기본 환경 항목을 확인했다. 본체에는 활성 `%wheel ALL=(ALL) ALL`, `root ALL=(ALL) ALL`, `#includedir /etc/sudoers.d`가 있고 wheel의 NOPASSWD 규칙은 주석이었다. 별도 디렉터리가 비었다는 것은 사용자 보고다.
+`sudo -l`로 적용되는 허용 명령과 Defaults를 보고, sudoers 본체와 포함 파일에서 해당 규칙의 근거를 찾는다. 그룹 가입 자체가 권한을 주는 것은 아니며 적용되는 sudoers 규칙이 결정한다. `%wheel`처럼 그룹을 가리키는 활성 규칙에서 **누가 → 어느 호스트 → 어떤 사용자로 → 어떤 명령**을 읽는다. 주석과 활성 규칙, 암호를 요구하는 규칙과 NOPASSWD 규칙을 구분한다.
 
-본체의 `@include`·`@includedir` 또는 이전 표기 `#include`·`#includedir`도 찾는다. 후자의 `#`를 일반 주석으로 넘기지 않는다. 디렉터리에 파일이 있다는 것과 정책으로 읽힌다는 것은 다르므로 include 지시와 목록을 연결한다. `Defaults`는 실행 조건·동작 옵션을 정하며 허용 명령 규칙과 구분한다. `%wheel ALL=(ALL) ALL`은 wheel 구성원 → 모든 호스트 → 모든 대상 사용자 → 모든 명령이라는 네 부분으로 읽는다. 기존 `secure_path`는 sudo가 사용하는 PATH이며 절대 경로로 지정한 명령을 막는 허용 목록이 아니다. 기존 권한 규칙과 이 경로 값은 유지하고 중복 추가하지 않는다.
+본체의 `@include`·`@includedir` 또는 이전 표기 `#include`·`#includedir`도 찾는다. 후자의 `#`를 일반 주석으로 넘기지 않는다. 디렉터리에 파일이 있다는 것과 정책으로 읽힌다는 것은 다르므로 include 지시와 목록을 연결한다. `Defaults`는 실행 조건·동작 옵션을 정하며 허용 명령 규칙과 구분한다. `%wheel ALL=(ALL) ALL`은 wheel 구성원 → 모든 호스트 → 모든 대상 사용자 → 모든 명령이라는 네 부분으로 읽는다. 기존 `secure_path`는 sudo가 사용하는 PATH이며 절대 경로로 지정한 명령을 막는 허용 목록이 아니다. 이 실습의 경로 선택은 `/sbin:/bin:/usr/sbin:/usr/bin`이다. 기본 시스템 관리·실행 파일 디렉터리로 검색 범위를 한정한다. 필요한 권한 규칙과 이 경로가 이미 있으면 중복 추가하지 않는다.
 
-**sudo 필수 목표:** 인증 실패 시 시도 3회 제한, 직접 정한 오류 메시지, 작업의 입력·출력 모두 `/var/log/sudo/` 아래 기록, TTY 모드 활성화, sudo에서 사용 가능한 경로 제한(`secure_path` 관련 개념). 오류 문구는 아래 간결한 문장을 선택했고, 경로는 확인한 기존 값을 유지한다.
+**sudo 필수 목표:** 인증 실패 시 시도 3회 제한, 직접 정한 오류 메시지, 작업의 입력·출력 모두 `/var/log/sudo/` 아래 기록, TTY 모드 활성화, sudo에서 사용 가능한 경로 제한(`secure_path` 관련 개념). 오류 문구는 아래 간결한 문장을 선택했고, 경로는 위 네 디렉터리를 기준으로 기존 설정과 대조한다.
 
 `sudo visudo -c`로 문법, `sudo -l`로 적용 정책을 살핀다. 별도로 실패 시도 제한·메시지·TTY 요구를 확인하고 직접 수행한 sudo 작업의 입출력 로그와 대조한다. 문법 통과만으로 동작 검증을 대신하지 않는다.
 
@@ -192,7 +192,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 전체 검사 다음에는 비밀이 아닌 문장으로 기록을 만들어 본다. `sudo cat`을 실행하고 `b2br-log-test`를 입력해 Enter를 누르면 cat이 입력을 그대로 출력한다. 빈 줄에서 Ctrl+D로 종료한다. 이어 `sudo sudoreplay -d /var/log/sudo -l`로 세션 목록을 보고 cat 명령의 TSID를 찾는다. 재생 명령의 ID에는 그 실제 값을 넣는다. `-d`가 필요한 이유는 우리가 기본 경로 대신 `/var/log/sudo`를 선택했기 때문이다.
 
-재생에서 문장을 확인하면 해당 기록 생성과 출력 재생을 확인한 것이다. 목록만 보거나 기본 재생을 했다고 모든 입력 스트림까지 검증한 것으로 기록하지 않는다. 문장이 두 번 보이더라도 터미널 에코와 cat 출력일 수 있으므로 입력 스트림의 독립적인 증거로 보지 않는다. `stdin`은 표준입력, `ttyin`은 터미널 입력으로 기록된 스트림이다. 같은 세션에 `-f stdin,ttyin`을 지정해 두 입력 종류를 함께 선택하고 테스트 문장을 대조한다. 한 종류에서 문장이 보이지 않는 것만으로 입력 기록 전체의 부재를 단정하지 않는다. 함께 재생해도 문장이 없으면 다음으로 세션 파일 구성을 확인한다. 문장이 보이면 선택한 입력 중에 기록된 증거지만 두 종류 각각의 성공을 뜻하지는 않는다. 재실습은 [치트시트](cheatsheet.md#9-로그-생성과-출력-재생), 실제 관찰은 [학습 기록](learning-log.md)에 둔다. 이후 인증 실패 횟수와 TTY 조건을 검증한다.
+재생에서 문장을 확인하면 해당 기록 생성과 출력 재생을 확인한 것이다. 목록만 보거나 기본 재생을 했다고 모든 입력 스트림까지 검증한 것으로 기록하지 않는다. 문장이 두 번 보이더라도 터미널 에코와 cat 출력일 수 있으므로 입력 스트림의 독립적인 증거로 보지 않는다. `stdin`은 표준입력, `ttyin`은 터미널 입력으로 기록된 스트림이다. 같은 세션에 `-f stdin,ttyin`을 지정해 두 입력 종류를 함께 선택하고 테스트 문장을 대조한다. 문장이 보이면 선택한 입력 중에 기록된 증거지만 두 종류 각각의 성공을 뜻하지는 않는다. 재실습은 [치트시트](cheatsheet.md#9-로그-생성과-출력-재생), 실제 관찰은 [학습 기록](learning-log.md)에 둔다. 이후 인증 실패 횟수와 TTY 조건을 검증한다.
 
 ## 5. SSH·firewalld·SELinux
 
@@ -252,15 +252,15 @@ cron의 사용자·환경·경로와 wall의 수신 대상을 구분한다. 사�
 
 **이번에 미룰 것과 이유:** SHA-1 알고리즘 구현·충돌 공격 수학, 다른 하이퍼바이저의 내부 구조, 보너스 웹 서비스 구축은 현재 필수 제출·설명 목표가 아니다. 암호학 분석·가상화 개발·보너스를 새 목표로 삼을 때 돌아온다. 비교를 위해 다른 OS 전체를 재설치할 필요는 없다는 것은 학습 범위 판단이며 비교 자체를 면제한다는 뜻이 아니다.
 
-재부팅 후 각 목표를 다시 대조하고 선택 이유를 설명한다. README와 실제 디스크 SHA-1을 담은 `signature.txt`가 최종 제출 대상이다. VM은 Git에 넣지 않는다. 각 평가는 스냅샷 없이 시작하고 평가용 스냅샷은 이후 생성해 종료 시 삭제한다. VM 재실행으로 서명이 달라질 수 있으므로 실제 디스크와 제출 서명을 대조한다. README 등 제출 세부 조건은 기존 가이드에서 확인한다. 현재 서명 생성이나 VM 검증을 완료했다는 뜻은 아니다.
+재부팅 후 각 목표를 다시 대조하고 선택 이유를 설명한다. README와 실제 디스크 SHA-1을 담은 `signature.txt`가 최종 제출 대상이다. VM은 Git에 넣지 않는다. 각 평가는 스냅샷 없이 시작하고 평가용 스냅샷은 이후 생성해 종료 시 삭제한다. VM 재실행으로 서명이 달라질 수 있으므로 실제 디스크와 제출 서명을 대조한다. README 등 제출 세부 조건은 기존 가이드에서 확인한다.
 
-README는 현재 진행 중 문서다. 최종 첫 줄은 `*This project has been created as part of the 42 curriculum by jungblee.*`를 유지하고 Description·Instructions·Resources, 참고 자료와 AI 사용 작업·범위를 채운다. OS 선택 이유와 장단점, 파티션·보안·사용자·서비스 설계, Debian/Rocky·AppArmor/SELinux·UFW/firewalld·VirtualBox/UTM 비교를 실제 학습에 근거해 정리한다. Debian은 이 비교에 필요한 범위에서 읽는다. 선택한 OS와 도구를 설명하고 원문의 apt/aptitude 질문 예시도 비교 맥락에서 살펴본다. 평가 지침에 포함되면 작은 스크립트·동작 변경도 직접 수행할 준비를 한다.
+README의 첫 줄은 `*This project has been created as part of the 42 curriculum by jungblee.*`를 유지하고 Description·Instructions·Resources, 참고 자료와 AI 사용 작업·범위를 채운다. OS 선택 이유와 장단점, 파티션·보안·사용자·서비스 설계, Debian/Rocky·AppArmor/SELinux·UFW/firewalld·VirtualBox/UTM 비교를 실제 학습에 근거해 정리한다. Debian은 이 비교에 필요한 범위에서 읽는다. 선택한 OS와 도구를 설명하고 원문의 apt/aptitude 질문 예시도 비교 맥락에서 살펴본다. 평가 지침에 포함되면 작은 스크립트·동작 변경도 직접 수행할 준비를 한다.
 
-서명 대상은 VM 설정이나 ISO가 아니라 실제 `.vdi`(UTM은 `.qcow2`)다. 원문은 서명 불일치와 그래픽 서버 설치를 0점 조건으로 명시한다. VirtualBox 사용이 필수이며 사용할 수 없을 때 UTM을 사용한다. README의 설치·실행 설명과 각 정책은 아직 검증된 최종 결과로 채우지 않는다.
+서명 대상은 VM 설정이나 ISO가 아니라 실제 `.vdi`(UTM은 `.qcow2`)다. 원문은 서명 불일치와 그래픽 서버 설치를 0점 조건으로 명시한다. VirtualBox 사용이 필수이며 사용할 수 없을 때 UTM을 사용한다. README의 설치·실행 설명과 설계 근거는 실제 재현 가능한 구성에 맞춘다.
 
 ## 구간별 공식 자료 읽기
 
-전체를 한꺼번에 따라 하지 않고 해당 구간의 개요와 필요한 항목만 읽는다. Rocky 입문서는 버전이 섞일 수 있어 Rocky 10의 설치된 도구·매뉴얼과 RHEL 10 자료를 함께 대조한다. `man`은 실제 VM에서 해당 패키지의 매뉴얼을 읽는 방법이며 이번에 실행했다는 뜻이 아니다.
+전체를 한꺼번에 따라 하지 않고 해당 구간의 개요와 필요한 항목만 읽는다. Rocky 입문서는 버전이 섞일 수 있어 Rocky 10의 설치된 도구·매뉴얼과 RHEL 10 자료를 함께 대조한다. `man`은 실제 VM에 설치된 패키지 버전의 매뉴얼을 읽는 방법이다.
 
 | 구간 | 입문 범위 |
 |---|---|
@@ -272,4 +272,4 @@ README는 현재 진행 중 문서다. 최종 첫 줄은 `*This project has been
 | 6 | [Rocky cron](https://docs.rockylinux.org/guides/automation/cron_jobs_howto/)의 예약 구조, `man 5 crontab`, `man wall`, 각 지표 도구의 매뉴얼 |
 | 7 | 원문 인쇄 12–13쪽 README, 16–17쪽 제출·평가. 기존 번역에서 원문 예시와 해설을 구분 |
 
-명령 참고: [firewall-cmd 공식 문서](https://firewalld.org/documentation/man-pages/firewall-cmd.html), [OpenSSH sshd 공식 매뉴얼](https://man.openbsd.org/sshd.8). 설치된 버전의 도움말도 함께 확인한다. 여기에 적은 VM 확인 명령은 이번 문서 작업에서 실행하지 않았다.
+명령 참고: [firewall-cmd 공식 문서](https://firewalld.org/documentation/man-pages/firewall-cmd.html), [OpenSSH sshd 공식 매뉴얼](https://man.openbsd.org/sshd.8). 설치된 버전의 도움말도 함께 확인한다.
