@@ -121,7 +121,7 @@ enforcing = 1
 enforce_for_root
 ```
 
-사전 검사 등 나머지 기본 설정은 유지한다. 화면의 설정값 확인과 실제 적용·동작 검증은 구분한다. `enforce_for_root = 1`도 libpwquality 1.4.5에서 켜짐으로 처리되지만 `= 0`으로 끌 수는 없다. 안내에서는 값 없는 표기를 유지한다.
+사전 검사 등 나머지 기본 설정은 유지한다. 화면의 설정값 확인과 실제 적용·동작 검증은 구분한다.
 
 ## 6. 비밀번호 변경과 날짜 확인
 
@@ -150,4 +150,14 @@ sudo chage -l root
 
 오류가 나면 다음 변경으로 넘어가지 않고 비밀번호를 제외한 오류 메시지만 확인한다. 성공 후 재변경은 최소 2일 제한의 영향을 받을 수 있으므로 실제 오류를 보고 판단한다. `Password inactive`·`Account expires`의 `never`는 이번에 추가 설정할 항목이 아니다. 비밀번호는 기록하지 않는다.
 
-다음 학습은 sudo 권한·감사 로그다. 아직 새 sudo 설정은 작성하지 않았다. 이후에는 sudo 정책·로그 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행하며 명령을 추가한다.
+## 7. sudo 현재 정책 읽기
+
+```bash
+sudo -l
+sudo cat /etc/sudoers
+sudo ls /etc/sudoers.d
+```
+
+현재 사용자에게 허용된 명령과 Defaults를 본다. 본체에서 활성 `%wheel` 규칙과 include 지시를 찾아 별도 파일 목록과 연결한다. 그룹 가입 자체와 권한 허용은 다르다. [읽을 부분과 세 묶음의 목표](targets.md#현재-정책부터-읽기)를 참고한다.
+
+조회 결과를 보고 다음에 별도 파일을 visudo로 편집한다. 아직 새 sudo 설정은 작성하지 않았다. 이후에는 실행 조건·입출력 로그 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행한다.

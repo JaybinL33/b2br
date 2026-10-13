@@ -150,19 +150,25 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 | `enforcing = 1` | 품질 실패를 경고만 하고 넘기지 않고 거절한다. 기본값 1을 정책에 명시한다. |
 | `enforce_for_root` | 안내에서는 값 없이 켜는 표기를 사용한다. root가 변경할 때도 품질 실패를 거절하지만, root는 이전 암호를 입력하지 않아 이전·새 비밀번호 비교는 생략된다. |
 
-앞선 화면의 마지막 줄은 `enforce_for_root = 1`이었고 최신 화면에서는 값 없는 `enforce_for_root` 저장·편집 종료를 확인했다. 이 표기의 의미는 [libpwquality 1.4.5 settings.c](https://github.com/libpwquality/libpwquality/blob/libpwquality-1.4.5/src/settings.c)의 `PWQ_TYPE_SET` 처리로 확인했다. 제공된 값을 읽지 않고 1로 켜므로 `= 1`은 허용되고 `= 0`도 끄는 표기가 아니다. 이는 버전을 고정한 구현 근거이며 VM 설치 버전을 새로 검증한 것은 아니다. 문서의 값 없는 표기는 유지한다.
-
 사전 검사 등 나머지 기본값은 유지한다. 일반 계정의 이전 비밀번호 비교는 사용자가 직접 `passwd`를 실행하는 경로에서 검증해야 한다. 관리자의 대리 변경으로는 `difok` 동작을 입증할 수 없다. 재실습 순서는 jungblee의 `passwd` 성공 → `sudo passwd root` 성공 → `chage -l jungblee`와 `sudo chage -l root` 조회다. 마지막 변경일이 실제 날짜로 바뀌고 만료일은 30일 뒤이며 2/30/7이 유지되는지 확인한다. 정상 변경 성공은 각 위반 조건을 거절한다는 증거와 별개다. 이후 재변경에는 최소 2일 제한이 영향을 줄 수 있다. 오류가 나면 비밀번호를 제외한 메시지를 보고 판단한다. 비밀번호는 기록하지 않는다. 다음 학습은 sudo 권한·감사 로그이며, 품질 위반 거절 테스트는 남은 검증으로 유지한다.
 
 ## 4. sudo 정책과 감사 로그
 
-**반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 9쪽과 [RHEL 10 Managing sudo access](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/security_hardening/managing-sudo-access) 8.1 `User authorizations in sudoers`, 8.2 `Granting sudo access to a user`로 권한 위임을 이해한다. 설정 시 VM의 `man sudoers`에서 `Defaults`, `passwd_tries`, `badpass_message`, `requiretty`, `secure_path`, `log_input`, `log_output`, `iolog_dir`를 찾고, `man visudo`의 검사 옵션 `-c`를 읽는다.
+**반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 9쪽과 [RHEL 10 Managing sudo access](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/security_hardening/managing-sudo-access) 8.1 `User authorizations in sudoers`, 8.2 `Granting sudo access to a user`로 권한 위임을 이해한다. 먼저 VM의 `man sudoers`에서 `User specification`, `Defaults`와 include 지시를 읽는다. [공식 sudoers 매뉴얼 원본](https://github.com/sudo-project/sudo/blob/main/docs/sudoers.man.in)에서도 같은 제목을 찾을 수 있다. 설정 시에는 `passwd_tries`, `badpass_message`, `requiretty`, `secure_path`, `log_input`, `log_output`, `iolog_dir`를 찾고, [공식 visudo 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/visudo.man.in)과 VM의 `man visudo`에서 `DESCRIPTION`, `-f`, `-c`를 읽는다. visudo는 동시 편집을 잠그고 저장 전 문법을 검사한다. 별도 파일은 다음 설정 단계에서 visudo로 편집할 예정이다.
 
 **설명할 수 있어야 할 것:** 실행 사용자·대상 사용자·허용 명령, TTY, 명령 검색 경로, 명령 기록과 입출력 기록의 차이다. 이들은 원문이 직접 요구하는 제한과 로그를 검증하는 데 필요하다. 문법 검사 성공과 실패 시도·메시지·로그 동작 성공은 따로 확인한다.
 
 **존재와 용도만:** `sudoreplay`는 입출력 기록을 재생하는 도구다. 로그가 남았는지를 넘어 세션 내용을 검토할 때 해당 매뉴얼을 읽는다.
 
 **이번에 미룰 것과 이유:** 중앙 로그 서버·LDAP sudo 규칙·RHEL system roles는 단일 VM의 로컬 정책에 필요하지 않다. 여러 서버에 같은 권한을 배포하거나 로그를 외부 보존할 때 돌아온다. 이 안내는 sudo 정책 구현 완료 기록이 아니다.
+
+### 현재 정책부터 읽기
+
+전체 목표를 세 묶음으로 나눈다. **권한 허용**은 누가 어느 호스트에서 어떤 사용자 권한으로 어떤 명령을 실행할 수 있는지, **실행 조건**은 실패 3회·오류 메시지·TTY·제한된 경로, **기록**은 입력·출력을 `/var/log/sudo/`에 남기는 것이다. 지금은 첫 묶음의 현재 상태부터 읽는다.
+
+`sudo -l`로 jungblee에 적용되는 허용 명령과 Defaults를 보고, `sudo cat /etc/sudoers`에서 해당 규칙의 근거를 찾고, `sudo ls /etc/sudoers.d`로 별도 파일 목록을 본다. `wheel`·`sudo` 그룹 가입은 확인했지만 실제 권한은 적용되는 sudoers 규칙이 결정한다. `%wheel`처럼 그룹을 가리키는 활성 규칙에서 **누가 → 어느 호스트 → 어떤 사용자로 → 어떤 명령**을 읽는다. 우리 VM에 어떤 규칙이 있는지는 조회 결과로 확인한다.
+
+본체의 `@include`·`@includedir` 또는 이전 표기 `#include`·`#includedir`도 찾는다. 후자의 `#`를 일반 주석으로 넘기지 않는다. 디렉터리에 파일이 있다는 것과 정책으로 읽힌다는 것은 다르므로 include 지시와 목록을 연결한다. `Defaults`는 실행 조건·동작 옵션을 정하며 허용 명령 규칙과 구분한다. 조회 결과를 확인한 뒤 필요한 별도 설정을 정한다. 이번 단계에서는 새 sudo 정책을 작성하지 않는다.
 
 **sudo 필수 목표:** 인증 실패 시 시도 3회 제한, 직접 정한 오류 메시지, 작업의 입력·출력 모두 `/var/log/sudo/` 아래 기록, TTY 모드 활성화, sudo에서 사용 가능한 경로 제한(`secure_path` 관련 개념). 오류 메시지 내용과 제한 경로의 최종 값은 아직 미선택이다.
 
