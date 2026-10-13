@@ -289,3 +289,10 @@ session include system-auth
 sudo의 auth·account 처리도 `system-auth`로 연결됨을 확인했다. 앞서 확인한 system-auth auth 스택에는 `pam_faillock`이 없었다. 이를 근거로 일반 사용자 터미널에서 `sudo -k` 다음 `sudo -v`를 실행하고, 틀린 입력 세 번으로 지정 오류 문구와 네 번째 요청 없이 종료되는지를 한 번만 확인하도록 안내했다. 기존 targets·치트시트의 인증 경로 확인 후 검사 순서와 일치한다.
 
 검사 결과는 아직 받지 않았으므로 `passwd_tries=3`·`badpass_message`의 동작 검증은 미완료다. 이번 작업은 전달된 화면 근거의 문서화이며 VM 명령 실행이나 보안 설정 변경은 하지 않았다.
+
+
+## 2026-10-13 — sudo 인증 실패 검사 완료와 원격 접속 구간 시작
+
+사용자 최신 화면을 확인한 주 대화의 전달 근거: `sudo -k` 후 `sudo -v`에서 비밀번호 요청 세 번, 재시도 중 `Authentication failed. Please try again.` 두 번, 마지막 `sudo: 3 incorrect password attempts`와 셸 복귀가 보였다. `passwd_tries=3`과 `badpass_message` 체크포인트를 완료했다. 그 뒤 대기 중인 프롬프트는 새로 실행한 `sudo -v`의 요청이므로 이전 호출의 네 번째 시도가 아니다. 올바른 비밀번호 입력 또는 Ctrl+C를 안내했다.
+
+이어서 sshd·firewalld·SELinux의 역할과 일반 사용자 4242 접속·root SSH 거절 목표를 설명했다. `systemctl is-active sshd firewalld`, `systemctl is-enabled sshd firewalld`, `getenforce`, `ip -br addr` 조회를 안내했으며 결과는 아직 받지 않았다.

@@ -218,6 +218,8 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 **설명할 수 있어야 할 것:** sshd의 리스닝·로그인 허용, 방화벽의 zone·서비스·포트와 실행/영구 설정, SELinux의 라벨·포트 유형·허용 정책은 서로 다른 층이다. 4242 일반 사용자 접속과 root 거절을 각각 확인해야 하므로 어느 층에서 막혔는지 구분한다. 설정 시 VM의 `man sshd_config`에서 `Port`, `PermitRootLogin`, `Include`, `Match`, `man firewall-cmd`에서 `--permanent`, `--reload`, 조회 옵션, `man semanage-port`에서 포트 유형을 읽는다. OpenSSH의 [공식 참조](https://man.openbsd.org/sshd_config)는 개념 대조용이며 설치 버전의 옵션·최종 적용값을 우선한다.
 
+**시작 조회의 목적:** sshd는 SSH 접속과 로그인을 처리하고, firewalld는 네트워크 트래픽의 허용 범위를 정하며, SELinux는 sshd 같은 프로세스가 접근할 자원·포트를 정책으로 제한한다. 먼저 서비스의 현재 실행 상태와 부팅 시 활성화 설정을 구분하고, SELinux 현재 모드와 VM 인터페이스·주소를 확인한다. 이 조회만으로 4242 리스닝·외부 접속·root 거절을 완료 처리하지 않는다. 결과를 바탕으로 설정과 실제 접속을 차례로 확인한다. [시작 조회와 결과 읽기](cheatsheet.md#12-sshfirewalldselinux-시작-조회).
+
 **존재와 용도만:** SSH 공개키 인증은 비밀번호 외의 인증 방식이고 SELinux 거절 로그는 정책 문제를 추적하는 단서다. 공개키 방식이 필요하거나 정상 설정 후에도 거절될 때 해당 부분을 더 읽는다. Enforcing·Permissive·Disabled의 차이 자체는 필수 이해 범위다.
 
 **이번에 미룰 것과 이유:** SSH 암호 알고리즘 수학·스마트카드·점프 호스트, nftables 내부 규칙 생성, 자체 SELinux 정책 모듈 작성은 이번 접속 경로의 요구가 아니다. 인증 인프라 확장이나 기존 정책으로 해결할 수 없는 서비스 운영 때 학습한다. firewalld·SELinux를 끄는 것을 범위 축소로 삼지 않는다.

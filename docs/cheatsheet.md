@@ -253,6 +253,26 @@ sudo -v
 
 프롬프트마다 의도적으로 틀린 값을 입력한다. 재시도 중 `Authentication failed. Please try again.`이 표시되고, 세 번째 실패 뒤 네 번째 비밀번호 요청 없이 종료되는지 확인한다. 마지막 실패 요약 문구와 사용자 지정 문구는 다르므로 문구가 정확히 세 번 출력될 것을 요구하지 않는다. 프롬프트가 없거나 조기 종료·잠금 메시지가 나오면 반복하지 말고 원인을 확인한다. 실제 비밀번호나 입력값은 기록하지 않는다.
 
+## 12. SSH·firewalld·SELinux 시작 조회
+
+일반 사용자 셸에서 각 줄을 실행한다.
+
+```bash
+systemctl is-active sshd firewalld
+systemctl is-enabled sshd firewalld
+getenforce
+ip -br addr
+```
+
+| 조회 | 결과 읽기 |
+|---|---|
+| `is-active` | sshd, firewalld 순서로 현재 상태를 읽는다. `active`는 실행 중, `inactive`는 비활성, `failed`는 실패 상태다. 두 서비스를 각각 확인한다. |
+| `is-enabled` | 같은 순서로 부팅 시 활성화 설정을 읽는다. `enabled`와 현재 실행 중인지는 별개다. `disabled`·`masked` 등 다른 값은 그대로 확인한 뒤 원인을 살핀다. |
+| `getenforce` | `Enforcing`은 정책 강제, `Permissive`는 거절을 강제하지 않고 기록, `Disabled`는 SELinux 비활성이다. 현재 모드 조회이며 재부팅 후 상태까지 증명하지 않는다. |
+| `ip -br addr` | 인터페이스 이름·상태·할당 주소와 접두사 길이를 읽는다. `lo`는 루프백이다. 다른 인터페이스의 주소가 보여도 호스트에서 바로 접속 가능한지는 VM 네트워크 방식·포트 전달과 함께 확인한다. |
+
+서비스가 없다는 오류나 예상과 다른 상태도 그대로 확인한다. 이 묶음은 시작 상태 조회이며 최종 기준은 **4242 포트의 일반 사용자 SSH 접속 성공과 root SSH 접속 거절**이다. [세 역할과 공식 읽을 범위](targets.md#5-sshfirewalldselinux)를 바탕으로 리스닝·방화벽 규칙·SELinux 정책·실제 접속을 이어서 확인한다.
+
 ## 이후 단위
 
-SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
+SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
