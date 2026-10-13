@@ -1,6 +1,6 @@
 # Born2beRoot 최소 치트시트
 
-`jungblee`의 일반 셸에서 **필요한 줄만 개별 실행**한다. 재실습 흐름이며 자동 실행 스크립트가 아니다. 개념·근거는 [targets](targets.md), 진행 상태와 확인한 출력은 [학습 기록](learning-log.md)에 둔다.
+Rocky 최소 설치 후 `jungblee`의 일반 셸에서 처음부터 재실습하는 순서다. **필요한 줄만 개별 실행**하며 자동 실행 스크립트로 사용하지 않는다. 설치·디스크 계획과 개념·근거는 [targets](targets.md), 현황은 [README](../README.md), 증거·이력은 [학습 기록](learning-log.md)에 둔다. 다른 로그인명을 쓰면 명령의 `jungblee`를 바꾼다.
 
 ## 1. 디스크·VG 확인
 
@@ -51,7 +51,7 @@ PASS_MIN_DAYS 2
 PASS_WARN_AGE 7
 ```
 
-**미지원 시 대안:** 별도 파일 방식 대신 `sudoedit /etc/login.defs`로 위 세 항목을 수정한다. 지원 여부가 불분명하면 패키지 정보를 먼저 확인한다. 원본 파일의 기존 변경을 임의로 복구하거나 삭제하지 않는다.
+**미지원 시 대안:** 별도 파일 방식 대신 `sudoedit /etc/login.defs`로 위 세 항목을 수정한다. 지원 여부가 불분명하면 패키지 정보를 먼저 확인한다. 선택한 방식에서 해당 항목만 수정한다.
 
 별도 파일은 기본 파일 뒤에 읽히며, drop-in은 파일명 사전순으로 처리된다. `90-local.defs`보다 뒤의 파일이 같은 값을 덮을 수 있다. [지원 조건·우선순위 근거](targets.md#3-비밀번호pam).
 
@@ -89,18 +89,22 @@ sudo authselect current
 sudo authselect check
 ```
 
-품질 모듈은 이미 연결되어 있다. PAM 파일을 직접 편집하지 않고 기존 품질 설정을 읽는다.
+`password` 스택에 `pam_pwquality.so`가 연결되어 있고 authselect 검사가 유효하면 기존 품질 설정을 읽는다. 연결이 없거나 검사 오류가 있으면 [PAM 설명](targets.md#3-비밀번호pam)으로 돌아가 관리 구성을 먼저 확인한다.
 
 ```bash
 cat /etc/security/pwquality.conf
 ls /etc/security/pwquality.conf.d
 ```
 
-libpwquality는 drop-in → 본체 순으로 읽으며 PAM 인수가 우선한다. 본체에 같은 활성 설정이 있는지 함께 확인한 뒤 규칙을 작성한다. [확인된 연결과 우선순위 설명](targets.md#3-비밀번호pam).
+libpwquality는 drop-in → 본체 순으로 읽으며 PAM 인수가 우선한다. 본체에 같은 활성 설정이 있는지 함께 확인한 뒤 규칙을 작성한다. [연결과 우선순위 설명](targets.md#3-비밀번호pam).
 
 ## 5. 별도 품질 설정 파일 작성
 
-본체에 활성 설정이 없고 분리 파일 디렉터리가 비어 있다는 사용자 보고를 바탕으로 안내한 단계다.
+본체와 기존 분리 파일에 충돌하는 활성 설정이 없는지 확인한다. 기존 파일이 있으면 해당 내용부터 읽고 중복·우선순위를 정리한다. 디렉터리가 없다면 먼저 생성한다.
+
+```bash
+sudo mkdir -p /etc/security/pwquality.conf.d
+```
 
 ```bash
 sudoedit /etc/security/pwquality.conf.d/90-local.conf
@@ -121,11 +125,9 @@ enforcing = 1
 enforce_for_root
 ```
 
-사전 검사 등 나머지 기본 설정은 유지한다. 화면의 설정값 확인과 실제 적용·동작 검증은 구분한다.
+사전 검사 등 나머지 기본 설정은 유지한다.
 
 ## 6. 비밀번호 변경과 날짜 확인
-
-날짜·기간 체크포인트는 완료했다. 아래는 재실습 절차이며 지금 다시 변경할 필요는 없다. [실제 결과](learning-log.md#2026-10-13--비밀번호-변경-성공과-만료일-확인)는 학습 기록에 둔다.
 
 `jungblee`의 현재 셸에서 **sudo 없이** 실행한다. 이전 비밀번호 입력을 거치는 이 경로로 `difok` 비교가 적용되도록 한다.
 
@@ -162,7 +164,7 @@ sudo ls /etc/sudoers.d
 
 ## 8. sudo 실행 조건과 입출력 로그 설정
 
-확인한 wheel 권한과 기존 secure_path는 유지한다. 점 없는 파일명으로 편집하며 `-P`로 저장 시 기본 sudoers 모드도 맞춘다. 이미 chmod로 권한을 교정했다면 다시 편집하지 않고 아래 전체 검사로 넘어간다.
+앞 조회에서 wheel의 허용 규칙, secure_path, `/etc/sudoers.d` include를 확인한다. 필요한 권한·경로가 이미 있으면 중복 추가하지 않는다. 구성이 다르면 [정책 설명](targets.md#현재-정책부터-읽기)을 바탕으로 먼저 확인한다. 점 없는 파일명으로 편집하며 `-P`로 기본 sudoers 모드도 맞춘다.
 
 ```bash
 sudo visudo -P -f /etc/sudoers.d/90-b2br
@@ -185,7 +187,7 @@ sudo visudo -c
 sudo -l
 ```
 
-최신 화면에서 `/etc/sudoers`와 `/etc/sudoers.d/90-b2br` 모두 `parsed OK`와 설정 목록 유지를 확인했다. 실제 교정은 chmod로 완료했으며 위 재실습 기본 절차는 유지한다. 이미 발생한 모드 오류에는 `sudo chmod 0440 /etc/sudoers.d/90-b2br`도 유효한 교정 방법이지만 기본 필수 후처리는 아니다. 소유권은 추측해 바꾸지 않는다. 오류가 있으면 다음 단계로 넘어가지 않고 메시지를 확인한다. 실제 실패 제한·TTY 거절·로그 동작은 별도로 검증한다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
+본체와 별도 파일 모두 `parsed OK`이고 오류가 없어야 한다. 적용 목록에서 위 설정을 대조한다. 오류가 있으면 다음 단계로 넘어가지 않는다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
 
 ## 9. 로그 생성과 출력 재생
 
@@ -205,6 +207,16 @@ sudo sudoreplay -d /var/log/sudo -l
 sudo sudoreplay -d /var/log/sudo ID
 ```
 
-`-d`는 우리가 설정한 로그 디렉터리, `-l`은 세션 목록이다. 재생에서 문장이 보이는지 확인한다. 이는 기록 생성·출력 재생 확인이며 모든 입력 스트림의 검증을 뜻하지 않는다. 아직 이 절차의 실행 결과는 받지 않았다. [설명과 공식 읽기 범위](targets.md#로그-생성과-출력-재생-확인).
+출력 재생 다음에는 같은 `ID`의 터미널 입력을 재생한다.
 
-이후에는 인증 실패 횟수·TTY 조건 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행한다.
+```bash
+sudo sudoreplay -d /var/log/sudo -f ttyin ID
+```
+
+입력 재생에서 `b2br-log-test`가 보이는지 확인한다. `-f ttyin`은 터미널 입력 스트림을 선택한다.
+
+`-d`는 우리가 설정한 로그 디렉터리, `-l`은 세션 목록이다. 재생에서 문장이 보이는지 확인한다. 기본 재생은 출력, `-f ttyin` 재생은 터미널 입력 확인이다. 한 스트림 확인을 모든 입력 스트림 검증으로 확대하지 않는다. [설명과 공식 읽기 범위](targets.md#로그-생성과-출력-재생-확인).
+
+## 이후 단위
+
+인증 실패 횟수·TTY 조건 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#남은-학습의-전체-지도)에서 확인한다.
