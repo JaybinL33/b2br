@@ -266,3 +266,10 @@ targets 전체에서 실제 출력·날짜·사용자 보고·진행 상태를 �
 공식 sudo·sudoers, util-linux setsid, Linux setsid(2) 매뉴얼과 대조해 일반 사용자 셸에서 `setsid -w sudo -n true </dev/null`로 TTY 요구를 확인하는 절차를 정리했다. targets에는 개념·읽을 범위, 치트시트에는 명령과 거절 판단 기준을 추가했다. 비밀번호 요구나 임의의 실패를 TTY 검증 성공으로 간주하지 않는다.
 
 이번 변경은 학습 절차의 문서화다. 사용자 VM에서 명령을 실행하지 않았고 결과도 받지 않았으므로 TTY 검증은 미완료다. 기존 로그 입력·출력 재생 성공 기록은 유지한다.
+
+
+## 2026-10-13 — TTY 거절 확인과 sudo 인증 경로 조회 안내
+
+사용자 첨부 화면을 확인한 주 대화의 전달 근거: jungblee 일반 셸에서 `setsid -w sudo -n true </dev/null` 실행 뒤 `sudo: sorry, you must have a tty to run sudo`가 표시됐다. 명시적인 TTY 거절로 requiretty 체크포인트를 완료했다. 화면에 `echo $?` 결과는 없지만 이를 이유로 추가 재검사를 요구하지 않는다.
+
+다음 검사인 `passwd_tries=3`·`badpass_message`에 앞서 `cat /etc/pam.d/sudo`를 안내했다. 앞서 본 system-auth에는 faillock이 없었지만 sudo의 실제 auth·account 호출 경로를 확인해야 한다. 이번 조회 결과는 아직 받지 않았다. 공식 sudo·sudoers·Linux-PAM 매뉴얼을 대조해 인증 경로 조회와 잠금 위험 확인을 선행 조건으로 둔 실패 검사 절차를 준비했다. 실패 횟수·사용자 지정 오류 메시지의 실제 동작은 미검증이다. 이번 문서 작업에서 VM은 조작하지 않았다.

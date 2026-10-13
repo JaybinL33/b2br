@@ -226,8 +226,33 @@ setsid -w sudo -n true </dev/null
 echo $?
 ```
 
-두 번째 줄은 첫 명령 직후 실행한다. `sudo: sorry, you must have a tty to run sudo`처럼 **TTY가 필요하다는 거절**과 0이 아닌 종료 상태가 기대 결과다. `a password is required`만 나오거나 다른 오류로 실패하면 통과로 판단하지 않고 적용 정책·명령·오류를 확인한다. `-c`는 추가하지 않는다. [개념과 공식 읽기 범위](targets.md#tty-실행-조건-확인).
+두 번째 줄은 첫 명령 직후 실행한다. `sudo: sorry, you must have a tty to run sudo`처럼 **TTY가 필요하다는 명시적 거절**이 확인 기준이다. 0이 아닌 종료 상태는 보조 증거이며 명시적 거절을 이미 확인했다면 재검사할 필요는 없다. `a password is required`만 나오거나 다른 오류로 실패하면 통과로 판단하지 않고 적용 정책·명령·오류를 확인한다. `-c`는 추가하지 않는다. [개념과 공식 읽기 범위](targets.md#tty-실행-조건-확인).
+
+## 11. sudo 인증 경로와 실패 검사
+
+먼저 인증 경로만 조회한다.
+
+```bash
+cat /etc/pam.d/sudo
+```
+
+`auth`·`account`의 `include`·`substack` 대상 파일을 읽는다. 예를 들어 `system-auth`를 참조하면 다음을 실행하고 추가 참조도 따라간다.
+
+```bash
+cat /etc/pam.d/system-auth
+```
+
+`pam_faillock.so` 등 잠금 처리가 있거나 경로가 불명확하면 고의 실패 검사는 보류한다. 모듈 인수·설정 파일·현재 실패 기록을 확인하고 잠금 위험을 판단한다. 정책 비활성화나 기록 초기화는 하지 않는다. [판단 근거와 읽을 범위](targets.md#인증-경로와-실패-횟수-확인).
+
+**인증 경로와 잠금 위험을 확인한 뒤에만**, 비밀번호 인증이 필요한 일반 사용자 터미널에서 한 번 검사한다.
+
+```bash
+sudo -k
+sudo -v
+```
+
+프롬프트마다 의도적으로 틀린 값을 입력한다. 재시도 중 `Authentication failed. Please try again.`이 표시되고, 세 번째 실패 뒤 네 번째 비밀번호 요청 없이 종료되는지 확인한다. 마지막 실패 요약 문구와 사용자 지정 문구는 다르므로 문구가 정확히 세 번 출력될 것을 요구하지 않는다. 프롬프트가 없거나 조기 종료·잠금 메시지가 나오면 반복하지 말고 원인을 확인한다. 실제 비밀번호나 입력값은 기록하지 않는다.
 
 ## 이후 단위
 
-인증 실패 횟수·오류 메시지 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
+SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

@@ -200,7 +200,17 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 `requiretty`는 sudo 호출자에게 TTY를 요구한다. 명령 실행용 PTY를 만드는 `use_pty`와 목적이 다르다. 일반 사용자 셸에서 `setsid -w sudo -n true </dev/null`로 제어 터미널 없는 새 세션에서 sudo를 호출한다. `-c`를 넣으면 제어 터미널을 다시 설정하므로 사용하지 않는다. `-w`는 실행 종료를 기다리고 해당 종료 상태를 전달한다. 표준입력은 `/dev/null`로 연결하고 sudo의 `-n`은 비밀번호 등 입력 요청을 막는다. `true`는 실행되더라도 별도 작업을 하지 않는 검사 대상이다.
 
-**판단 기준:** TTY가 필요하다는 명시적 거절과 0이 아닌 종료 상태를 함께 확인한다. 메시지는 설치 버전·언어에 따라 다를 수 있다. `a password is required`만 나오거나 다른 오류로 실패한 경우에는 TTY 조건 검증 성공으로 판단하지 않는다. 출력이 계속 화면에 보이는 것과 호출 세션에 제어 터미널이 있는 것은 별개다. 재실습 명령은 [치트시트](cheatsheet.md#10-tty-실행-조건-검증)에 둔다.
+**판단 기준:** TTY가 필요하다는 명시적 거절로 requiretty 동작을 확인한다. 0이 아닌 종료 상태는 보조 증거이며, 명시적인 거절을 확인했다면 종료 상태만을 위해 재검사하지 않는다. 메시지는 설치 버전·언어에 따라 다를 수 있다. `a password is required`만 나오거나 다른 오류로 실패한 경우에는 TTY 조건 검증 성공으로 판단하지 않는다. 출력이 계속 화면에 보이는 것과 호출 세션에 제어 터미널이 있는 것은 별개다. 재실습 명령은 [치트시트](cheatsheet.md#10-tty-실행-조건-검증)에 둔다.
+
+### 인증 경로와 실패 횟수 확인
+
+**읽을 범위:** 위 공식 sudo 매뉴얼과 설치된 `man sudo`의 `-k`·`-v`, sudoers 매뉴얼의 `passwd_tries`·`badpass_message`를 읽는다. [Linux-PAM 공식 pam_faillock 매뉴얼](https://raw.githubusercontent.com/linux-pam/linux-pam/master/modules/pam_faillock/pam_faillock.8.xml)은 `DESCRIPTION`, `preauth`·`authfail`·`authsucc`, `auth`·`account` 연결과 설정 우선순위를 본다. 모듈이 연결되어 있으면 [faillock.conf 매뉴얼](https://raw.githubusercontent.com/linux-pam/linux-pam/master/modules/pam_faillock/faillock.conf.5.xml)과 설치된 `man faillock.conf`의 `deny`·`fail_interval`·`unlock_time`, `man faillock`의 실패 기록 조회도 읽는다. PAM 전체 설정이나 잠금 정책 변경은 이 검사의 범위가 아니다.
+
+`passwd_tries=3`은 한 번의 sudo 인증에서 실패를 기록하고 종료하기 전까지 허용하는 시도 수다. `badpass_message`는 잘못된 비밀번호에 대한 문구이며 마지막 실패 횟수 요약과 구분한다. PAM의 계정 잠금은 여러 인증에 걸친 실패 기록을 다루므로 이 제한과 별개다.
+
+`cat /etc/pam.d/sudo`로 시작해 `auth`·`account`의 `include`·`substack`이 가리키는 파일을 따라 읽는다. 참조가 `system-auth`일 때 해당 파일을 조회하고, 그 안의 추가 참조도 확인한다. 비밀번호 변경용 `password` 스택이나 authselect 프로필 이름만으로 sudo의 인증 경로를 판단하지 않는다. `pam_faillock.so` 등 잠금 처리가 있으면 모듈 인수와 `conf=` 지정 파일(기본 `/etc/security/faillock.conf`), 현재 실패 기록을 함께 확인한다. 모듈 인수가 설정 파일보다 우선한다. 임계값·집계 시간·해제 시간과 기존 실패 수를 확인하기 전에는 고의 실패를 시도하지 않는다. 검사 때문에 잠금 정책을 끄거나 기록을 초기화하지 않는다.
+
+잠금 위험을 해소하고 비밀번호 인증이 필요한 일반 사용자 터미널에서 `sudo -k`로 현재 세션의 인증 캐시를 무효화한 뒤 `sudo -v`를 실행한다. `-v`는 명령을 실행하지 않고 필요한 인증을 수행한다. 한 번의 호출에서 의도적으로 틀린 값을 세 번 입력해 재시도 중 지정 오류 문구, 세 번째 실패 뒤 네 번째 요청 없이 종료되는지를 확인한다. 입력 프롬프트가 없거나 조기 종료·계정 잠금 메시지가 나오면 해당 결과로는 3회 제한을 검증할 수 없다. 반복 호출하지 않고 정책·PAM 경로를 확인한다. 실제 비밀번호나 입력한 값은 학습 기록에 남기지 않는다. [재실습 절차](cheatsheet.md#11-sudo-인증-경로와-실패-검사).
 
 ## 5. SSH·firewalld·SELinux
 
