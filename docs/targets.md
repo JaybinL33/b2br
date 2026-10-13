@@ -154,7 +154,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 ## 4. sudo 정책과 감사 로그
 
-**반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 9쪽과 [RHEL 10 Managing sudo access](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/security_hardening/managing-sudo-access) 8.1 `User authorizations in sudoers`, 8.2 `Granting sudo access to a user`로 권한 위임을 이해한다. 먼저 VM의 `man sudoers`에서 `User specification`, `Defaults`와 include 지시를 읽는다. [공식 sudoers 매뉴얼 원본](https://github.com/sudo-project/sudo/blob/main/docs/sudoers.man.in)에서도 같은 제목을 찾을 수 있다. 설정 시에는 `passwd_tries`, `badpass_message`, `requiretty`, `secure_path`, `log_input`, `log_output`, `iolog_dir`를 찾고, [공식 visudo 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/visudo.man.in)과 VM의 `man visudo`에서 `DESCRIPTION`, `-f`, `-c`를 읽는다. visudo는 동시 편집을 잠그고 저장 전 문법을 검사한다. 아래 별도 파일 작성에서는 visudo의 `-f`를 사용하고 저장 뒤 `-c`로 포함 파일까지 검사한다. `Including other files from within sudoers`의 파일명 규칙과 `I/O LOGGING`도 해당 부분만 읽는다.
+**반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 9쪽과 [RHEL 10 Managing sudo access](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/security_hardening/managing-sudo-access) 8.1 `User authorizations in sudoers`, 8.2 `Granting sudo access to a user`로 권한 위임을 이해한다. 먼저 VM의 `man sudoers`에서 `User specification`, `Defaults`와 include 지시를 읽는다. [공식 sudoers 매뉴얼 원본](https://github.com/sudo-project/sudo/blob/main/docs/sudoers.man.in)에서도 같은 제목을 찾을 수 있다. 설정 시에는 `passwd_tries`, `badpass_message`, `requiretty`, `secure_path`, `log_input`, `log_output`, `iolog_dir`를 찾고, [공식 visudo 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/visudo.man.in)과 VM의 `man visudo`에서 `DESCRIPTION`, `-f`, `-c`, `-P`를 읽는다. visudo는 동시 편집을 잠그고 저장 전 문법을 검사한다. 별도 파일 편집의 문법 검사와 전체 파일의 소유권·모드 검사를 구분한다. 공식 매뉴얼에서 `-P`의 기본 모드 강제는 파일 경로를 지정하지 않을 때 기본 활성이다. 따라서 `visudo -f`로 새 파일을 저장했다고 올바른 모드가 자동 보장된다고 가정하지 않는다. 파일을 지정하지 않는 `visudo -c`는 포함 파일의 문법과 소유권·모드를 함께 검사한다. `Including other files from within sudoers`의 파일명 규칙과 `I/O LOGGING`도 해당 부분만 읽는다.
 
 **설명할 수 있어야 할 것:** 실행 사용자·대상 사용자·허용 명령, TTY, 명령 검색 경로, 명령 기록과 입출력 기록의 차이다. 이들은 원문이 직접 요구하는 제한과 로그를 검증하는 데 필요하다. 문법 검사 성공과 실패 시도·메시지·로그 동작 성공은 따로 확인한다.
 
@@ -186,7 +186,9 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 | `log_input, log_output` | 입력과 출력을 모두 기록한다. |
 | `iolog_dir="/var/log/sudo"` | 과제의 입출력 로그 경로다. 필요한 로그 디렉터리는 sudo가 생성하므로 별도 mkdir 단계는 두지 않는다. |
 
-저장 뒤 현재 터미널을 유지한 채 `sudo visudo -c`로 전체 문법을 검사하고 `sudo -l`로 적용 목록을 확인한다. 파일 하나의 검사만으로 전체 정책 검사를 대신하지 않는다. 현재는 작성 안내이며 실제 저장·검사 결과와 실패 횟수·TTY 거절·로그 동작은 아직 확인하지 않았다. 입출력 로그에는 민감한 내용이 포함될 수 있으므로 공개 Git에 올리지 않는다.
+현재 화면에서 `/etc/sudoers: parsed OK`와 `/etc/sudoers.d/90-b2br: bad permissions, should be mode 0440`를 확인했다. `sudo -l`에는 `passwd_tries=3`, 지정 오류 문구, `requiretty`, `log_input`, `log_output`, `iolog_dir=/var/log/sudo`가 모두 보였지만, 이것은 전체 검사 통과와 다르다.
+
+현재 터미널을 유지하며 `sudo chmod 0440 /etc/sudoers.d/90-b2br`로 보고된 모드 오류만 교정하고, `sudo visudo -c` → `sudo -l` 순으로 다시 확인한다. 소유권은 추측해 바꾸지 않는다. 본체와 별도 파일 모두 `parsed OK`이고 오류가 없어야 검사 완료로 기록한다. 교정 성공 출력은 아직 받지 않았다. 실패 횟수·TTY 거절·로그 동작은 별도 검증이며 입출력 로그는 공개 Git에 올리지 않는다.
 
 ## 5. SSH·firewalld·SELinux
 

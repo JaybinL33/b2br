@@ -178,13 +178,14 @@ Defaults log_input, log_output
 Defaults iolog_dir="/var/log/sudo"
 ```
 
-저장 뒤 **현재 터미널을 유지**하고 전체 문법과 적용 목록을 확인한다.
+저장 뒤 **현재 터미널을 유지**하고 파일 모드를 맞춘 다음 전체 문법·파일 속성과 적용 목록을 확인한다.
 
 ```bash
+sudo chmod 0440 /etc/sudoers.d/90-b2br
 sudo visudo -c
 sudo -l
 ```
 
-오류가 있으면 다음 단계로 넘어가지 않고 메시지를 확인한다. 실제 실패 제한·TTY 거절·로그 동작은 별도로 검증한다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
+`/etc/sudoers`와 `/etc/sudoers.d/90-b2br`가 모두 `parsed OK`이고 오류가 없어야 전체 검사 완료다. 현재 화면의 권한 오류만 교정하며 소유권은 추측해 바꾸지 않는다. 오류가 있으면 다음 단계로 넘어가지 않고 메시지를 확인한다. 실제 실패 제한·TTY 거절·로그 동작은 별도로 검증한다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
 
 이후에는 sudo 동작 검증 → SSH·firewalld·SELinux → monitoring.sh·cron·wall → 평가 재현·README·서명 순으로 진행한다.
