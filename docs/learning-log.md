@@ -187,3 +187,22 @@ password required pam_deny.so
 **다음으로 안내한 절차:** jungblee의 현재 셸에서 sudo 없이 `passwd`를 실행해 이전 비밀번호 입력과 비교를 거치고, 성공한 뒤 `sudo passwd root`를 실행한다. 이어 `chage -l jungblee`, `sudo chage -l root`로 실제 마지막 변경 날짜·30일 뒤 만료·2/30/7 유지를 확인한다. 정상 변경 성공과 각 위반 조건의 거절 테스트는 구분한다.
 
 아직 실제 변경 성공 출력은 받지 않았다. 오류가 있으면 비밀번호를 제외한 메시지를 확인한다. 기존 마지막 변경일이 `never`였으므로 최소 2일 제한이 곧바로 문제라고 단정하지 않고 실제 오류를 보고 판단한다. 이번 작업에서 VM 설정·비밀번호를 변경하지 않았으며 비밀번호를 기록하지 않았다.
+
+
+## 2026-10-13 — 비밀번호 변경 성공과 만료일 확인
+
+첫 화면에서 값 없는 `enforce_for_root` 저장·편집 종료와 jungblee의 sudo 없는 `passwd` 실행을 확인했다. `Current password`, `New password`, `Retype new password` 입력 뒤 `password updated successfully`가 표시됐다. 비밀번호 내용은 기록하지 않는다.
+
+다음 화면에서 jungblee 로그인 후 `chage -l jungblee`와 `sudo chage -l root` 결과는 같았다.
+
+| 항목 | 두 계정의 확인값 |
+|---|---|
+| Last password change | Oct 13, 2026 |
+| Password expires | Nov 12, 2026 |
+| Password inactive | never |
+| Account expires | never |
+| Minimum / Maximum / Warning | 2 / 30 / 7 |
+
+jungblee의 변경 성공과 두 계정의 변경일·30일 뒤 만료일·기간 값을 확인해 날짜·기간 체크포인트를 완료했다. root 변경 명령 자체의 성공 메시지는 화면에 없었다. 이전 기록의 변경일·만료일 `never`는 변경 전 상태이며, 현재의 비활성 기한·계정 만료 `never`는 이번에 추가 설정할 항목이 아니다.
+
+정상 변경 성공과 각 품질 위반 조건의 거절 검증은 다르므로 거절 테스트는 남은 항목으로 둔다. 다음 학습은 sudo 권한과 감사 로그다. 이번 작업은 화면 근거의 문서화이며 새 sudo 설정 작성이나 VM 조작은 하지 않았다.

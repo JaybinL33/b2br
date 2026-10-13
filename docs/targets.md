@@ -125,7 +125,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 사용자 화면에서 authselect는 `local` 프로필, 추가 기능 없음, 구성 유효 상태였다. `passwd`가 `system-auth`의 비밀번호 스택을 호출하고, 그 안에는 `pam_pwquality.so` → `pam_unix.so` → `pam_deny.so`가 연결되어 있다. `requisite`인 품질 모듈이 실패하면 해당 스택은 즉시 실패로 돌아간다. `pam_unix.so`의 `use_authtok`는 앞에서 받은 새 비밀번호를 이용해 로컬 비밀번호 갱신을 이어 간다. 품질 모듈이 이미 연결되어 있으므로 이번 단계에서 PAM 파일을 직접 편집할 필요는 없다. 정확한 화면 내용은 [학습 기록](learning-log.md)에 둔다.
 
-`cat /etc/security/pwquality.conf`와 `ls /etc/security/pwquality.conf.d` 결과에 대해 사용자는 본체가 모두 주석이고 디렉터리는 비어 있다고 보고했다. 앞서 확인한 PAM 품질 모듈에도 인수가 없어 별도 품질 파일 작성을 안내했다. libpwquality는 drop-in을 먼저 파일명 ASCII 순서로 읽고 본체를 나중에 읽으므로, 본체에 같은 활성 항목이 있으면 drop-in 값을 덮는다. PAM 모듈 인수는 설정 파일보다 우선한다. 따라서 본체의 중복 설정도 확인한다. 이는 앞의 login.defs/libeconf와 읽기 순서가 다르다. 근거: [pwquality.conf 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod), [pam_pwquality 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod). 품질 파일 작성은 아래 안내 단계이며, 실제 적용과 허용·거절 검증은 다음에 확인한다.
+`cat /etc/security/pwquality.conf`와 `ls /etc/security/pwquality.conf.d` 결과에 대해 사용자는 본체가 모두 주석이고 디렉터리는 비어 있다고 보고했다. 앞서 확인한 PAM 품질 모듈에도 인수가 없어 별도 품질 파일 작성을 안내했다. libpwquality는 drop-in을 먼저 파일명 ASCII 순서로 읽고 본체를 나중에 읽으므로, 본체에 같은 활성 항목이 있으면 drop-in 값을 덮는다. PAM 모듈 인수는 설정 파일보다 우선한다. 따라서 본체의 중복 설정도 확인한다. 이는 앞의 login.defs/libeconf와 읽기 순서가 다르다. 근거: [pwquality.conf 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pwquality.conf.5.pod), [pam_pwquality 공식 매뉴얼](https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod). 이후 화면에서 값 없는 `enforce_for_root` 저장·편집 종료와 jungblee의 정상 변경 성공을 확인했다. 각 품질 위반 조건의 거절은 별도로 검증한다.
 
 `/etc/login.defs.d/*.defs` 지원은 shadow-utils의 libeconf 사용 빌드에 달려 있다. [shadow 4.15.0의 읽기 코드](https://github.com/shadow-maint/shadow/blob/4.15.0/lib/getdef.c)는 `USE_ECONF` 조건으로 libeconf를 호출하며, [libeconf 공식 설명](https://github.com/openSUSE/libeconf/blob/master/README.md)은 분리된 설정 파일의 읽기 구조를 설명한다. libeconf는 기본 파일 뒤에 drop-in을 읽으며 파일명 사전순으로 처리한 뒤의 값이 앞의 값을 덮는다. 따라서 `/etc/login.defs.d/90-local.defs`에 세 기간 값을 모을 수 있지만, 더 뒤의 파일에 같은 키가 있으면 그 값이 우선한다. VM에서는 패키지 의존성으로 지원 빌드인지 확인하고 별도 파일 방식을 사용한다. 미지원이면 원본 파일 편집을 대안으로 선택하며 두 절차를 연달아 수행하지 않는다. 원본의 기존 변경을 복구하거나 삭제할 필요는 없다. 어느 방식도 기존 계정의 기간 값을 바꾸는 `chage`를 대신하지 않는다.
 
@@ -133,7 +133,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 `sudo chage -l jungblee`, `sudo chage -l root`로 기간 정책을 확인한다. 문자 조건은 실제 적용되는 인증·품질 정책과 허용/거절 동작을 대조한다. `chage`만으로 길이·문자 조건은 검증되지 않는다. 비밀번호 자체는 문서나 증거에 남기지 않는다.
 
-10월 13일 사용자 화면에서 root와 jungblee 모두 최소 2일·최대 30일·경고 7일을 확인했다. 두 계정의 `Last password change`와 `Password expires`는 `never`였다. 기간 숫자 확인과 실제 만료 검증을 구분한다. 다음 순서는 **품질 정책 구성 → root와 jungblee의 실제 비밀번호 변경 → 마지막 변경 날짜·30일 뒤 만료일·2/30/7 재확인**이다. 관리자가 일반 계정의 비밀번호를 변경하면 이전 비밀번호 비교가 생략될 수 있으므로, jungblee 현재 셸에서 sudo 없이 `passwd`를 실행하고 성공한 뒤 `sudo passwd root`를 실행하도록 안내했다. 실제 변경 성공은 아직 확인 전이다.
+최신 사용자 화면에서 jungblee가 sudo 없이 `passwd`를 실행해 이전 비밀번호 입력을 거친 뒤 변경에 성공했다. `chage -l jungblee`와 `sudo chage -l root`는 모두 마지막 변경일 **2026-10-13**, 만료일 **2026-11-12**, 최소 **2**·최대 **30**·경고 **7**을 표시했다. 이 날짜·기간 체크포인트는 완료했다. root 변경 명령 자체의 성공 메시지는 제공되지 않았으므로 두 계정의 조회 결과와 jungblee의 변경 성공 출력을 구분한다. 이전 `never` 출력은 학습 기록의 과거 상태다. `Password inactive`와 `Account expires`의 `never`는 각각 비밀번호 만료 후 비활성 기한과 계정 만료일을 설정하지 않았다는 뜻이며 이번에는 추가 설정하지 않는다.
 
 ### 이번에 안내한 품질 규칙
 
@@ -150,9 +150,9 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 | `enforcing = 1` | 품질 실패를 경고만 하고 넘기지 않고 거절한다. 기본값 1을 정책에 명시한다. |
 | `enforce_for_root` | 안내에서는 값 없이 켜는 표기를 사용한다. root가 변경할 때도 품질 실패를 거절하지만, root는 이전 암호를 입력하지 않아 이전·새 비밀번호 비교는 생략된다. |
 
-새 사용자 화면에는 위 품질값과 마지막 줄 `enforce_for_root = 1`이 보인다. 하단에 셸 프롬프트가 있지만 파일 경로·저장 위치·적용 테스트 결과까지 증명하지는 않는다. 이 표기의 의미는 [libpwquality 1.4.5 settings.c](https://github.com/libpwquality/libpwquality/blob/libpwquality-1.4.5/src/settings.c)의 `PWQ_TYPE_SET` 처리로 확인했다. 제공된 값을 읽지 않고 1로 켜므로 `= 1`은 허용되고 `= 0`도 끄는 표기가 아니다. 이는 버전을 고정한 구현 근거이며 VM 설치 버전을 새로 검증한 것은 아니다. 문서의 값 없는 표기는 유지한다.
+앞선 화면의 마지막 줄은 `enforce_for_root = 1`이었고 최신 화면에서는 값 없는 `enforce_for_root` 저장·편집 종료를 확인했다. 이 표기의 의미는 [libpwquality 1.4.5 settings.c](https://github.com/libpwquality/libpwquality/blob/libpwquality-1.4.5/src/settings.c)의 `PWQ_TYPE_SET` 처리로 확인했다. 제공된 값을 읽지 않고 1로 켜므로 `= 1`은 허용되고 `= 0`도 끄는 표기가 아니다. 이는 버전을 고정한 구현 근거이며 VM 설치 버전을 새로 검증한 것은 아니다. 문서의 값 없는 표기는 유지한다.
 
-사전 검사 등 나머지 기본값은 유지한다. 일반 계정의 이전 비밀번호 비교는 사용자가 직접 `passwd`를 실행하는 경로에서 검증해야 한다. 관리자의 대리 변경으로는 `difok` 동작을 입증할 수 없다. 현재 안내 순서는 jungblee의 `passwd` 성공 → `sudo passwd root` 성공 → `chage -l jungblee`와 `sudo chage -l root` 조회다. 마지막 변경일이 실제 날짜로 바뀌고 만료일은 30일 뒤이며 2/30/7이 유지되는지 확인한다. 정상 변경 성공은 각 위반 조건을 거절한다는 증거와 별개다. 오류가 나면 비밀번호를 제외한 메시지를 보고 판단하며, 기존 마지막 변경일이 `never`인 상태에서 최소 2일 제한이 즉시 걸린다고 단정하지 않는다. 비밀번호는 기록하지 않는다.
+사전 검사 등 나머지 기본값은 유지한다. 일반 계정의 이전 비밀번호 비교는 사용자가 직접 `passwd`를 실행하는 경로에서 검증해야 한다. 관리자의 대리 변경으로는 `difok` 동작을 입증할 수 없다. 재실습 순서는 jungblee의 `passwd` 성공 → `sudo passwd root` 성공 → `chage -l jungblee`와 `sudo chage -l root` 조회다. 마지막 변경일이 실제 날짜로 바뀌고 만료일은 30일 뒤이며 2/30/7이 유지되는지 확인한다. 정상 변경 성공은 각 위반 조건을 거절한다는 증거와 별개다. 이후 재변경에는 최소 2일 제한이 영향을 줄 수 있다. 오류가 나면 비밀번호를 제외한 메시지를 보고 판단한다. 비밀번호는 기록하지 않는다. 다음 학습은 sudo 권한·감사 로그이며, 품질 위반 거절 테스트는 남은 검증으로 유지한다.
 
 ## 4. sudo 정책과 감사 로그
 
