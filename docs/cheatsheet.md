@@ -207,15 +207,15 @@ sudo sudoreplay -d /var/log/sudo -l
 sudo sudoreplay -d /var/log/sudo ID
 ```
 
-출력 재생 다음에는 같은 `ID`의 터미널 입력을 재생한다.
+출력 재생 다음에는 같은 `ID`의 표준입력·터미널 입력을 함께 재생한다.
 
 ```bash
-sudo sudoreplay -d /var/log/sudo -f ttyin ID
+sudo sudoreplay -d /var/log/sudo -f stdin,ttyin ID
 ```
 
-입력 재생에서 `b2br-log-test`가 보이는지 확인한다. `-f ttyin`은 터미널 입력 스트림을 선택한다.
+입력 재생에서 `b2br-log-test`가 보이는지 확인한다. `-f stdin,ttyin`은 두 입력 종류를 함께 선택한다. 문장이 없으면 입력 검증을 완료하지 말고 해당 세션의 로그 파일 구성을 확인한다.
 
-`-d`는 우리가 설정한 로그 디렉터리, `-l`은 세션 목록이다. 재생에서 문장이 보이는지 확인한다. 기본 재생은 출력, `-f ttyin` 재생은 터미널 입력 확인이다. 한 스트림 확인을 모든 입력 스트림 검증으로 확대하지 않는다. [설명과 공식 읽기 범위](targets.md#로그-생성과-출력-재생-확인).
+`-d`는 우리가 설정한 로그 디렉터리, `-l`은 세션 목록이다. 재생에서 문장이 보이는지 확인한다. 기본 재생은 출력, `-f stdin,ttyin` 재생은 입력 확인이다. 문장이 보여도 두 종류 각각에 모두 기록됐다고 단정하지 않는다. [설명과 공식 읽기 범위](targets.md#로그-생성과-출력-재생-확인).
 
 ## 이후 단위
 
