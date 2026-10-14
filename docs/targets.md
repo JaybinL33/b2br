@@ -246,6 +246,8 @@ SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 
 
 처음 접속할 때 서버 호스트 키 지문을 VM 콘솔의 공개키 지문과 대조한다. [공식 ssh-keygen 매뉴얼](https://man.openbsd.org/ssh-keygen)의 `-l`·`-f`와 설치된 매뉴얼을 읽는다. ED25519를 제시하면 `/etc/ssh/ssh_host_ed25519_key.pub`를 비교하고, 다른 알고리즘이면 해당 호스트 공개키를 비교한다. 같은 알고리즘의 지문이 일치한 뒤 신뢰를 승인한다. 호스트 키 확인은 서버 식별이고 이후 비밀번호 입력은 사용자 인증이다. 로그인 뒤 `hostname`·`whoami`로 목적지와 사용자를 대조한다. [전달 값과 접속 절차](cheatsheet.md#19-virtualbox-포트-전달과-호스트-접속).
 
+**root 접속 거절 확인:** 일반 사용자로 목적지·로그인 계정을 확인한 뒤 호스트로 돌아와 같은 전달 포트로 root 접속을 검사한다. [공식 ssh_config 매뉴얼](https://man.openbsd.org/ssh_config)의 `NumberOfPasswordPrompts`를 읽는다. 값을 1로 지정하는 것은 클라이언트 질문을 제한하기 위한 선택이며 `PermitRootLogin no`의 서버 정책과 구분한다. 올바른 root 비밀번호로도 인증이 거절되고 root 셸이 열리지 않는지 확인한다. 단순 연결 장애를 인증 거절의 증거로 삼지 않는다. [검사 절차](cheatsheet.md#20-root-ssh-접속-거절-확인).
+
 **존재와 용도만:** SSH 공개키 인증은 비밀번호 외의 인증 방식이고 SELinux 거절 로그는 정책 문제를 추적하는 단서다. 공개키 방식이 필요하거나 정상 설정 후에도 거절될 때 해당 부분을 더 읽는다. Enforcing·Permissive·Disabled의 차이 자체는 필수 이해 범위다.
 
 **이번에 미룰 것과 이유:** SSH 암호 알고리즘 수학·스마트카드·점프 호스트, nftables 내부 규칙 생성, 자체 SELinux 정책 모듈 작성은 이번 접속 경로의 요구가 아니다. 인증 인프라 확장이나 기존 정책으로 해결할 수 없는 서비스 운영 때 학습한다. firewalld·SELinux를 끄는 것을 범위 축소로 삼지 않는다.

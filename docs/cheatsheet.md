@@ -410,6 +410,22 @@ whoami
 
 이 실습의 기대값은 각각 `jungblee42`, `jungblee`다. 다른 로그인명으로 재실습하면 그 계정과 호스트명에 맞춰 대조한다. [조건과 공식 근거](targets.md#5-sshfirewalldselinux).
 
+## 20. root SSH 접속 거절 확인
+
+일반 사용자 SSH 세션에서 종료해 **호스트 셸로 돌아온 뒤** 같은 전달 경로로 검사한다.
+
+```bash
+exit
+```
+
+아래 `4242`는 호스트 포트 예시다. 일반 사용자 접속에 성공한 실제 Host Port가 다르면 `-p` 값을 그 포트로 바꾼다.
+
+```bash
+ssh -p 4242 -o NumberOfPasswordPrompts=1 root@127.0.0.1
+```
+
+비밀번호를 요청하면 올바른 root 비밀번호를 터미널에 입력한다. 기대 결과는 인증 거절과 root 셸에 진입하지 못하는 것이다. `NumberOfPasswordPrompts=1`은 클라이언트의 비밀번호 질문 횟수 제한이며 서버의 root 차단 정책이 아니다. 연결 실패·잘못된 비밀번호만으로 root 차단 성공을 판단하지 않고, 일반 사용자 접속 성공 및 `permitrootlogin no`와 함께 대조한다. [옵션과 검증 근거](targets.md#5-sshfirewalldselinux).
+
 ## 이후 단위
 
 SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
