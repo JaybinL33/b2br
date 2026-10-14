@@ -657,6 +657,30 @@ sudo crontab -l
 
 root 사용자 열이나 sudo를 명령에 추가하지 않는다. crond 재시작은 필요 없다. VM의 시각 기준 다음 00·10·20·30·40·50분 경계에 SSH·콘솔 각각에서 방송이 한 번씩 수신되는지 확인한다. 목록 조회 성공과 예약 실행 성공을 구분하고, 부팅 실행은 별도로 검증한다. [시간 필드·환경·검증 범위](targets.md#root-crontab의-읽기-범위).
 
+## 37. 재부팅 후 서비스·접속·부팅 예약 확인
+
+편집 내용을 저장한 뒤 VM에서 재부팅한다.
+
+```bash
+sudo reboot
+```
+
+SSH 연결이 끊기면 VM 콘솔에서 LUKS 암호를 입력하고 부팅·로그인한다. 호스트에서 저장한 포트 전달 경로로 다시 접속한다. 현재 실습 경로의 예시는 다음과 같다.
+
+```bash
+ssh -p 4242 jungblee@127.0.0.2
+```
+
+접속한 VM에서 조회한다.
+
+```bash
+systemctl is-active sshd firewalld crond
+getenforce
+sudo journalctl -b -u crond --no-pager
+```
+
+서비스는 명령에 나열한 순서대로 `active`, SELinux는 `Enforcing`인지 대조한다. journal의 `-b`는 이번 부팅, `-u crond`는 해당 서비스로 범위를 한정한다. 이번 부팅의 monitoring 명령 실행 기록과 오류 여부를 읽는다. 부팅 직후 로그인 사용자가 없었다면 wall 화면이 없을 수 있으므로 기록상 실행과 터미널 수신을 별도로 확인한다. 로그인 후 다음 주기 방송에서 각 터미널의 수신도 대조한다. [검증 범위](targets.md#재부팅-검증의-읽기-범위).
+
 ## 이후 단위
 
 예약·부팅 방송 및 중단 검증 → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
