@@ -413,6 +413,10 @@ sudoreplay의 `-l` 목록에서 한 줄이 한 세션인 형식을 확인한 환
 
 PATH는 cron의 제한된 환경에서도 스크립트 안의 도구를 찾도록 지정하며 Bash와 설치본은 절대 경로로 호출한다. 기존 PATH와 다른 예약의 영향을 함께 읽고 기존 내용을 보존한다. Cronie는 crontab 변경을 감지하므로 편집 후 데몬 재시작이 필요 없다. `crontab -l`로 등록 내용을 확인한 뒤 실제 예정 시각에 두 터미널 각각의 단일 수신·오류 부재를 관찰한다. 등록 확인, 주기 실행, 부팅 실행, 스크립트 수정 없는 중단은 각각 별도 검증이다.
 
+부팅 실행의 세부 근거는 [Cronie cron.c의 run_reboot_jobs](https://github.com/cronie-crond/cronie/blob/master/src/cron.c)에서 필요한 부분만 읽는다. REBOOT_LOCK이 있으면 @reboot 작업을 건너뛰므로 일반적인 crond 서비스 재시작을 부팅 테스트로 대신하지 않는다. 부팅 시 로그인 사용자가 없으면 wall을 읽을 터미널이 없을 수 있다. 이때 실행 로그와 실제 터미널 수신은 별개의 증거로 다룬다.
+
+스크립트 수정 없는 중단의 검토 방향은 monitoring의 두 예약 줄만 주석 처리하는 것이다. 다른 예약과 PATH를 보존하고, 이 방향의 실제 안내·적용·중단 확인은 별도 단계에서 진행한다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.
