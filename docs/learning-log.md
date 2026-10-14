@@ -743,3 +743,22 @@ Cronie의 run_reboot_jobs와 REBOOT_LOCK 처리를 대조해 일반 서비스 �
 사용자 VM의 `firewall-cmd --list-all`에서 public이 default·active이고 인터페이스는 enp0s3였다. services는 비어 있고 ports는 `4242/tcp`였다. protocols·source-ports·forward-ports·rich rules도 비어 있었으며 forward는 yes, masquerade는 no였다. 재부팅 후 대상 인터페이스의 활성 zone 규칙 유지 검증을 완료로 기록한다. forward yes가 모든 인바운드 포트 개방을 뜻하는 것은 아니라고 설명했다.
 
 다음으로 `cat /etc/os-release`, `systemctl get-default`, `rpm -q xorg-x11-server-Xorg gnome-shell gdm`을 요청했다. 아직 결과는 없다. 대표 패키지 부재만으로 모든 GUI·그래픽 서버의 부재를 증명했다고 판단하지 않는다. 복구 후 자동 방송 확인도 별도 대기 상태다. 이번 문서 작업에서는 VM 설정이나 패키지를 변경하지 않았다.
+
+
+## 2026-10-14 — OS·대표 GUI 패키지 확인과 품질 시험 전 기간 조회
+
+원격 main을 가져와 대조했으며 직전 OS 조회 결과는 아직 기록되지 않은 상태였다. 이번에 사용자 제공 결과를 반영한다. `/etc/os-release`는 Rocky Linux 10.2 (Red Quartz), stable을 표시했다. `systemctl get-default`는 `multi-user.target`이었고 `xorg-x11-server-Xorg`, `gnome-shell`, `gdm`은 모두 설치되지 않았다. 이는 콘솔 중심 구성을 뒷받침하지만 모든 GUI 패키지·그래픽 서버의 부재나 확인 시점의 최신 안정 릴리스 여부를 독립적으로 증명하지는 않는다.
+
+이어서 사용자의 `chage -l jungblee`에서 다음 값을 확인했다.
+
+| 항목 | 확인값 |
+|---|---|
+| 마지막 변경 | Oct 13, 2026 |
+| 비밀번호 만료 | Nov 12, 2026 |
+| 비밀번호 비활성 기한 | never |
+| 계정 만료 | never |
+| 최소 / 최대 / 경고 | 2 / 30 / 7 |
+
+조회일은 Oct 14이므로 일반 사용자의 재변경이 최소 2일 간격에 걸릴 수 있다. 기간 제한으로 거절된 결과를 품질 규칙의 거절 증거로 삼지 않도록 구분한다. 기존 계정의 기간 정책을 바꾸지 않고, 연습 계정 이름의 사용 여부를 확인하려고 `getent passwd b2brtest`를 안내했다. 조회 결과는 아직 없으며 계정 생성·품질 거절 시험도 수행하지 않았다.
+
+기존 cron 두 예약 줄 복구 확인과 재부팅 후 활성 방화벽의 4242/tcp 규칙 유지 확인은 그대로 유효하다. 복구 후 자동 방송 수신은 여전히 별도 미확인이다. 이번 작업은 문서 동기화이며 사용자 VM의 계정·비밀번호·설정을 변경하지 않았다.
