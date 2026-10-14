@@ -19,7 +19,7 @@ Born2beRoot는 가상 머신에 최소 구성의 Linux 서버를 만들고 디�
 
 사용자는 학교 컴퓨터와 개인 NixOS 환경에서 **Rocky 10.2 Minimal**로 전체 과정을 해봤으며, 아직 익숙하지 않아 반복 실습하고 싶다고 밝혔다. 환경과 버전은 사용자 제공 정보다. 이전 실습의 설치 버전·구성 상태·평가 통과 여부는 독립적으로 확인하지 않았다. 이 경험을 이번 학습의 완료 기록으로 간주하지 않는다.
 
-**이번 반복 실습의 현재 상태:** 디스크·그룹·비밀번호 기간과 sudo 정책·로그 검증을 진행했고, SSH 설정 검사와 SELinux의 TCP 4242 등록을 확인했다. firewalld의 `public` zone은 runtime·permanent 모두 `services`가 비어 있고 `ports`는 `4242/tcp`다. sshd 재시작 후 `active`와 IPv4·IPv6의 4242 리스닝, 22 리스닝 없음을 확인했다. 호스트 포트 14242를 통한 일반 사용자 SSH 로그인과 `hostname`의 `jungblee42`, `whoami`의 `jungblee`를 확인해 호스트 접속 체크포인트를 완료했다. root 접속은 한 번의 비밀번호 요청 후 거절되어 기존 `permitrootlogin no`와 함께 직접 접속 거절 체크포인트를 완료했다. monitoring은 잠시 미루고 호스트 4242 점유 원인과 같은 포트를 사용할 방법을 확인 중이다. 최신 소켓 조회는 `/system.slice/supervisor.service` cgroup을 가리키지만 PID·프로세스명과 42 패키지 관리자 여부는 미확정이다. `systemctl status supervisor --no-pager` 결과를 기다리고 있다. 14242 접속 성공은 유지하며 비밀번호 품질 위반 거절 검증도 남아 있다. 세부 확인 근거와 이력은 [학습 기록](docs/learning-log.md)에 둔다.
+**이번 반복 실습의 현재 상태:** 디스크·그룹·비밀번호 기간과 sudo 정책·로그 검증을 진행했고, SSH 설정 검사와 SELinux의 TCP 4242 등록을 확인했다. firewalld의 `public` zone은 runtime·permanent 모두 `services`가 비어 있고 `ports`는 `4242/tcp`다. sshd 재시작 후 `active`와 IPv4·IPv6의 4242 리스닝, 22 리스닝 없음을 확인했다. 호스트 포트 14242를 통한 일반 사용자 SSH 로그인과 `hostname`의 `jungblee42`, `whoami`의 `jungblee`를 확인해 호스트 접속 체크포인트를 완료했다. root 접속은 한 번의 비밀번호 요청 후 거절되어 기존 `permitrootlogin no`와 함께 직접 접속 거절 체크포인트를 완료했다. 현재 `127.0.0.2:4242` → `10.0.2.15:4242` 접속 성공을 사용자가 확인했으며 학교 서비스는 변경하지 않았다. 일반 사용자·root 거절 검증은 앞선 14242 경로의 결과다. supervisor 아래 `ftpkg-srv.py`와 다른 worker가 있지만 정확한 소켓 PID는 미확정이다. monitoring 첫 조회는 보류 상태이며 비밀번호 품질 위반 거절 검증도 남아 있다. 세부 확인 근거와 이력은 [학습 기록](docs/learning-log.md)에 둔다.
 
 원문·번역·가이드는 요구사항을 찾는 자료이고, 학습 기록은 직접 적용한 결과를 남기는 문서다. 문서를 읽거나 예시를 확인한 것만으로 체크리스트를 완료 처리하지 않는다.
 
