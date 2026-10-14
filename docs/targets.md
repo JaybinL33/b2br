@@ -377,6 +377,14 @@ TCP 쪽은 ss의 `-H`가 제목을 없애고 `-t`가 TCP를 선택하며 `-n`이
 
 [systemd journalctl 매뉴얼](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html)의 필드 일치 조회, `-n`·`--lines`, `--no-pager`, `-o cat`과 설치된 `man journalctl`의 같은 항목만 읽는다. `_COMM=sudo`는 해당 명령 이름의 로그 필터이며, `-n 10`은 최근 메시지 10개 제한이다. cat은 메시지 본문 위주로 출력한다. 세션 메시지와 명령 실행 기록이 섞일 수 있어 로그 행 수를 곧바로 sudo 실행 횟수로 삼지 않는다. 기록 보존 범위·실행 기록의 실제 형식을 확인하고 집계 기준을 정한 뒤 구현한다.
 
+### sudo I/O 세션 목록의 읽기 범위
+
+[공식 sudoers 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/sudoers.man.in)의 `Accepted command log entries`·`Denied command log entries`와 `log_input`·`log_output`·`iolog_dir`를 읽는다. 명령 기록과 PAM 세션 메시지는 다른 사건이며, `COMMAND`가 있다는 것만으로 허용된 실행이라고 단정할 수 없다. 따라서 journal의 전체 행 수나 COMMAND 단순 검색 결과를 바로 실행 횟수로 삼지 않는다.
+
+이미 설정한 `/var/log/sudo`의 I/O 로그를 재사용하는 방향으로 [공식 sudoreplay 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/sudoreplay.man.in)의 `DESCRIPTION`, `-d`·`-l`만 읽고 설치된 `man sudoreplay`와 대조한다. 목록 모드는 보관된 세션을 파일명 또는 시퀀스 번호 순으로 나열하고 TSID로 실행 기록과 연결할 수 있다. 설치된 `man tail`의 `-n`은 끝에서 지정한 줄 수를 읽는 옵션이다. 마지막 다섯 줄은 형식 확인 표본이지 전체 개수나 시간순 정렬을 보장하는 선택이 아니다.
+
+이 방향에서 세려는 대상은 **현재 디렉터리에 보관된 sudo I/O 실행 세션 수**다. 영구 누적 명령 수나 sudo로 연 셸 안에서 실행한 개별 명령 수가 아니다. 로그 삭제·시퀀스 재사용·로깅 예외가 있으면 범위가 달라지며, 세션 존재가 명령의 성공 종료를 뜻하지도 않는다. 조회를 sudo로 수행하면 그 조회도 기록될 수 있다. 실제 목록 형식과 기록 범위를 확인한 뒤 집계 방식을 정하며 아직 집계 코드는 작성하지 않는다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.

@@ -580,3 +580,12 @@ TYPE의 lvm 존재 여부를 if와 grep으로 판단하는 부분 코드, 필터
 남은 수집 항목인 sudo 횟수의 실제 로그 형식을 보기 위해 `sudo journalctl _COMM=sudo -n 10 --no-pager -o cat`를 요청했다. 아직 결과가 없어 sudo 집계 코드는 작성하지 않았고 방송·cron도 구현하지 않았다. 사용자 VM 조작은 하지 않았다.
 
 작업 환경의 통제 입력으로 동일 사용자 두 세션의 중복 제거, IPv4 접두사 제거와 MAC 출력 조합을 검사했고 Bash 구문 검사도 통과했다. 사용자 VM 원자료와 로컬 검사 입력은 구분했다.
+
+
+## 2026-10-14 — sudo journal 구조 확인과 I/O 세션 목록 조회 안내
+
+사용자 VM의 최근 sudo journal 출력에서 `TTY`·`PWD`·`USER`·`TSID`·`COMMAND`를 포함한 명령 기록과 `pam_unix`의 session opened/closed 메시지가 함께 나타났다. 조회 자체도 TSID `00001E`·`00001F`로 기록되었다. 상세 명령 인자는 복사하지 않고 메시지 구조만 보존한다.
+
+journal 전체 줄 수를 실행 횟수로 쓸 수 없고 COMMAND 단순 검색도 거절된 시도를 포함할 수 있음을 설명했다. 기존 log_input/log_output 설정과 `/var/log/sudo`를 재사용해 보관된 I/O 실행 세션 목록을 집계하는 방향을 안내했다. 영구 누적 횟수나 sudo 셸 내부 명령 수를 의미하는 것은 아니다.
+
+다음 검증으로 `sudo sudoreplay -d /var/log/sudo -l | tail -n 5`를 요청했으며 아직 출력은 없다. 공식 sudoreplay·sudoers 매뉴얼에서 목록 모드·로그 필드·보관 범위를 대조하고 정상 조회 흐름을 문서에 추가했다. sudo 집계 코드·방송·cron은 구현하지 않았고 사용자 VM 조작도 하지 않았다.
