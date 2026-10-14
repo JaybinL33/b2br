@@ -390,3 +390,19 @@ VBoxManage showvminfo b2br --log 0 | grep -i -e nat -e 4242 -e forward -e bind
 ```
 
 NAT·포워딩·바인딩 로그 결과는 아직 없다.
+
+
+## 2026-10-14 — NAT 전달 적용 실패 확인과 호스트 포트 변경 안내
+
+주 대화가 확인한 VBox.log 화면에는 다음 오류가 있었다.
+
+```text
+drvNATNotifyApplyPortForwardCommand: Port forward modify FAIL!
+VERR_NAT_REDIR_SETUP
+NAT#0 configuration error failed to set up redirection of 4242 to 4242
+Probably a conflict with existing services or other rules.
+```
+
+저장된 전달 규칙이 보여도 실제 전달 적용에 성공한 것은 아님을 확인했다. 로그는 기존 서비스·규칙과의 충돌 가능성을 제시하지만 충돌 소유자는 아직 특정하지 못했다.
+
+기존 `ssh` 규칙의 Host Port만 `14242`로 바꾸고 Host IP `127.0.0.1`, Guest IP `10.0.2.15`, Guest Port `4242`는 유지하도록 안내했다. 두 설정 창을 OK로 저장한 뒤 호스트에서 `ssh -p 14242 jungblee@127.0.0.1`로 재시도하는 단계다. VM의 과제 SSH 포트 4242와 호스트 입구 포트는 서로 달라도 된다. 변경·접속 결과는 아직 없으며 복구 성공으로 처리하지 않는다.
