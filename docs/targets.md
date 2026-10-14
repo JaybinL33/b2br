@@ -262,6 +262,10 @@ SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 
 
 ## 6. monitoring.sh와 cron·wall
 
+**전체 흐름과 첫 단위:** 시스템 상태 수집 → 요구 형식으로 출력·wall 방송 → 부팅 시점과 10분 주기의 cron 예약 순서로 구성한다. 첫 단위는 원문 10쪽의 OS 아키텍처·커널 버전·물리 및 가상 프로세서 수다. VM에서 원자료를 읽고 각 값의 뜻을 설명한 뒤 해당 부분만 코드로 옮긴다.
+
+[GNU uname 매뉴얼](https://man7.org/linux/man-pages/man1/uname.1.html)과 설치된 `man uname`의 `-a`, `-s`, `-r`, `-v`, `-m`, `-o`를 읽어 커널 이름·릴리스·빌드 버전·머신 아키텍처·OS 표기를 구분한다. `uname -a`는 배포판의 제품명·릴리스를 확인하는 명령과 다르다. [util-linux lscpu 매뉴얼](https://man7.org/linux/man-pages/man1/lscpu.1.html)의 `DESCRIPTION` 중 정보 출처와 가상 환경 설명, `NOTES`의 출력 형식 주의를 읽는다. VM 출력의 `CPU(s)`는 논리 CPU 수, `Socket(s)`는 게스트에 보이는 소켓 수로 읽고 물리 프로세서·가상 CPU 지표의 근거를 구분한다. 필요하면 cores/threads와 온라인 CPU 목록을 함께 보되 VM 토폴로지를 호스트의 실제 하드웨어 수로 해석하지 않는다. 지금은 출력 이해가 목표이며 NUMA·캐시·명령어 플래그와 전체 스크립트 구현은 뒤로 미룬다. [첫 조회 절차](cheatsheet.md#21-monitoring-첫-조회-os와-cpu).
+
 **반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 10–11쪽에서 먼저 지표와 방송 조건을 읽는다. [Rocky Task Management](https://docs.rockylinux.org/books/admin_guide/11-tasks/)의 `Generalities`, `How the service works`, `Scheduling tasks` 아래 `The crontab command`·`The crontab file`·`Task execution process`로 예약 구조를 잡는다. 실제 작성 시 VM의 `man 5 crontab`에서 시간 필드·환경·`@reboot`, `man wall`의 `DESCRIPTION`을 읽고, 아래 표의 지표를 하나 선택할 때마다 해당 명령의 출력 필드 설명만 읽는다.
 
 **설명할 수 있어야 할 것:** CPU 사용률의 측정 구간과 load average 차이, 사용/가용/전체 메모리·디스크의 분모, 사용자와 세션, VM CPU와 호스트 CPU, 누적 sudo 기록의 집계 범위다. 원문 출력 예시와 문구의 차이를 인식하고 계산 근거를 설명해야 한다. cron의 실행 사용자·환경·부팅 예약과 주기 예약, wall의 수신 대상도 방송 조건을 직접 검증하기 위해 필요하다. 스크립트는 지표 하나씩 원자료와 대조하며 작성한다.

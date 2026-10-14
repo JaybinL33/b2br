@@ -422,3 +422,12 @@ Probably a conflict with existing services or other rules.
 주 대화가 확인한 새 화면에서 호스트의 `ssh -p 14242 jungblee@127.0.0.1`로 키 질문에 `yes`를 입력한 뒤 비밀번호 인증에 성공했다. `hostname`은 `jungblee42`, `whoami`는 `jungblee`였다. 일반 사용자 호스트 SSH 접속 체크포인트를 완료했다.
 
 다음으로 `exit`로 호스트에 돌아온 뒤 `ssh -p 14242 -o NumberOfPasswordPrompts=1 root@127.0.0.1`을 실행하고 올바른 root 비밀번호로도 거절되는지 확인하도록 안내했다. 해당 옵션은 클라이언트 비밀번호 질문을 한 번으로 제한한다. root 접속 거절 결과는 아직 없다.
+
+
+## 2026-10-14 — root SSH 거절 확인과 monitoring 첫 단위
+
+주 대화가 확인한 최신 화면에서 호스트의 `ssh -p 14242 -o NumberOfPasswordPrompts=1 root@127.0.0.1`은 비밀번호 요청 한 번 후 `Permission denied (publickey,gssapi-keyex,gssapi-with-mic,password)`를 표시하고 호스트 프롬프트로 돌아왔다. 비밀번호 자체는 보지 않았다. 기존 `sshd -T`의 `permitrootlogin no`와 함께 root 직접 접속 거절 체크포인트를 기록했다.
+
+사용자는 호스트 4242를 “42 pkg manager”가 차지한다는 이야기를 들었다고 말했다. 이는 충돌 관측과 일관되는 전달 정보지만 점유 프로세스를 직접 확인한 것은 아니다. 학교 프로그램은 그대로 두고 호스트 14242 사용을 유지하기로 안내했다.
+
+monitoring 학습은 상태 수집 → 요구 형식 출력·wall → 부팅 시점·10분 주기 cron의 순서로 시작했다. 저장소 원문 v5.2 인쇄 10쪽의 Bash 스크립트·지표·방송 요구를 다시 대조했다. 첫 단위로 일반 사용자 SSH 재접속 뒤 `uname -a`·`lscpu`를 요청했고 OS·커널·아키텍처와 게스트의 CPU·소켓 수를 읽은 뒤 코드로 옮기기로 했다. 조회 결과는 아직 없으며 전체 스크립트를 작성하지 않았다.

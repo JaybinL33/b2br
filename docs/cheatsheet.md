@@ -426,6 +426,23 @@ ssh -p 4242 -o NumberOfPasswordPrompts=1 root@127.0.0.1
 
 비밀번호를 요청하면 올바른 root 비밀번호를 터미널에 입력한다. 기대 결과는 인증 거절과 root 셸에 진입하지 못하는 것이다. `NumberOfPasswordPrompts=1`은 클라이언트의 비밀번호 질문 횟수 제한이며 서버의 root 차단 정책이 아니다. 연결 실패·잘못된 비밀번호만으로 root 차단 성공을 판단하지 않고, 일반 사용자 접속 성공 및 `permitrootlogin no`와 함께 대조한다. [옵션과 검증 근거](targets.md#5-sshfirewalldselinux).
 
+## 21. monitoring 첫 조회: OS와 CPU
+
+호스트에서 일반 사용자로 다시 접속한다. `4242`는 예시이며 실제 선택한 Host Port로 바꾼다.
+
+```bash
+ssh -p 4242 jungblee@127.0.0.1
+```
+
+접속한 VM 셸에서 실행한다.
+
+```bash
+uname -a
+lscpu
+```
+
+`uname -a`에서 커널·OS·아키텍처 표기를, `lscpu`에서 `CPU(s)`·`Socket(s)`를 찾는다. VM에 보이는 논리 CPU 수와 소켓 수를 구분하고 호스트 실제 하드웨어 수로 단정하지 않는다. 출력의 의미를 확인한 뒤 해당 지표만 코드로 옮긴다. [공식 자료와 읽을 범위](targets.md#6-monitoringsh와-cronwall).
+
 ## 이후 단위
 
-SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
+나머지 monitoring 지표 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
