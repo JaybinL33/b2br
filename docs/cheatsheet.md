@@ -584,6 +584,23 @@ sudo sudoreplay -d /var/log/sudo -l | tail -n 5
 
 `-d`로 로그 디렉터리, `-l`로 목록 모드를 지정하고 마지막 다섯 줄의 형식을 읽는다. 목록은 파일명 또는 시퀀스 번호 순서이며 `tail`은 표본 확인용이다. TSID와 사용자·터미널·실행 명령 등 필드를 구분하고 실제 실행 기록과 대조한다. 조회 자체도 sudo I/O 세션을 만들 수 있다. 출력 확인 전에는 전체 횟수를 계산하지 않는다. [범위와 공식 근거](targets.md#sudo-io-세션-목록의-읽기-범위).
 
+## 33. sudo I/O 세션 수 부분 출력
+
+목록의 한 줄이 한 세션임을 확인한 뒤 스크립트에 추가한다.
+
+```bash
+sudo_count=$(sudoreplay -d /var/log/sudo -l | wc -l)
+printf '#Sudo : %s cmd\n' "$sudo_count"
+```
+
+VM 터미널에서 로그를 읽을 권한으로 스크립트 전체를 실행한다.
+
+```bash
+sudo bash monitoring.sh
+```
+
+스크립트 내부의 sudoreplay 앞에는 sudo를 붙이지 않는다. 출력은 현재 보관된 I/O 세션 수이며 수동 `sudo bash` 실행 세션도 포함될 수 있다. 조회 오류 없이 목록을 읽었는지 함께 확인한다. [권한·집계 범위](targets.md#sudo-io-세션-집계의-실행-범위).
+
 ## 이후 단위
 
-sudo 실행 횟수 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
+수집 결과 검증 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
