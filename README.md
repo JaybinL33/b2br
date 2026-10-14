@@ -17,6 +17,7 @@
 - [요구사항·평가 체크리스트](docs/ko/Born2beRoot-v5.2-ko-guide.md) · [PDF](docs/ko/Born2beRoot-v5.2-ko-guide.pdf)
 - [targets](docs/targets.md): 전체 구조, 선택 이유, 공식 자료의 읽을 범위와 목표
 - [치트시트](docs/cheatsheet.md): 반복 실습의 명령·설정·기대 결과
+- [스피드런](docs/speedrun.md): Rocky 10.2 Minimal 신규 재구축의 필수 입력만 압축
 - [학습 기록](docs/learning-log.md): 실제 적용 결과, 확인 근거와 남은 검증
 
 공식 입문 자료로 전체 구조를 보고, 당장 필요한 세부사항을 좁혀 읽고 직접 적용한다. 원문의 요구사항, 안내 예시, 실제 실행 결과는 구분하며 완료 여부는 학습 기록에서 관리한다. 실습 구성은 Rocky Minimal·VirtualBox, LUKS 위 LVM, SSH 4242, firewalld·SELinux다.
