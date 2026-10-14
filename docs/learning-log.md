@@ -915,3 +915,20 @@ VirtualBox의 스냅샷 유무와 실제 가상 디스크 파일 경로를 요�
 전달된 스크린샷 확인 결과에 따르면 선택된 VirtualBox VM `b2br`의 Snapshots 목록에는 `Current State` 하나만 있고 VM은 `Running`이다. 해당 화면에서 저장된 스냅샷이 없는 상태로 확인하며, 별도 VM `jungblee42`의 상태와 혼동하지 않는다. 파일 관리자에는 `~/goinfre/VirtualBox VMs/b2br/b2br.vdi`가 보인다. Storage의 실제 연결 화면이 아니므로 이 파일이 현재 선택된 VM에 연결된 디스크라는 확인은 남아 있다. 종료·해시 생성·signature.txt 준비는 미실시다.
 
 README에 원문 12쪽의 OS 선택 근거·장단점, 네 가지 비교, 설치·실행 순서와 주요 설계·서비스 역할을 기존 실습 및 공식 문서로 보완했다. Debian 릴리스, Rocky 소개·SELinux, Ubuntu의 AppArmor·UFW 설명, firewalld 개념, UTM 공식 설명을 확인했다. 비교 설명을 작성한 것을 다른 OS·도구의 실제 실행 비교로 기록하지 않는다. 이전 절의 설명 미작성 상태는 이번 문서 보완으로 해소하되 최종 구성 대조와 사용자의 설명 준비는 남는다. 실제 42 제출 저장소 주소는 여전히 미확인이다. 사용자 VM·호스트 설정을 변경하지 않았다.
+
+
+## 2026-10-14 — 가상 디스크 SHA-1 계산 결과 확인
+
+사용자가 호스트에서 다음 명령을 실행한 결과를 전달했다.
+
+```bash
+sha1sum "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi"
+```
+
+```text
+1ac763cd9e7e5526d602a6dc928d3563fb186b00  /home/jungblee/goinfre/VirtualBox VMs/b2br/b2br.vdi
+```
+
+해당 경로 파일의 해시 계산은 확인했다. 계산 당시 VM이 `Powered Off`였는지는 명시 확인이 없어 다시 요청한 상태다. 앞선 스크린샷의 Running은 그 화면 당시 상태이며 해시 계산 시점의 상태로 단정하지 않는다. Storage 연결 확인의 한계도 유지하며, 이 해시를 최종 제출용으로 확정하지 않는다.
+
+Powered Off 상태에서 계산한 경우 실제 제출 저장소 루트에서 `printf`로 해시만 한 줄을 `signature.txt`에 저장하도록 안내했다. 기존 파일 덮어쓰기와 VDI Git 제출 금지도 설명했다. 실제 제출 저장소의 로컬 경로는 대기이며, signature.txt 작성·커밋·제출 결과는 전달받지 않았다. 이전 해시 미생성 상태는 이번 계산 결과로 갱신하지만 제출 완료로 기록하지 않는다. 이번 동기화는 학습 문서만 수정했고 학습 저장소 루트에 signature.txt를 생성하지 않았으며 사용자 VM·호스트를 조작하지 않았다.

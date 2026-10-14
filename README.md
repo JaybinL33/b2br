@@ -78,7 +78,7 @@ sudo /bin/bash /usr/local/sbin/monitoring.sh
 
 v5.2 인쇄 12–13쪽·16–17쪽에 따라 최종 제출은 루트 `README.md`와 실제 가상 디스크 SHA-1을 담은 `signature.txt`다. VM은 Git에 넣지 않는다. 평가는 스냅샷 없이 시작하고, 평가용 스냅샷은 이후 생성해 종료 시 삭제한다. VM 재실행으로 서명이 바뀔 수 있으므로 최종 디스크와 제출 서명을 대조한다.
 
-전달받은 화면에서 선택된 **b2br**의 Snapshots 목록에는 `Current State`만 있으며 상태는 `Running`이다. 파일 관리자에는 `~/goinfre/VirtualBox VMs/b2br/b2br.vdi`가 보인다. Storage 연결 화면을 확인한 것은 아니므로 이 파일을 실제 연결 디스크로 확정하지 않는다. VM 종료와 해시 생성은 아직 하지 않았고 `signature.txt`도 없다. 실제 42 제출 저장소 주소는 미확인이다.
+전달받은 화면에서 선택된 **b2br**의 Snapshots 목록에는 `Current State`만 있으며 상태는 `Running`이다. 파일 관리자에는 `~/goinfre/VirtualBox VMs/b2br/b2br.vdi`가 보인다. Storage 연결 화면을 확인한 것은 아니므로 이 파일을 실제 연결 디스크로 확정하지 않는다. 이후 사용자가 해당 파일의 SHA-1 `1ac763cd9e7e5526d602a6dc928d3563fb186b00`을 계산했다. 계산 당시 VM의 Powered Off 상태는 아직 확인되지 않아 최종 제출 서명으로 확정하지 않는다. 실제 42 제출 저장소의 주소·로컬 경로와 `signature.txt` 작성·제출 여부도 미확인이다.
 
 ## Project description
 
