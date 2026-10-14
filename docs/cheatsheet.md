@@ -677,9 +677,27 @@ ssh -p 4242 jungblee@127.0.0.2
 systemctl is-active sshd firewalld crond
 getenforce
 sudo journalctl -b -u crond --no-pager
+sudo journalctl -b -t CROND --no-pager
 ```
 
-서비스는 명령에 나열한 순서대로 `active`, SELinux는 `Enforcing`인지 대조한다. journal의 `-b`는 이번 부팅, `-u crond`는 해당 서비스로 범위를 한정한다. 이번 부팅의 monitoring 명령 실행 기록과 오류 여부를 읽는다. 부팅 직후 로그인 사용자가 없었다면 wall 화면이 없을 수 있으므로 기록상 실행과 터미널 수신을 별도로 확인한다. 로그인 후 다음 주기 방송에서 각 터미널의 수신도 대조한다. [검증 범위](targets.md#재부팅-검증의-읽기-범위).
+서비스는 명령에 나열한 순서대로 `active`, SELinux는 `Enforcing`인지 대조한다. journal의 `-b`는 이번 부팅, `-u crond`는 서비스, `-t CROND`는 작업 로그의 식별자로 범위를 한정한다. 이번 부팅의 monitoring 명령 실행 기록과 오류 여부를 읽는다. 부팅 직후 로그인 사용자가 없었다면 wall 화면이 없을 수 있으므로 기록상 실행과 터미널 수신을 별도로 확인한다. 로그인 후 다음 주기 방송에서 각 터미널의 수신도 대조한다. [검증 범위](targets.md#재부팅-검증의-읽기-범위).
+
+## 38. 스크립트 수정 없이 monitoring 예약 중단·복구
+
+VM에서 root crontab을 편집한다.
+
+```bash
+sudo crontab -e
+```
+
+PATH와 다른 예약은 유지하고 monitoring의 두 실행 줄만 주석 처리한다.
+
+```cron
+#*/10 * * * * /bin/bash /usr/local/sbin/monitoring.sh
+#@reboot /bin/bash /usr/local/sbin/monitoring.sh
+```
+
+`sudo crontab -l`로 두 줄이 주석인지 확인한 뒤 다음 10분 경계에 방송이 없는지 관찰한다. crond 전체를 중단하거나 스크립트를 수정하지 않는다. 검증 뒤 같은 편집 명령에서 두 줄의 첫 `#`만 제거하고 저장한다. 다시 목록을 확인하고 다음 주기 방송으로 복구 여부를 검증한다. [중단 범위와 증거](targets.md#monitoring-예약-중단과-복구).
 
 ## 이후 단위
 

@@ -688,3 +688,10 @@ Cronie의 run_reboot_jobs와 REBOOT_LOCK 처리를 대조해 일반 서비스 �
 `journalctl -b -u crond`에는 18:41:57의 STARTUP(Cronie 1.7.0)과 기본 INFO 메시지만 보였고 monitoring 작업 실행 기록은 보이지 않았다. 이것만으로 @reboot 실행 완료 또는 실행 실패를 확정하지 않는다. 서비스 시작과 monitoring 작업 실행은 별도 증거다.
 
 작업 로그의 journal 식별자가 다를 가능성도 있어 `sudo crontab -l`과 `sudo journalctl -b -t CROND --no-pager`를 추가 요청했다. 아직 결과는 없다. @reboot 실행은 미검증으로 유지하며 이번 문서 작업에서 VM 설정이나 예약을 변경하지 않았다.
+
+
+## 2026-10-14 — @reboot 시작·종료 기록 확인과 중단 테스트 제안
+
+재부팅 후 root crontab은 기존 PATH·주기·@reboot 항목을 유지했다. `journalctl -b -t CROND`에서 18:41:58 root의 `CMD (/bin/bash /usr/local/sbin/monitoring.sh)`, 18:41:59 CMDEND를 확인했다. 부팅 시각과 별도 @reboot 예약을 대조해 부팅 작업의 시작·종료 기록 확인을 완료로 기록한다. 이 로그만으로 개별 명령의 오류 부재나 방송 수신까지 완료 처리하지 않는다. 이 환경에서 작업 기록 조회에 CROND 식별자가 유효함을 정상 절차에 반영했다.
+
+다음으로 root crontab의 두 monitoring 예약 줄만 #으로 주석 처리하고 PATH·다른 예약은 유지하도록 제안했다. 목록을 확인하고 18:50 KST 방송이 없는지 관찰한 뒤 주석을 제거해 복구할 예정이다. 아직 주석 적용 증거는 없으며 중단·복구도 미검증이다. crond 전체 중단이나 스크립트 수정은 제안하지 않았다. 이번 작업에서도 사용자 VM 변경을 직접 수행하지 않았다.
