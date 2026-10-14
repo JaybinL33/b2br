@@ -463,10 +463,25 @@ architecture=$(uname -a)
 physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
 virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
 
-printf '#Architecture: %s\n#CPU physical: %s\n#vCPU: %s\n' "$architecture" "$physical" "$virtual"
+printf '#Architecture: %s\n' "$architecture"
+printf '#CPU physical : %s\n' "$physical"
+printf '#vCPU : %s\n' "$virtual"
 ```
 
 출력의 Architecture는 `uname -a`, CPU physical은 온라인 CPU에 나타난 서로 다른 소켓 수, vCPU는 온라인 CPU 데이터 행 수와 대조한다. [각 처리 단계의 의미](targets.md#monitoring-첫-구현의-흐름).
+
+## 24. monitoring 메모리·디스크 원자료 읽기
+
+VM 셸에서 조회한다.
+
+```bash
+free -m
+df -BM --total -x tmpfs -x devtmpfs
+```
+
+`free`의 Mem 행에서 total·used·free·shared·buff/cache·available을 구분하고 Swap 행과 섞지 않는다. `-m`은 MiB 단위다. `df`에서는 파일시스템별 Size·Used·Avail·Use%·마운트 지점과 total 행을 읽는다. `-BM`은 1,048,576바이트 단위로 표시하고 `-x`는 지정한 파일시스템 유형을 제외한다. 이 조회의 total은 선택된 마운트 파일시스템의 합계이며 가상 디스크 전체 용량이나 swap 용량이 아니다.
+
+표시값은 반올림되므로 행별 숫자의 합과 total이 정확히 일치한다고 가정하지 않는다. 먼저 집계 대상·단위·사용량과 가용량의 의미를 정하고 원문 예시와 대조한다. 계산 코드와 출력 형식은 그 다음 단위에서 작성한다. [공식 읽기 범위와 원문 표기의 한계](targets.md#monitoring-메모리디스크의-읽기-범위).
 
 ## 이후 단위
 

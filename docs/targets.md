@@ -300,6 +300,27 @@ SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 
 
 cron의 사용자·환경·경로와 wall의 수신 대상을 구분한다. 사용자 crontab과 시스템 예약 위치를 확인하고 예약 중단을 실제로 시연한다. 부팅 직후 방송, 10분 간격, 여러 터미널 수신, 오류 부재, 값의 근거, 스크립트 수정 없는 중단을 직접 관찰한다. 예약 설정 조회만으로 방송 성공을 판정하지 않는다.
 
+### monitoring 메모리·디스크의 읽기 범위
+
+[free 매뉴얼](https://man7.org/linux/man-pages/man1/free.1.html)의 `DESCRIPTION`에서 total·used·free·shared·buff/cache·available, `OPTIONS`에서 `-m`만 먼저 읽는다. 설치된 VM의 `man free`와 대조한다. free는 완전히 미사용인 메모리이며 available은 새 프로그램에 사용할 수 있는 양의 추정치다. 현재 upstream의 used 정의는 total − available이지만 설치 버전의 정의를 확인하고, 표시 단위로 반올림된 숫자로 정확한 등식을 기대하지 않는다. Swap은 RAM과 따로 읽는다.
+
+[df 매뉴얼](https://man7.org/linux/man-pages/man1/df.1.html)의 `DESCRIPTION`, `-B`·`--total`·`-x`와 단위 설명을 설치된 `man df`와 대조한다. `df -BM --total -x tmpfs -x devtmpfs`는 지정 유형을 제외한 마운트 파일시스템을 MiB 단위로 보여 준다. 어떤 마운트가 합계에 들어가는지 먼저 확인한다. 파일시스템의 Size·Used·Avail·Use%를 구분하고 예약 공간·표시 반올림 때문에 Avail을 단순히 Size − Used로 단정하지 않는다. 파일시스템 합계를 가상 디스크 용량·LVM의 미할당 공간·swap과 혼동하지 않는다.
+
+원문 v5.2 인쇄 10쪽의 요구 문장은 다음과 같다.
+
+> The currently available RAM on your server and its utilization rate as a percentage.
+>
+> The currently available storage on your server and its utilization rate as a percentage.
+
+같은 쪽의 예시는 다음 두 줄이다.
+
+```text
+#Memory Usage: 74/987MB (7.50%)
+#Disk Usage: 1009/2Gb (49%)
+```
+
+요구 문장은 가용량을 언급하지만 예시는 사용량/전체처럼 표현한다. 원문은 디스크 퍼센트가 used/size인지 `df`의 Use%인지, 파일시스템 집계 범위가 무엇인지 명시하지 않는다. 예시의 `MB`·`Gb` 표기도 그대로 인용한 것이며, 이를 근거로 바이트 환산 기준·분자 단위·반올림 규칙을 임의로 확정하지 않는다. 조회 명령의 MiB 단위와 원문 예시 표기는 별개다. 이 구간에서는 원자료와 정의를 읽고, 계산·출력 선택은 근거를 정리한 뒤 진행한다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.
