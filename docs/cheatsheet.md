@@ -550,6 +550,30 @@ ip -br link
 
 who에서 사용자명과 터미널을 읽고, 같은 사용자가 여러 행에 있는지 확인한다. 세션 행 수와 중복을 제외한 사용자 수를 구분한다. ip 출력은 같은 인터페이스 이름으로 대조한다. `enp0s3`의 IPv4와 접두사 길이, 링크의 MAC 주소를 찾고 `lo` 및 IPv6 주소와 구분한다. 다른 환경이면 실제 인터페이스 이름을 확인한다. [공식 읽기 범위](targets.md#monitoring-로그인-세션ipmac의-읽기-범위)를 읽은 뒤 집계·출력 방식을 정한다.
 
+## 30. monitoring 사용자 수·IPv4·MAC 부분 출력
+
+VM 터미널에서 `who`와 네트워크 원자료를 대조한다. 다음 예시는 대상 NIC가 `enp0s3`이고 IPv4 주소가 하나인 구성이다. 이름이나 주소 개수가 다르면 먼저 대상 범위를 정한다.
+
+```bash
+users=$(who | awk '{print $1}' | sort -u | wc -l)
+ip_address=$(ip -4 -o address show dev enp0s3 | awk '{print $4}' | cut -d / -f 1)
+mac_address=$(cat /sys/class/net/enp0s3/address)
+printf '#User log: %s\n' "$users"
+printf '#Network: IP %s (%s)\n' "$ip_address" "$mac_address"
+```
+
+부분 스크립트에 추가하고 `bash monitoring.sh`로 실행한다. User log는 같은 사용자명을 한 번만 센 값이다. Network는 선택한 NIC의 IPv4에서 접두사 길이를 제외한 값과 같은 NIC의 MAC을 대조한다. [집계 선택과 공식 읽기 범위](targets.md#monitoring-사용자수ipv4mac-부분-구현).
+
+## 31. sudo 횟수를 위한 로그 원자료 조회
+
+VM 터미널에서 최근 sudo 로그의 형식을 확인한다.
+
+```bash
+sudo journalctl _COMM=sudo -n 10 --no-pager -o cat
+```
+
+최근 10개 로그 메시지를 읽는 조회이며 실행 횟수 계산은 아니다. 명령 실행 기록과 세션 열기·닫기 등 다른 메시지를 구분하고, 조회 자체도 sudo 실행으로 기록될 수 있음을 고려한다. 형식을 확인한 뒤 집계 범위와 기준을 정한다. [읽기 범위](targets.md#sudo-횟수-원자료의-읽기-범위).
+
 ## 이후 단위
 
-사용자 수·IPv4/MAC·sudo 실행 횟수 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
+sudo 실행 횟수 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

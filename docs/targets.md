@@ -365,6 +365,18 @@ TCP 쪽은 ss의 `-H`가 제목을 없애고 `-t`가 TCP를 선택하며 `-n`이
 
 [iproute2 ip 매뉴얼](https://man7.org/linux/man-pages/man8/ip.8.html)의 `-br`·`--brief`, `OBJECT`의 `address`·`link`만 먼저 읽고 설치된 `man ip`와 대조한다. `ip -br address`는 인터페이스의 IP 주소를, `ip -br link`는 링크 정보를 간단한 표로 보여 준다. 같은 인터페이스의 IPv4와 MAC을 짝지어 읽고 IPv4의 `/접두사 길이`는 주소 자체와 구분한다. loopback과 외부 접속에 쓰는 인터페이스, IPv4와 IPv6를 구분한다. 여기서는 `enp0s3`를 확인 대상으로 삼지만 이름과 주소를 다른 VM에도 고정값으로 적용하지 않는다. 여러 주소가 있으면 무작정 첫 값을 택하지 않고 대상 인터페이스와 표시 범위를 먼저 정한다. 네트워크 설정 변경이나 전체 라우팅 학습은 이 조회 단위에 필요하지 않다.
 
+### monitoring 사용자수·IPv4·MAC 부분 구현
+
+원문 v5.2 인쇄 10쪽은 “The number of users using the server.”를 요구하며 예시는 `#User log: 1`이다. 세션 행 수를 쓰라고 명시하지 않는다. 이 구현은 who에 나타난 로그인 사용자명을 중복 제거해 세는 해석을 선택한다. 같은 계정의 여러 세션은 한 사용자로 계산하며, 이것은 계정을 공유하는 실제 사람 수를 판별하는 기능이 아니다. 모든 등록 계정을 세는 것도 아니다.
+
+`awk '{print $1}'`은 사용자명 열을 고르고 `sort -u`는 중복을 제거하며 `wc -l`은 남은 행을 센다. 기존 awk·sort·wc 읽기 범위에서 이 동작만 대조한다. [ip 매뉴얼](https://man7.org/linux/man-pages/man8/ip.8.html)의 `-4`(IPv4)·`-o`(한 레코드를 한 줄로), [ip-address 매뉴얼](https://man7.org/linux/man-pages/man8/ip-address.8.html)의 `show dev IFNAME`을 읽는다. 지정 NIC의 출력에서 `$4`가 IPv4/접두사 길이임을 확인한 뒤 사용한다. 설치된 `man cut`의 `-d`(구분자)·`-f`(필드 선택)를 읽고 `/`로 나눈 첫 필드만 고르는 이유를 설명한다.
+
+[Linux 커널 sysfs 네트워크 ABI](https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-net)의 `/sys/class/net/<iface>/address` 항목은 현재 인터페이스 링크 주소를 설명한다. Ethernet NIC의 MAC을 이 파일에서 읽어 같은 NIC의 IP와 짝짓는다. 이는 영구 하드웨어 주소임을 보장하는 값은 아니다. 현재 예시는 단일 대상 NIC·단일 IPv4를 전제로 하며, NIC 이름 변경·여러 IPv4·명령 실패와 빈 결과는 전체 검증에서 다시 다룬다.
+
+### sudo 횟수 원자료의 읽기 범위
+
+[systemd journalctl 매뉴얼](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html)의 필드 일치 조회, `-n`·`--lines`, `--no-pager`, `-o cat`과 설치된 `man journalctl`의 같은 항목만 읽는다. `_COMM=sudo`는 해당 명령 이름의 로그 필터이며, `-n 10`은 최근 메시지 10개 제한이다. cat은 메시지 본문 위주로 출력한다. 세션 메시지와 명령 실행 기록이 섞일 수 있어 로그 행 수를 곧바로 sudo 실행 횟수로 삼지 않는다. 기록 보존 범위·실행 기록의 실제 형식을 확인하고 집계 기준을 정한 뒤 구현한다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.
