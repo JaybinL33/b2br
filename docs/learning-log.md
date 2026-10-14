@@ -363,3 +363,10 @@ PrintMotd no
 호스트에서 `ssh -p 4242 jungblee@127.0.0.1`과 `ssh -p 4242 jungblee@localhost` 모두 `kex_exchange_identification: Connection closed by remote host`, `Connection closed by 127.0.0.1 port 4242`로 실패했다. 사용자 인증 전 연결 종료이며 원인은 아직 확인되지 않았다. 이를 비밀번호 오류나 root SSH 거절 검증으로 해석하지 않는다.
 
 VM 콘솔에서 `ip -br addr`와 `sudo journalctl -u sshd -n 30 --no-pager`를 요청했다. 현재 Guest IP와 sshd 도달·거절 로그를 확인할 단계이며 결과는 아직 없다.
+
+
+## 2026-10-14 — VM 주소·sshd 로그 확인과 내부 접속 분리 검사
+
+주 대화가 확인한 사용자 화면에서 `ip -br addr`는 `enp0s3 UP 10.0.2.15/24`를 표시했다. `journalctl -u sshd -n 30 --no-pager`에는 14:56·15:11의 서비스 시작·정상 재시작과 `0.0.0.0`·`::`의 4242 리스닝 기록만 있었으며, 조회 범위에 실패한 접속 관련 로그는 없었다. 이 사실만으로 요청이 sshd에 도달하지 않았다고 확정하지 않으며 연결 종료 원인은 미확정이다.
+
+다음으로 VM 콘솔 안에서 `ssh -p 4242 jungblee@127.0.0.1`로 SSH 자체 연결을 확인하고 로그인되면 `exit`하도록 안내했다. VirtualBox 설정의 네트워크 어댑터 1 전체 화면도 요청했다. 내부 접속 결과와 어댑터 설정은 아직 확인되지 않았다.
