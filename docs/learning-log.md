@@ -837,3 +837,21 @@ passwd: password unchanged
 확인된 현재 호스트 접속 주소를 `127.42.42.42:4242`로 정리해 README·치트시트·targets의 정상 경로를 맞췄다. 앞선 `127.0.0.2` 성공·조회 대기 기록은 당시 사실로 유지한다. 이 문서 변경이 새로운 포워딩 설정 변경을 요구하는 것은 아니다.
 
 최초 주소 등록 질문에서 사용자가 yes를 입력했다. 호스트가 제시한 ED25519 지문은 `SHA256:bd3YFCAGPZvOgAM/zxZZpQEmtzvEIskCtSbbF+orJMs`였다. VM 콘솔에서 `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`로 독립 대조하도록 안내했으며 결과는 대기 중이다. 접속 성공·키 승인과 별개로 이번 주소의 콘솔 지문 대조까지 완료했다고 기록하지 않는다. 이번 문서 작업에서 VM·호스트 설정은 변경하지 않았다.
+
+
+## 2026-10-14 — SSH 지문 문자열 일치와 호스트명 변경 연습 안내
+
+b2brtest 프롬프트에서 `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`의 출력은 `256 SHA256:bd3YFCAGPZvOgAM/zxZZpQEmtzvEIskCtSbbF+orJMs no comment (ED25519)`였다. 접속 때 제시된 지문과 문자열이 일치함을 확인했다. 다만 VirtualBox 콘솔에서 실행했는지 확인되지 않아 독립적인 신뢰 경로의 대조 완료로 기록하지 않는다. 같은 SSH 세션에서 조회했다면 독립 확인이 아니라는 설명을 전달했다.
+
+다음으로 기존 jungblee 관리자 터미널에서 아래 순서로 호스트명을 변경하고 즉시 복원하도록 안내했다.
+
+```bash
+sudo hostnamectl set-hostname check42
+hostname
+cat /etc/hostname
+sudo hostnamectl set-hostname jungblee42
+hostname
+cat /etc/hostname
+```
+
+셸 프롬프트는 바로 갱신되지 않을 수 있으므로 hostname 출력과 저장 파일로 판단하도록 설명했다. 아직 실행 결과가 없어 변경·복원 모두 미검증이다. 이번 문서 작업에서 사용자 VM의 호스트명을 직접 변경하지 않았다.
