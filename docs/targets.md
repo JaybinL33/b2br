@@ -467,6 +467,40 @@ README의 첫 줄은 `*This project has been created as part of the 42 curriculu
 
 서명 대상은 VM 설정이나 ISO가 아니라 실제 `.vdi`(UTM은 `.qcow2`)다. 원문은 서명 불일치와 그래픽 서버 설치를 0점 조건으로 명시한다. VirtualBox 사용이 필수이며 사용할 수 없을 때 UTM을 사용한다. README의 설치·실행 설명과 설계 근거는 실제 재현 가능한 구성에 맞춘다.
 
+
+### 평가 사이의 디스크 보존과 복원
+
+**원문 조건:** [원문](../en.subject.pdf) 인쇄 16쪽은 VM 재실행으로 서명이 바뀐다고 설명하며, 여러 평가의 서명 검증을 위해 가상 디스크 파일 복제 또는 평가별 스냅샷을 허용한다. 17쪽은 각 평가를 스냅샷 없이 시작하고 이후 해당 평가용 스냅샷을 생성해 평가 종료 시 삭제하도록 제한한다. 생성 주체가 평가자라고 명시하지는 않으므로 평가자와 순서를 맞춘다. 평가 전부터 보관한 스냅샷을 그대로 둔 채 시작하는 허용으로 해석하지 않는다.
+
+**복제 방식의 차이:** 바이트 그대로의 VDI 백업은 파일 내용과 내부 UUID를 보존한다. 이는 원래 경로로 되돌릴 오프라인 보관본이며 새 VM으로 등록하거나 연결하지 않는다. VirtualBox Full Clone은 독립 실행용 VM을 만들며 디스크 UUID 등 메타데이터가 달라질 수 있어 원본 SHA-1 보존을 보장하지 않는다. `Keep Hardware UUIDs`도 VDI의 바이트 동일성을 보장하는 옵션이 아니다. Linked Clone은 원본에 의존하고 스냅샷을 만들 수 있어 같은 목적의 대체물이 아니다.
+
+**실행 전 조건:** 대상 VM과 실제 Storage 연결 파일을 확인한다. VM은 정상 종료된 `Powered Off`여야 하며 Running·Paused·Saved 상태에서는 복사·복원하지 않는다. 스냅샷과 차등 디스크가 없는 상태에서만 아래 단일 VDI 절차를 사용한다. 백업은 Git·VM 폴더 밖에 두고, 복사와 평가용 스냅샷 병합에 필요한 호스트 여유 공간을 확인한다. 설정 복구용으로 `.vbox` 등 VM 설정도 별도 보관할 수 있지만 서명 대상은 VDI다.
+
+1. 최종 설정을 마친 뒤 종료하고 원본 VDI 해시를 확인한다. 아래는 Linux 호스트의 경로 예시다. 백업 폴더는 새 이름을 사용하며 이미 존재하면 기존 보관본을 덮어쓰지 않는다. 각 명령의 성공을 확인한 뒤 다음으로 진행한다.
+
+   ```bash
+   mkdir "$HOME/goinfre/b2br-baseline-1ac763cd"
+   cp -i -- "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi" "$HOME/goinfre/b2br-baseline-1ac763cd/b2br.vdi"
+   cmp -- "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi" "$HOME/goinfre/b2br-baseline-1ac763cd/b2br.vdi"
+   sha1sum "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi" "$HOME/goinfre/b2br-baseline-1ac763cd/b2br.vdi"
+   ```
+
+   `cmp`의 정상 종료(0)와 두 SHA-1 일치를 확인한다. 복사 실패나 불일치가 있으면 백업 완료로 취급하지 않는다. 기준 보관본은 실행·수정·등록하지 않으며 하드 링크로 대신하지 않는다.
+2. 매 평가 시작 전에 스냅샷이 없고 실제 연결된 디스크의 SHA-1이 제출 `signature.txt`와 같은지 확인한다. 평가자와 확인한 순서에 따라 그 평가용 스냅샷을 만든 뒤 VM을 실행하고 검증한다.
+3. 평가가 끝나면 정상 종료한다. 평가 중 바뀐 내용을 버릴 예정이면 평가용 스냅샷을 **Restore**하고, 새 현재 상태 스냅샷을 추가로 남기지 않도록 선택을 확인한 다음 평가용 스냅샷을 **Delete**한다. **Delete만 하면 현재 상태를 유지하며 병합할 수 있으므로 이전 상태 복원과 다르다.** 복원·삭제 후에도 VDI SHA-1은 직접 대조한다. GUI 복원이 파일의 모든 메타데이터까지 이전과 동일하게 만든다고 가정하지 않는다.
+4. 동일 해시를 확실히 되돌릴 필요가 있으면, 스냅샷·차등 디스크 없음, Powered Off, 실제 연결 경로를 다시 확인하고 VirtualBox를 닫은 뒤 기준 보관본을 원래 VDI 경로로 복사한다. 이 작업은 평가·연습 중의 디스크 변경을 덮어쓰므로 보존할 내용은 먼저 별도 기록한다. 백업에서 원본 방향인지 확인하고, 복사 성공 후 `cmp` 및 SHA-1을 다시 확인한다. 스냅샷이 남아 있으면 기반 VDI만 덮어쓰지 않는다.
+
+   ```bash
+   cp -i -- "$HOME/goinfre/b2br-baseline-1ac763cd/b2br.vdi" "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi"
+   cmp -- "$HOME/goinfre/b2br-baseline-1ac763cd/b2br.vdi" "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi"
+   sha1sum "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi"
+   ```
+
+   복사 취소·실패 시 다음 평가용으로 준비됐다고 판단하지 않는다. 같은 VM·원래 경로·UUID를 유지하는 복원이며 백업을 두 번째 디스크로 추가하는 절차가 아니다. VM 설정도 평가에서 변경됐다면 별도로 기준 설정과 대조한다.
+5. 다음 평가에서도 2–4의 조건을 확인한다. 재검증은 실행 중 디스크를 바꾸므로 다음 평가 전 다시 기준 상태와 해시를 맞춘다. 최종 설정 자체를 개선하려면 기존 백업으로 개선을 잃지 않도록 새 기준본·서명을 준비하고 실제 제출물 갱신 가능 여부를 확인한다.
+
+**공식 도구 근거:** [VirtualBox 7.1 First Steps](https://docs.oracle.com/en/virtualization/virtualbox/7.1/user/Introduction.html)의 `Snapshots`·`Cloning a Virtual Machine`, [Virtual Storage](https://docs.oracle.com/en/virtualization/virtualbox/7.1/user/storage.html)의 `Differencing Images`·`Cloning Disk Images`. 설치 버전의 화면과 대조한다. 이 절은 공식 동작에 근거한 안내이며 사용자 환경에서 백업·복원을 실행 검증한 기록은 아니다.
+
 ## 구간별 공식 자료 읽기
 
 전체를 한꺼번에 따라 하지 않고 해당 구간의 개요와 필요한 항목만 읽는다. Rocky 입문서는 버전이 섞일 수 있어 Rocky 10의 설치된 도구·매뉴얼과 RHEL 10 자료를 함께 대조한다. `man`은 실제 VM에 설치된 패키지 버전의 매뉴얼을 읽는 방법이다.
