@@ -296,3 +296,10 @@ sudo의 auth·account 처리도 `system-auth`로 연결됨을 확인했다. 앞�
 사용자 최신 화면을 확인한 주 대화의 전달 근거: `sudo -k` 후 `sudo -v`에서 비밀번호 요청 세 번, 재시도 중 `Authentication failed. Please try again.` 두 번, 마지막 `sudo: 3 incorrect password attempts`와 셸 복귀가 보였다. `passwd_tries=3`과 `badpass_message` 체크포인트를 완료했다. 그 뒤 대기 중인 프롬프트는 새로 실행한 `sudo -v`의 요청이므로 이전 호출의 네 번째 시도가 아니다. 올바른 비밀번호 입력 또는 Ctrl+C를 안내했다.
 
 이어서 sshd·firewalld·SELinux의 역할과 일반 사용자 4242 접속·root SSH 거절 목표를 설명했다. `systemctl is-active sshd firewalld`, `systemctl is-enabled sshd firewalld`, `getenforce`, `ip -br addr` 조회를 안내했으며 결과는 아직 받지 않았다.
+
+
+## 2026-10-14 — 원격 접속 구간 시작 상태 확인
+
+사용자 화면을 확인한 주 대화의 전달 근거: sshd와 firewalld는 모두 `active`·`enabled`, SELinux는 `Enforcing`이었다. `enp0s3`는 `UP`이며 IPv4 주소는 `10.0.2.15/24`였다. 이 주소만으로 NAT 모드를 확정하지 않는다.
+
+다음 조회는 `sudo cat /etc/ssh/sshd_config`와 `sudo ls /etc/ssh/sshd_config.d`다. 설정 내용·4242 리스닝·일반 사용자 접속·root SSH 거절은 아직 확인하지 않았다.

@@ -273,6 +273,15 @@ ip -br addr
 
 서비스가 없다는 오류나 예상과 다른 상태도 그대로 확인한다. 이 묶음은 시작 상태 조회이며 최종 기준은 **4242 포트의 일반 사용자 SSH 접속 성공과 root SSH 접속 거절**이다. [세 역할과 공식 읽을 범위](targets.md#5-sshfirewalldselinux)를 바탕으로 리스닝·방화벽 규칙·SELinux 정책·실제 접속을 이어서 확인한다.
 
+## 13. SSH 설정 파일 조회
+
+```bash
+sudo cat /etc/ssh/sshd_config
+sudo ls /etc/ssh/sshd_config.d
+```
+
+본체에서 활성 `Include`의 위치·대상, `Port`, `PermitRootLogin`, `Match`를 찾는다. 목록에 나온 파일은 Include 패턴과 대조한 뒤 해당 경로를 `sudo cat`으로 읽는다. Include가 다른 경로를 가리키면 그 경로를 따른다. 파일명이나 주석만으로 적용값을 확정하지 않는다. 여러 `Port`는 함께 적용될 수 있으므로 4242 추가가 기존 포트 제거를 뜻하지 않는다. [읽기 순서와 공식 근거](targets.md#5-sshfirewalldselinux).
+
 ## 이후 단위
 
 SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
