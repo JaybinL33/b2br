@@ -246,6 +246,8 @@ SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 
 
 처음 접속할 때 서버 호스트 키 지문을 VM 콘솔의 공개키 지문과 대조한다. [공식 ssh-keygen 매뉴얼](https://man.openbsd.org/ssh-keygen)의 `-l`·`-f`와 설치된 매뉴얼을 읽는다. ED25519를 제시하면 `/etc/ssh/ssh_host_ed25519_key.pub`를 비교하고, 다른 알고리즘이면 해당 호스트 공개키를 비교한다. 같은 알고리즘의 지문이 일치한 뒤 신뢰를 승인한다. 호스트 키 확인은 서버 식별이고 이후 비밀번호 입력은 사용자 인증이다. 로그인 뒤 `hostname`·`whoami`로 목적지와 사용자를 대조한다. [전달 값과 접속 절차](cheatsheet.md#19-virtualbox-포트-전달과-호스트-접속).
 
+**호스트 입구의 식별:** 같은 TCP 포트 번호라도 로컬 IP 주소와 함께 바인딩 대상을 구분한다. [Linux ip(7)](https://man7.org/linux/man-pages/man7/ip.7.html)의 `DESCRIPTION`·`Address format`·`Special and reserved addresses`에서 주소·포트 조합, 모든 주소를 뜻하는 `0.0.0.0`, Linux의 `127/8` 루프백 범위를 읽는다. 위 Oracle NAT 문서는 Host IP로 수신 주소를 지정하는 근거다. 기존 리스너가 `127.0.0.1:4242`에만 바인딩했다면 `127.0.0.2:4242`와 공존할 가능성이 있으나 다른 리스너·환경과 실제 전달 성공을 확인해야 한다. 같은 `127.0.0.1:4242`를 사용하려면 기존 점유를 조정해야 하며 학교 관리 서비스라면 관리자와 조율한다. 포트 재사용 옵션·소켓 내부 구현은 이번 범위에서 미룬다.
+
 **root 접속 거절 확인:** 일반 사용자로 목적지·로그인 계정을 확인한 뒤 호스트로 돌아와 같은 전달 포트로 root 접속을 검사한다. [공식 ssh_config 매뉴얼](https://man.openbsd.org/ssh_config)의 `NumberOfPasswordPrompts`를 읽는다. 값을 1로 지정하는 것은 클라이언트 질문을 제한하기 위한 선택이며 `PermitRootLogin no`의 서버 정책과 구분한다. 올바른 root 비밀번호로도 인증이 거절되고 root 셸이 열리지 않는지 확인한다. 단순 연결 장애를 인증 거절의 증거로 삼지 않는다. [검사 절차](cheatsheet.md#20-root-ssh-접속-거절-확인).
 
 **존재와 용도만:** SSH 공개키 인증은 비밀번호 외의 인증 방식이고 SELinux 거절 로그는 정책 문제를 추적하는 단서다. 공개키 방식이 필요하거나 정상 설정 후에도 거절될 때 해당 부분을 더 읽는다. Enforcing·Permissive·Disabled의 차이 자체는 필수 이해 범위다.
