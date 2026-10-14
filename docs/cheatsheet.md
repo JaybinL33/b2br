@@ -329,6 +329,21 @@ sudo semanage port -l | grep ssh_port_t
 
 SELinux 등록은 방화벽 개방과 별개다. 다음은 firewalld 현황 확인이며 아직 sshd를 재시작하지 않는다. [개념과 공식 읽기 범위](targets.md#5-sshfirewalldselinux).
 
+## 16. firewalld 활성 zone과 규칙 조회
+
+```bash
+sudo firewall-cmd --get-active-zones
+sudo firewall-cmd --list-all
+```
+
+첫 출력에서 대상 인터페이스가 연결된 zone을 찾는다. 두 번째 출력은 **기본 zone**의 현재 실행 구성이므로 같은 zone인지 대조한다. 다르면 아래 `ZONE`을 실제 활성 zone 이름으로 바꿔 조회한다.
+
+```bash
+sudo firewall-cmd --zone=ZONE --list-all
+```
+
+zone 이름과 `interfaces`·`sources`·`services`·`ports`·추가 규칙을 읽는다. `ports`가 비어 있어도 서비스로 허용된 포트가 있을 수 있다. 조회 결과를 확인한 뒤 변경할 규칙을 정한다. [zone 개념과 공식 읽기 범위](targets.md#5-sshfirewalldselinux).
+
 ## 이후 단위
 
 SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

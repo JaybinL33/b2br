@@ -232,6 +232,10 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 TCP 4242를 `ssh_port_t`에 등록하면 SELinux 정책상 sshd가 사용할 수 있는 포트 유형에 연결된다. `-a`는 항목 추가, `-t`는 SELinux 유형, `-p`는 프로토콜, `-l`은 목록 조회다. 이는 방화벽의 트래픽 허용이나 sshd의 포트 변경을 대신하지 않는다. 목록의 `ssh_port_t` TCP 항목에 4242가 포함되는지 확인한다. 이미 정의된 포트라는 오류가 나면 기존 유형·범위를 먼저 확인하고 임의로 `-m`으로 덮어쓰지 않는다. 이미 같은 유형이면 재등록할 필요가 없고, 다른 유형이면 사용 목적을 확인한 뒤 판단한다. 이후 firewalld 현황을 확인한다. [등록·확인 절차](cheatsheet.md#15-selinux에-ssh-포트-등록).
 
+**firewalld 현황 읽기:** zone은 인터페이스나 출처에 연결하는 규칙 묶음이다. 위 Rocky 입문서의 zone·서비스·포트 부분과 [공식 firewall-cmd 매뉴얼](https://firewalld.org/documentation/man-pages/firewall-cmd.html)의 `Zone Options`, `Options to Adapt and Query Zones and Policies`에서 `--get-active-zones`, `--list-all`, `--zone`을 읽는다. 설치된 `man firewall-cmd`에서도 같은 옵션을 확인한다.
+
+`--get-active-zones`는 현재 활성 zone과 연결된 인터페이스·출처를 보여 준다. `--list-all`은 zone을 지정하지 않으면 기본 zone을 조회하므로 두 출력의 zone 이름과 대상 인터페이스를 대조한다. 기본 zone이 대상 인터페이스의 활성 zone과 다르면 실제 zone을 지정해 읽는다. `--permanent` 없는 조회는 현재 실행 구성이며, 서비스 이름으로 허용된 항목도 있으므로 `ports`만으로 개방 범위를 판단하지 않는다. `services`·`ports`·출처·추가 규칙을 읽고 변경 대상을 정한다. [정상 조회 절차](cheatsheet.md#16-firewalld-활성-zone과-규칙-조회).
+
 **존재와 용도만:** SSH 공개키 인증은 비밀번호 외의 인증 방식이고 SELinux 거절 로그는 정책 문제를 추적하는 단서다. 공개키 방식이 필요하거나 정상 설정 후에도 거절될 때 해당 부분을 더 읽는다. Enforcing·Permissive·Disabled의 차이 자체는 필수 이해 범위다.
 
 **이번에 미룰 것과 이유:** SSH 암호 알고리즘 수학·스마트카드·점프 호스트, nftables 내부 규칙 생성, 자체 SELinux 정책 모듈 작성은 이번 접속 경로의 요구가 아니다. 인증 인프라 확장이나 기존 정책으로 해결할 수 없는 서비스 운영 때 학습한다. firewalld·SELinux를 끄는 것을 범위 축소로 삼지 않는다.

@@ -329,3 +329,10 @@ PrintMotd no
 사용자 화면을 확인한 주 대화의 전달 근거: `sudo sshd -t`는 암호 입력 후 오류 없이 종료했고, `sudo sshd -T`의 필터 출력은 `port 4242`와 `permitrootlogin no`였다. 설정 검사 체크포인트를 완료했다. 실행 중 서비스의 반영이나 실제 접속 성공까지 확인한 것은 아니다.
 
 다음으로 `policycoreutils-python-utils` 설치, `semanage port -a -t ssh_port_t -p tcp 4242` 등록, `semanage port -l`의 SSH 유형 조회를 sudo로 실행하도록 안내했다. 관리 도구·옵션과 포트 유형 등록의 목적, 방화벽 개방과의 차이를 설명하고 이미 정의 오류에는 임의의 `-m` 변경 대신 기존 유형을 확인하도록 했다. 실행 결과는 아직 없으며 다음은 firewalld 현황 확인이다.
+
+
+## 2026-10-14 — SELinux 포트 등록 확인과 firewalld 조회 안내
+
+주 대화가 확인한 사용자 화면에서 `policycoreutils-python-utils` 설치가 `Complete`로 끝났고, 최종 `sudo semanage port -l | grep ssh_port_t` 출력은 `ssh_port_t tcp 4242, 22`였다. SELinux의 TCP 4242 등록 체크포인트를 완료했다. 처음 유형 이름을 `ssh_port`로 입력해 invalid type 오류가 났으나 사용자가 `ssh_port_t`로 고쳐 재실행했다. 목록의 22는 실제 리스닝·방화벽 개방과 다르며 삭제를 지시하지 않았다.
+
+다음으로 `sudo firewall-cmd --get-active-zones`와 `sudo firewall-cmd --list-all`을 안내했다. 기본 zone 출력이 `enp0s3`의 활성 zone과 같은지 대조하도록 설명했다. 조회 결과는 아직 없으며 zone 이름·허용 서비스는 미확인이다.
