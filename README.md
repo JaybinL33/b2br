@@ -17,9 +17,9 @@ Born2beRoot는 가상 머신에 최소 구성의 Linux 서버를 만들고 디�
 - [직접 만들고 대조할 목표](docs/targets.md): 디스크 구조 예시와 단위별 필수 상태·확인 방법
 - [최소 치트시트](docs/cheatsheet.md): 처음부터 재실습하는 절차·명령·설정·기대 결과
 
-사용자는 학교 컴퓨터와 개인 NixOS 환경에서 **Rocky 10.2 Minimal**로 전체 과정을 해봤으며, 아직 익숙하지 않아 반복 실습하고 싶다고 밝혔다. 환경과 버전은 사용자 제공 정보다. 이전 실습의 설치 버전·구성 상태·평가 통과 여부는 독립적으로 확인하지 않았다. 이 경험을 이번 학습의 완료 기록으로 간주하지 않는다.
+이 실습은 Rocky Minimal·VirtualBox, LUKS 위 LVM, SSH 4242와 firewalld·SELinux를 사용한다. 구체적인 파티션 용량과 보안 선택은 [목표 문서](docs/targets.md)에 둔다.
 
-**이번 반복 실습의 현재 상태:** SSH 일반 사용자 접속·root 직접 접속 거절을 확인했고, `sudo bash monitoring.sh`로 수집 지표 12개가 권한 오류 없이 출력됨을 확인했다. 전체 소스가 안내한 수집 코드와 일치함을 확인하고 wall 단일 방송 변경을 제안했다. 구문 검사와 12개 항목의 wall 방송 출력을 확인했다. 같은 터미널의 중복 수신과 sudo의 추가 PTY를 확인했으며 최종 단일 수신은 미검증이다. root 소유 설치본과 crond 실행·활성화를 확인했다. root crontab 등록과 첫 자동 방송의 해당 터미널 단일 수신을 확인했다. 양쪽 터미널 동시 수신은 미확인이고, 재부팅 후 세 서비스의 active와 SELinux Enforcing을 확인했다. 재부팅 후 예약 유지와 @reboot 작업의 시작·종료 로그를 확인했다. 두 예약 줄만 주석 처리하는 중단·복구 테스트를 제안했으며 아직 적용 결과는 없다. who와 uptime의 시각 차이는 원인 미확정으로 보존하며, 비밀번호 품질 위반 거절(`difok` 포함)도 미검증이다. 세부 관측값과 검증 범위는 [학습 기록](docs/learning-log.md)에 둔다.
+**확인한 상태:** 모니터링 12항목 출력, root 소유 설치본, 첫 cron 방송의 해당 터미널 단일 수신, 재부팅 후 서비스·SELinux 유지 및 @reboot 작업 시작·종료 기록. **남은 확인:** 여러 터미널 수신, 예약 중단·복구, 비밀번호 품질 거절과 평가 재현. 부팅 작업 로그만으로 내부 오류 부재나 방송 수신까지 확정하지 않는다. 세부 근거와 이전 이력은 [학습 기록](docs/learning-log.md)에 둔다.
 
 원문·번역·가이드는 요구사항을 찾는 자료이고, 학습 기록은 직접 적용한 결과를 남기는 문서다. 문서를 읽거나 예시를 확인한 것만으로 체크리스트를 완료 처리하지 않는다.
 
@@ -47,17 +47,19 @@ Born2beRoot는 가상 머신에 최소 구성의 Linux 서버를 만들고 디�
 
 ### 실행·제출 안내의 현재 범위
 
-과제는 VirtualBox를 사용하며, 사용할 수 없다면 UTM을 사용한다. Debian 또는 Rocky의 최신 안정 버전으로 최소 서비스를 구성하고 그래픽 서버는 설치하지 않는다. 현재 저장소에는 검증된 설치·실행 절차가 없으며 반복 실습 후 여기에 정리한다. 전체 조건은 기존 가이드를 참고한다.
+과제는 VirtualBox를 사용하며, 사용할 수 없다면 UTM을 사용한다. Debian 또는 Rocky의 최신 안정 버전으로 최소 서비스를 구성하고 그래픽 서버는 설치하지 않는다. 설치 후 재실습은 [치트시트](docs/cheatsheet.md)를 따른다. monitoring은 [한곳에 모은 코드](docs/cheatsheet.md#34-전체-출력을-wall-한-번으로-전달) → root 소유 경로 설치 → root crontab 순서다. 현재 확인된 실행과 남은 검증은 위 상태 및 학습 기록을 참고한다. OS 설치부터 제출까지의 최종 재현 설명은 아직 보완 중이다.
 
 v5.2의 README 요구사항과 제출 장에 따라 최종 제출에는 루트 `README.md`와 실제 가상 디스크의 SHA-1을 담은 `signature.txt`가 필요하다. 일반 지침의 서명 파일만 언급한 문장과 함께 읽어야 한다. VM은 Git에 넣지 않는다. 각 평가는 스냅샷 없이 시작하고 평가용 스냅샷은 이후 생성해 종료 시 삭제한다. VM을 다시 실행하면 서명이 달라질 수 있으므로 최종 디스크와 제출 서명을 대조해야 한다. 현재 서명 파일은 준비하지 않았다.
 
 ## Project description — 학습 후 보완할 내용
 
-아래 항목은 아직 이번 반복 실습에서 근거를 정리하지 않았다. 선택하거나 확인한 시점에 채운다.
+이미 정리한 설계 근거는 다음 문서로 연결한다. 최종 제출 때 실제 구성과 설명을 다시 대조한다.
 
-- OS 선택 이유와 Debian·Rocky 각각의 장단점.
-- 파티션과 용량, 보안 정책, 사용자 관리, 설치 서비스의 설계 결정.
-- Debian vs Rocky Linux, AppArmor vs SELinux, UFW vs firewalld, VirtualBox vs UTM 비교.
+- [디스크와 용량 선택](docs/targets.md#1-설치-결과와-디스크-확인): root·home·로그·swap 분리와 VG 여유 공간.
+- [사용자·그룹](docs/targets.md#2-계정그룹권한과-호스트명), [암호 정책](docs/targets.md#3-비밀번호pam), [sudo와 감사 로그](docs/targets.md#4-sudo-정책과-감사-로그).
+- [SSH·firewalld·SELinux](docs/targets.md#5-sshfirewalldselinux), [모니터링·예약](docs/targets.md#6-monitoringsh와-cronwall).
+
+OS 선택의 장단점과 Debian/Rocky, AppArmor/SELinux, UFW/firewalld, VirtualBox/UTM 네 비교는 아직 작성하지 않았다.
 
 ## Resources
 

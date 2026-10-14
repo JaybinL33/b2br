@@ -1,6 +1,6 @@
 # Born2beRoot 최소 치트시트
 
-Rocky 최소 설치 후 `jungblee`의 일반 셸에서 처음부터 재실습하는 순서다. **필요한 줄만 개별 실행**하며 자동 실행 스크립트로 사용하지 않는다. 설치·디스크 계획과 개념·근거는 [targets](targets.md), 현황은 [README](../README.md), 증거·이력은 [학습 기록](learning-log.md)에 둔다. 다른 로그인명을 쓰면 명령의 `jungblee`를 바꾼다.
+Rocky 최소 설치 때 `jungblee`를 관리자 계정(wheel)으로 생성해 sudo를 사용할 수 있는 상태에서, 해당 일반 셸로 재실습하는 순서다. **필요한 줄만 개별 실행**하며 자동 실행 스크립트로 사용하지 않는다. 설치·디스크 계획과 개념·근거는 [targets](targets.md), 현황은 [README](../README.md), 증거·이력은 [학습 기록](learning-log.md)에 둔다. 다른 로그인명을 쓰면 명령의 `jungblee`를 바꾼다.
 
 ## 1. 디스크·VG 확인
 
@@ -135,7 +135,7 @@ enforce_for_root
 passwd
 ```
 
-jungblee 변경에 성공한 뒤 root 비밀번호를 변경한다.
+jungblee 변경에 성공한 뒤 root 비밀번호를 변경한다. root는 이전 암호 비교만 예외이며 다른 품질 규칙은 적용한다. 추가로 만든 비밀번호 사용 계정이 있다면 해당 계정도 갱신·기간 적용 대상에 포함한다.
 
 ```bash
 sudo passwd root
@@ -226,7 +226,7 @@ setsid -w sudo -n true </dev/null
 echo $?
 ```
 
-두 번째 줄은 첫 명령 직후 실행한다. `sudo: sorry, you must have a tty to run sudo`처럼 **TTY가 필요하다는 명시적 거절**이 확인 기준이다. 0이 아닌 종료 상태는 보조 증거이며 명시적 거절을 이미 확인했다면 재검사할 필요는 없다. `a password is required`만 나오거나 다른 오류로 실패하면 통과로 판단하지 않고 적용 정책·명령·오류를 확인한다. `-c`는 추가하지 않는다. [개념과 공식 읽기 범위](targets.md#tty-실행-조건-확인).
+두 번째 줄은 첫 명령 직후 실행한다. `sudo: sorry, you must have a tty to run sudo`처럼 **TTY가 필요하다는 명시적 거절**이 확인 기준이다. 0이 아닌 종료 상태는 보조 증거이며 명시적 거절을 이미 확인했다면 재검사할 필요는 없다. `a password is required`만 나오거나 다른 오류로 실패하면 통과로 판단하지 않고 적용 정책·명령·오류를 확인한다. [개념과 공식 읽기 범위](targets.md#tty-실행-조건-확인).
 
 ## 11. sudo 인증 경로와 실패 검사
 
@@ -380,19 +380,19 @@ sudo ss -lntp
 |---|---|
 | Name | `ssh` |
 | Protocol | `TCP` |
-| Host IP | `127.0.0.1` |
+| Host IP | `127.0.0.2` |
 | Host Port | `4242` |
 | Guest IP | 빈칸: 내장 DHCP 사용 조건 |
 | Guest Port | `4242` |
 
-Host Port의 `4242`는 예시다. 호스트에서 사용 가능한 다른 포트를 선택해도 되며, 아래 SSH 명령의 `-p`에도 그 값을 쓴다. 게스트 SSH 포트는 과제 요구인 `4242`를 유지한다.
+Host IP `127.0.0.2`와 Host Port `4242`는 이 문서의 일관된 접속 예시다. 실제 저장한 Host IP·Port가 다르면 이후 모든 접속 명령도 함께 바꾼다. 호스트에서 사용 가능한 다른 포트를 선택해도 되며, 아래 SSH 명령의 `-p`에도 그 값을 쓴다. 게스트 SSH 포트는 과제 요구인 `4242`를 유지한다.
 
 수동 고정 IP라면 Guest IP에 실제 VM 주소를 지정한다. Guest IP 생략과 달리 **Guest Port는 지정해야 한다.** 다른 네트워크 방식이면 이 규칙을 그대로 적용하지 않고 접속 경로를 확인한다.
 
 포트 전달 창을 확인한 뒤 **바깥 VM 설정 창도 OK로 저장**한다. 이후 **호스트 터미널**에서 실행한다.
 
 ```bash
-ssh -p 4242 jungblee@127.0.0.1
+ssh -p 4242 jungblee@127.0.0.2
 ```
 
 최초 접속에서 제시된 키가 ED25519이면 **VM 콘솔**에서 다음 공개키 지문을 조회해 비교한다.
@@ -421,7 +421,7 @@ exit
 아래 `4242`는 호스트 포트 예시다. 일반 사용자 접속에 성공한 실제 Host Port가 다르면 `-p` 값을 그 포트로 바꾼다.
 
 ```bash
-ssh -p 4242 -o NumberOfPasswordPrompts=1 root@127.0.0.1
+ssh -p 4242 -o NumberOfPasswordPrompts=1 root@127.0.0.2
 ```
 
 비밀번호를 요청하면 올바른 root 비밀번호를 터미널에 입력한다. 기대 결과는 인증 거절과 root 셸에 진입하지 못하는 것이다. `NumberOfPasswordPrompts=1`은 클라이언트의 비밀번호 질문 횟수 제한이며 서버의 root 차단 정책이 아니다. 연결 실패·잘못된 비밀번호만으로 root 차단 성공을 판단하지 않고, 일반 사용자 접속 성공 및 `permitrootlogin no`와 함께 대조한다. [옵션과 검증 근거](targets.md#5-sshfirewalldselinux).
@@ -431,7 +431,7 @@ ssh -p 4242 -o NumberOfPasswordPrompts=1 root@127.0.0.1
 호스트에서 일반 사용자로 다시 접속한다. `4242`는 예시이며 실제 선택한 Host Port로 바꾼다.
 
 ```bash
-ssh -p 4242 jungblee@127.0.0.1
+ssh -p 4242 jungblee@127.0.0.2
 ```
 
 접속한 VM 셸에서 실행한다.
@@ -455,18 +455,9 @@ lscpu -p=SOCKET,CPU
 
 ## 23. monitoring 첫 구현 예시
 
-다음은 Architecture·CPU physical·vCPU만 출력하는 **부분 학습 예시**다. 별도 실습 파일에 작성해 Bash로 실행하고 앞서 읽은 원자료와 대조한다. 나머지 지표·wall·cron은 각 학습 단위에서 이어 붙인다.
+`monitoring.sh`는 34절의 한 코드 블록을 기준으로 관리한다. 처음 학습할 때는 Architecture·CPU physical·vCPU 부분부터 원자료와 대조하고 이후 항목을 순서대로 읽는다.
 
-```bash
-#!/bin/bash
-architecture=$(uname -a)
-physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
-virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
-
-printf '#Architecture: %s\n' "$architecture"
-printf '#CPU physical : %s\n' "$physical"
-printf '#vCPU : %s\n' "$virtual"
-```
+전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
 출력의 Architecture는 `uname -a`, CPU physical은 온라인 CPU에 나타난 서로 다른 소켓 수, vCPU는 온라인 CPU 데이터 행 수와 대조한다. [각 처리 단계의 의미](targets.md#monitoring-첫-구현의-흐름).
 
@@ -485,12 +476,9 @@ df -BM --total -x tmpfs -x devtmpfs
 
 ## 25. monitoring 메모리·디스크 출력
 
-원자료의 열과 집계 대상을 확인한 뒤 부분 스크립트에 다음 두 줄을 추가하고 `bash monitoring.sh`로 실행한다.
+원자료의 열과 집계 대상을 확인하고 전체 코드의 Memory Usage·Disk Usage 두 줄과 대조한다.
 
-```bash
-LC_ALL=C free -m | awk '$1 == "Mem:" {printf "#Memory Usage: %s/%sMB (%.2f%%)\n", $3, $2, $3 / $2 * 100}'
-LC_ALL=C df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "#Disk Usage: %s/%.0fGb (%.0f%%)\n", $3, $2 / 1024, $3 / $2 * 100}'
-```
+전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
 메모리는 Mem 행, 디스크는 total 행의 used/total로 사용률을 계산한다. 원문 예시의 `MB`·`Gb` 표기를 따르지만 실제로 메모리와 디스크 사용량은 MiB, 디스크 전체 표시값은 GiB다. 디스크 퍼센트는 GiB로 반올림한 표시값이 아니라 MiB 원자료로 계산한다. `df`의 Use%와 동일한 값일 필요는 없다. [계산 선택과 awk 읽기 범위](targets.md#monitoring-메모리디스크의-계산과-awk).
 
@@ -503,12 +491,9 @@ LC_ALL=C vmstat 1 2
 uptime -s
 ```
 
-vmstat의 헤더에서 `id`가 15열인지 확인하고 두 번째 수치 행을 읽는다. `uptime -s`의 `YYYY-MM-DD HH:MM:SS` 날짜·시각을 확인한다. CPU 열 배치를 확인한 환경에서는 다음 부분 예시를 추가하고 `bash monitoring.sh`로 대조한다.
+vmstat의 헤더에서 `id`가 15열인지 확인하고 두 번째 수치 행을 읽는다. `uptime -s`의 `YYYY-MM-DD HH:MM:SS` 날짜·시각을 확인한다. CPU 열 배치를 확인한 뒤 전체 코드의 CPU load·Last boot 두 줄과 대조한다.
 
-```bash
-LC_ALL=C vmstat 1 2 | awk 'END {printf "#CPU load: %.1f%%\n", 100 - $15}'
-printf '#Last boot: %s\n' "$(uptime -s | cut -c 1-16)"
-```
+전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
 CPU 출력은 직전 1초 구간의 `100 - id`이며, I/O 대기·steal도 포함한다. 시간에 따라 변하므로 이전 조회와 숫자가 같아야 하는 것은 아니다. 부팅 시각 출력은 같은 `uptime -s` 원자료의 분 단위 값과 대조한다. 다른 도구의 시각과 자동으로 일치한다고 가정하지 않는다. [측정 구간과 해석](targets.md#monitoring-cpu와-부팅-시각의-읽기-범위).
 
@@ -525,16 +510,9 @@ lsblk의 TYPE 열에서 `lvm`이 있는지 확인한다. 장치 이름과 트리
 
 ## 28. monitoring LVM·TCP 연결 부분 출력
 
-VM 터미널에서 원자료를 확인한 뒤 스크립트에 추가하고 `bash monitoring.sh`로 대조한다.
+VM 터미널의 원자료를 전체 코드의 LVM 조건과 TCP 집계에 대조한다.
 
-```bash
-if lsblk -rn -o TYPE | grep -qx lvm; then
-    printf '#LVM use: yes\n'
-else
-    printf '#LVM use: no\n'
-fi
-printf '#Connections TCP : %s ESTABLISHED\n' "$(ss -Htn state established | wc -l)"
-```
+전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
 LVM 출력은 TYPE에 `lvm`이 있는지, TCP 출력은 같은 시점의 필터된 소켓 행 수와 대조한다. 연결 수는 조회 시점에 따라 바뀔 수 있다. [조건 검사와 집계의 의미](targets.md#monitoring-lvmtcp-부분-구현의-읽기-범위).
 
@@ -554,15 +532,9 @@ who에서 사용자명과 터미널을 읽고, 같은 사용자가 여러 행에
 
 VM 터미널에서 `who`와 네트워크 원자료를 대조한다. 다음 예시는 대상 NIC가 `enp0s3`이고 IPv4 주소가 하나인 구성이다. 이름이나 주소 개수가 다르면 먼저 대상 범위를 정한다.
 
-```bash
-users=$(who | awk '{print $1}' | sort -u | wc -l)
-ip_address=$(ip -4 -o address show dev enp0s3 | awk '{print $4}' | cut -d / -f 1)
-mac_address=$(cat /sys/class/net/enp0s3/address)
-printf '#User log: %s\n' "$users"
-printf '#Network: IP %s (%s)\n' "$ip_address" "$mac_address"
-```
+전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
-부분 스크립트에 추가하고 `bash monitoring.sh`로 실행한다. User log는 같은 사용자명을 한 번만 센 값이다. Network는 선택한 NIC의 IPv4에서 접두사 길이를 제외한 값과 같은 NIC의 MAC을 대조한다. [집계 선택과 공식 읽기 범위](targets.md#monitoring-사용자수ipv4mac-부분-구현).
+User log는 같은 사용자명을 한 번만 센 값이다. Network는 선택한 NIC의 IPv4에서 접두사 길이를 제외한 값과 같은 NIC의 MAC을 대조한다. [집계 선택과 공식 읽기 범위](targets.md#monitoring-사용자수ipv4mac-부분-구현).
 
 ## 31. sudo 횟수를 위한 로그 원자료 조회
 
@@ -586,29 +558,48 @@ sudo sudoreplay -d /var/log/sudo -l | tail -n 5
 
 ## 33. sudo I/O 세션 수 부분 출력
 
-목록의 한 줄이 한 세션임을 확인한 뒤 스크립트에 추가한다.
+목록의 한 줄이 한 세션임을 확인하고 전체 코드의 sudo_count 집계와 대조한다.
 
-```bash
-sudo_count=$(sudoreplay -d /var/log/sudo -l | wc -l)
-printf '#Sudo : %s cmd\n' "$sudo_count"
-```
-
-VM 터미널에서 로그를 읽을 권한으로 스크립트 전체를 실행한다.
-
-```bash
-sudo bash monitoring.sh
-```
+전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
 스크립트 내부의 sudoreplay 앞에는 sudo를 붙이지 않는다. 출력은 현재 보관된 I/O 세션 수이며 수동 `sudo bash` 실행 세션도 포함될 수 있다. 조회 오류 없이 목록을 읽었는지 함께 확인한다. [권한·집계 범위](targets.md#sudo-io-세션-집계의-실행-범위).
 
 ## 34. 전체 출력을 wall 한 번으로 전달
 
-전체 소스가 앞선 수집 코드와 일치하는지 먼저 검토한다. `#!/bin/bash` 다음 줄에 `{`를 단독으로 넣고 기존 수집·출력 코드를 모두 그 안에 둔다. 마지막 코드 뒤 새 줄에는 `} | wall`을 넣는다. 아래는 배치만 나타내며 주석 자리는 기존 코드를 유지한다.
+아래는 앞 단위에서 직접 적용한 코드를 한곳에 모은 `monitoring.sh`다. 현재 학습 구성의 재현 기준이며, 오류 처리와 남은 평가 검증의 범위는 targets·학습 기록을 따른다. 대상 NIC는 `enp0s3`·IPv4 하나이며, 지표 해석과 한계는 위 단위 및 targets에서 확인한다. 기존 파일이 있으면 내용을 대조하고 **조각을 중복 추가하지 않는다.**
 
 ```bash
 #!/bin/bash
 {
-    # 기존 12개 항목의 수집·출력 코드 전체
+    architecture=$(uname -a)
+    physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
+    virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
+
+    printf '#Architecture: %s\n' "$architecture"
+    printf '#CPU physical : %s\n' "$physical"
+    printf '#vCPU : %s\n' "$virtual"
+
+    LC_ALL=C free -m | awk '$1 == "Mem:" {printf "#Memory Usage: %s/%sMB (%.2f%%)\n", $3, $2, $3 / $2 * 100}'
+    LC_ALL=C df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "#Disk Usage: %s/%.0fGb (%.0f%%)\n", $3, $2 / 1024, $3 / $2 * 100}'
+
+    LC_ALL=C vmstat 1 2 | awk 'END {printf "#CPU load: %.1f%%\n", 100 - $15}'
+    printf '#Last boot: %s\n' "$(uptime -s | cut -c 1-16)"
+
+    if lsblk -rn -o TYPE | grep -qx lvm; then
+        printf '#LVM use: yes\n'
+    else
+        printf '#LVM use: no\n'
+    fi
+    printf '#Connections TCP : %s ESTABLISHED\n' "$(ss -Htn state established | wc -l)"
+
+    users=$(who | awk '{print $1}' | sort -u | wc -l)
+    ip_address=$(ip -4 -o address show dev enp0s3 | awk '{print $4}' | cut -d / -f 1)
+    mac_address=$(cat /sys/class/net/enp0s3/address)
+    printf '#User log: %s\n' "$users"
+    printf '#Network: IP %s (%s)\n' "$ip_address" "$mac_address"
+
+    sudo_count=$(sudoreplay -d /var/log/sudo -l | wc -l)
+    printf '#Sudo : %s cmd\n' "$sudo_count"
 } | wall
 ```
 
@@ -619,7 +610,7 @@ bash -n monitoring.sh
 sudo bash monitoring.sh
 ```
 
-VM 콘솔 tty1과 SSH 터미널을 모두 로그인 상태로 두고 같은 12개 항목이 한 방송으로 수신되는지 각각 확인한다. Architecture처럼 긴 줄은 wall이 화면 줄을 나눌 수 있어 화면 줄 수 대신 항목 내용을 대조한다. 오류가 없는지도 확인한다. [그룹·파이프·wall 읽기 범위](targets.md#monitoring-그룹-출력과-wall).
+VM 콘솔 tty1과 SSH 터미널을 모두 로그인 상태로 두고 같은 12개 항목이 한 방송으로 수신되는지 각각 확인한다. Architecture처럼 긴 줄은 wall이 화면 줄을 나눌 수 있어 화면 줄 수 대신 항목 내용을 대조한다. 오류가 없는지도 확인한다. 수동 sudo 실행에서는 I/O 로깅 PTY 때문에 같은 화면에 중복 전달될 수 있어 수신 경로를 구분한다. 로깅을 끄지 않고 최종 단일 수신은 root cron 실행에서 확인한다. [그룹·파이프·wall 읽기 범위](targets.md#monitoring-그룹-출력과-wall).
 
 ## 35. root 소유 실행 파일 설치와 crond 상태 조회
 

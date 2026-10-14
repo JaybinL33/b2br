@@ -268,7 +268,7 @@ SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 
 
 **전체 흐름과 첫 단위:** 시스템 상태 수집 → 요구 형식으로 출력·wall 방송 → 부팅 시점과 10분 주기의 cron 예약 순서로 구성한다. 첫 단위는 원문 10쪽의 OS 아키텍처·커널 버전·물리 및 가상 프로세서 수다. VM에서 원자료를 읽고 각 값의 뜻을 설명한 뒤 해당 부분만 코드로 옮긴다.
 
-[GNU uname 매뉴얼](https://man7.org/linux/man-pages/man1/uname.1.html)과 설치된 `man uname`의 `-a`, `-s`, `-r`, `-v`, `-m`, `-o`를 읽어 커널 이름·릴리스·빌드 버전·머신 아키텍처·OS 표기를 구분한다. `uname -a`는 배포판의 제품명·릴리스를 확인하는 명령과 다르다. [util-linux lscpu 매뉴얼](https://man7.org/linux/man-pages/man1/lscpu.1.html)의 `DESCRIPTION` 중 정보 출처와 가상 환경 설명, `NOTES`의 출력 형식 주의를 읽는다. VM 출력의 `CPU(s)`는 논리 CPU 수, `Socket(s)`는 게스트에 보이는 소켓 수로 읽고 물리 프로세서·가상 CPU 지표의 근거를 구분한다. 필요하면 cores/threads와 온라인 CPU 목록을 함께 보되 VM 토폴로지를 호스트의 실제 하드웨어 수로 해석하지 않는다. 지금은 출력 이해가 목표이며 NUMA·캐시·명령어 플래그와 전체 스크립트 구현은 뒤로 미룬다. [첫 조회 절차](cheatsheet.md#21-monitoring-첫-조회-os와-cpu).
+[GNU uname 매뉴얼](https://man7.org/linux/man-pages/man1/uname.1.html)과 설치된 `man uname`의 `-a`, `-s`, `-r`, `-v`, `-m`, `-o`를 읽어 커널 이름·릴리스·빌드 버전·머신 아키텍처·OS 표기를 구분한다. `uname -a`는 배포판의 제품명·릴리스를 확인하는 명령과 다르다. [util-linux lscpu 매뉴얼](https://man7.org/linux/man-pages/man1/lscpu.1.html)의 `DESCRIPTION` 중 정보 출처와 가상 환경 설명, `NOTES`의 출력 형식 주의를 읽는다. VM 출력의 `CPU(s)`는 논리 CPU 수, `Socket(s)`는 게스트에 보이는 소켓 수로 읽고 물리 프로세서·가상 CPU 지표의 근거를 구분한다. 필요하면 cores/threads와 온라인 CPU 목록을 함께 보되 VM 토폴로지를 호스트의 실제 하드웨어 수로 해석하지 않는다. 첫 조회에서는 출력 이해에 집중하고 NUMA·캐시·명령어 플래그의 심화는 미룬다. [첫 조회 절차](cheatsheet.md#21-monitoring-첫-조회-os와-cpu).
 
 **계산용 CPU 출력:** 위 lscpu 매뉴얼의 `-p`·`-b`·`-a`를 읽는다. 기본 요약의 화면 배치는 바뀔 수 있으므로 계산할 때는 `lscpu -p=SOCKET,CPU`로 필요한 열과 순서를 지정한다. `#` 설명 줄을 제외한 행에서 첫 열은 소켓 ID, 둘째 열은 논리 CPU ID다. 소켓 ID의 서로 다른 값 개수와 CPU 데이터 행 수를 각각 세는 원리를 먼저 이해한다. `-p`는 기본적으로 온라인 CPU를 보여 주므로 전체 CPU 수와 대조할 때 오프라인 CPU 유무도 확인한다. 소켓 ID 자체를 개수로 쓰거나 1부터 시작한다고 가정하지 않는다. 과제의 물리 프로세서 지표는 여기서 게스트가 보고하는 소켓 수로 해석하며 `nproc` 명령의 CPU 수와 혼동하지 않는다.
 
@@ -369,7 +369,7 @@ TCP 쪽은 ss의 `-H`가 제목을 없애고 `-t`가 TCP를 선택하며 `-n`이
 
 원문 v5.2 인쇄 10쪽은 “The number of users using the server.”를 요구하며 예시는 `#User log: 1`이다. 세션 행 수를 쓰라고 명시하지 않는다. 이 구현은 who에 나타난 로그인 사용자명을 중복 제거해 세는 해석을 선택한다. 같은 계정의 여러 세션은 한 사용자로 계산하며, 이것은 계정을 공유하는 실제 사람 수를 판별하는 기능이 아니다. 모든 등록 계정을 세는 것도 아니다.
 
-`awk '{print $1}'`은 사용자명 열을 고르고 `sort -u`는 중복을 제거하며 `wc -l`은 남은 행을 센다. 기존 awk·sort·wc 읽기 범위에서 이 동작만 대조한다. [ip 매뉴얼](https://man7.org/linux/man-pages/man8/ip.8.html)의 `-4`(IPv4)·`-o`(한 레코드를 한 줄로), [ip-address 매뉴얼](https://man7.org/linux/man-pages/man8/ip-address.8.html)의 `show dev IFNAME`을 읽는다. 지정 NIC의 출력에서 `$4`가 IPv4/접두사 길이임을 확인한 뒤 사용한다. 설치된 `man cut`의 `-d`(구분자)·`-f`(필드 선택)를 읽고 `/`로 나눈 첫 필드만 고르는 이유를 설명한다.
+사용자 집계는 사용자명 선택 → 중복 제거 → 개수의 흐름으로 읽는다. 기존 awk·sort·wc 읽기 범위와 대조한다. [ip 매뉴얼](https://man7.org/linux/man-pages/man8/ip.8.html)의 `-4`(IPv4)·`-o`(한 레코드를 한 줄로), [ip-address 매뉴얼](https://man7.org/linux/man-pages/man8/ip-address.8.html)의 `show dev IFNAME`을 읽는다. 지정 NIC의 출력에서 `$4`가 IPv4/접두사 길이임을 확인한 뒤 사용한다. 설치된 `man cut`의 `-d`(구분자)·`-f`(필드 선택)를 읽고 `/`로 나눈 첫 필드만 고르는 이유를 설명한다.
 
 [Linux 커널 sysfs 네트워크 ABI](https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-net)의 `/sys/class/net/<iface>/address` 항목은 현재 인터페이스 링크 주소를 설명한다. Ethernet NIC의 MAC을 이 파일에서 읽어 같은 NIC의 IP와 짝짓는다. 이는 영구 하드웨어 주소임을 보장하는 값은 아니다. 현재 예시는 단일 대상 NIC·단일 IPv4를 전제로 하며, NIC 이름 변경·여러 IPv4·명령 실패와 빈 결과는 전체 검증에서 다시 다룬다.
 
@@ -415,8 +415,6 @@ PATH는 cron의 제한된 환경에서도 스크립트 안의 도구를 찾도�
 
 부팅 실행의 세부 근거는 [Cronie cron.c의 run_reboot_jobs](https://github.com/cronie-crond/cronie/blob/master/src/cron.c)에서 필요한 부분만 읽는다. REBOOT_LOCK이 있으면 @reboot 작업을 건너뛰므로 일반적인 crond 서비스 재시작을 부팅 테스트로 대신하지 않는다. 부팅 시 로그인 사용자가 없으면 wall을 읽을 터미널이 없을 수 있다. 이때 실행 로그와 실제 터미널 수신은 별개의 증거로 다룬다.
 
-스크립트 수정 없는 중단의 검토 방향은 monitoring의 두 예약 줄만 주석 처리하는 것이다. 다른 예약과 PATH를 보존하고, 이 방향의 실제 안내·적용·중단 확인은 별도 단계에서 진행한다.
-
 ### 재부팅 검증의 읽기 범위
 
 설치된 `man systemctl`의 `is-active`, `man getenforce`, `man journalctl`의 `-b`·`-u`·`-t`·`--no-pager`만 읽는다. SSH·방화벽·cron이 부팅 후 실행되는지, SELinux가 Enforcing인지, 저장한 SSH 접속 경로가 다시 동작하는지를 확인한다. LUKS 해제는 VM 콘솔에서 수행하며 호스트의 접속 명령과 VM의 상태 조회를 구분한다.
@@ -433,9 +431,9 @@ Cronie crontab(5)의 주석 설명을 읽는다. 첫 비공백 문자가 `#`인 
 
 ### monitoring 첫 구현의 흐름
 
-[첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.
+[첫 구현 단위](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목을 다루며 코드는 치트시트 34절 한곳에 둔다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.
 
-CPU 계산은 `lscpu`의 열 지정 → `grep -v '^#'`로 설명 줄 제외 → 필요한 집계의 순서다. `|`는 앞 명령의 출력을 다음 명령의 입력으로 전달한다. 소켓 열은 `sort -u`로 같은 ID를 하나로 합친 뒤 `wc -l`로 종류 수를 센다. CPU 열은 논리 CPU마다 한 행이므로 바로 행 수를 센다. 기본 `-p`의 온라인 CPU 범위가 이 계산에도 적용된다. `printf`의 `%s`는 변수 값을 문자열로 넣고 `\n`은 줄바꿈을 출력한다. 변수 확장을 큰따옴표로 감싸 Architecture의 공백 등을 한 인자로 유지한다.
+CPU 계산은 `lscpu`의 열 지정 → `grep -v '^#'`로 설명 줄 제외 → 필요한 집계의 순서다. `|`는 앞 명령의 출력을 다음 명령의 입력으로 전달한다. 소켓 열은 `sort -u`로 같은 ID를 하나로 합친 뒤 `wc -l`로 종류 수를 센다. CPU 열은 논리 CPU마다 한 행이므로 바로 행 수를 센다. 기본 `-p`의 온라인 CPU 범위가 이 계산에도 적용된다. 출력은 고정 형식과 값으로 구분하고 변수 확장을 큰따옴표로 감싸 Architecture의 공백 등을 한 인자로 유지한다.
 
 설치된 `man bash`의 `Command Substitution`, `Pipelines`, `printf`, `man grep`의 `-v`, `man sort`의 `-u`, `man wc`의 `-l`만 이 예시와 대조한다. 출력 형식을 먼저 재현하고 다른 지표를 추가한다. 명령 실패 처리와 CPU가 오프라인인 경우의 집계 범위는 전체 스크립트 검증에서 다시 점검한다.
 
