@@ -453,6 +453,21 @@ lscpu -p=SOCKET,CPU
 
 `#`로 시작하는 설명 줄과 데이터 행을 구분한다. 첫 열의 소켓 ID는 중복을 제거한 종류 수, 둘째 열의 CPU는 데이터 행 수로 이해한다. `-p`는 기본적으로 온라인 CPU만 출력하므로 앞서 본 온라인 목록과 대조한다. 출력에서 이 관계를 확인한 뒤 스크립트 첫 단위를 작성한다. [옵션과 계산 근거](targets.md#6-monitoringsh와-cronwall).
 
+## 23. monitoring 첫 구현 예시
+
+다음은 Architecture·CPU physical·vCPU만 출력하는 **부분 학습 예시**다. 별도 실습 파일에 작성해 Bash로 실행하고 앞서 읽은 원자료와 대조한다. 나머지 지표·wall·cron은 각 학습 단위에서 이어 붙인다.
+
+```bash
+#!/bin/bash
+architecture=$(uname -a)
+physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
+virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
+
+printf '#Architecture: %s\n#CPU physical: %s\n#vCPU: %s\n' "$architecture" "$physical" "$virtual"
+```
+
+출력의 Architecture는 `uname -a`, CPU physical은 온라인 CPU에 나타난 서로 다른 소켓 수, vCPU는 온라인 CPU 데이터 행 수와 대조한다. [각 처리 단계의 의미](targets.md#monitoring-첫-구현의-흐름).
+
 ## 이후 단위
 
 나머지 monitoring 지표 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

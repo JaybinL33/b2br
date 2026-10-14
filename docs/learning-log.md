@@ -460,3 +460,12 @@ Hypervisor vendor에는 `KVM`이 보였으나 확인된 VirtualBox 환경을 다
 ## 2026-10-14 — 이전 비밀번호 비교 경로 설명 보완
 
 공식 libpwquality pam_pwquality 매뉴얼의 `difok`·`enforce_for_root`를 대조했다. `difok=7`과 root 품질 강제는 유지하되, 일반 사용자가 sudo 없이 `passwd`를 실행하는 경로와 root 권한의 변경을 구분했다. `sudo passwd root`뿐 아니라 `sudo passwd jungblee`도 이전 암호 비교를 생략하므로 `enforce_for_root`가 이를 복원하지 않는다고 보완했다. 기존 정상 변경 성공과 별개로 실제 `difok` 위반 거절은 미검증이다.
+
+
+## 2026-10-14 — CPU 계산용 두 행 확인과 첫 구현 예시 준비
+
+주 대화가 확인한 사용자 `lscpu -p=SOCKET,CPU` 출력은 `#` 주석 뒤 `0,0`·`0,1` 두 행이었다. 같은 소켓 ID 0에 CPU ID 0·1이 속하므로 게스트 소켓 1개·온라인 CPU 2개라는 앞선 요약과 일치한다.
+
+Architecture·CPU physical·vCPU 세 항목만 출력하는 Bash 예시를 치트시트에 추가하고 명령 치환·파이프·주석 제외·중복 제거·행 수·printf를 해당 흐름에 연결했다. 사용자 파일 작성·실행 결과는 아직 없다.
+
+문서 예시를 임시 파일로 추출해 작업 환경에서 `bash -n`을 통과했고, 소켓 0·0과 CPU 0·1을 제공한 통제 입력에서 1·2 집계 및 세 줄 출력을 확인했다. 작업 환경의 실제 uname·lscpu를 이용한 읽기 전용 실행도 세 줄 출력과 오류 없음을 확인했다. 이 검사는 사용자 VM에서의 적용 검증이 아니며 작업 환경 수치를 VM 관측값으로 기록하지 않았다.
