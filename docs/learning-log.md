@@ -354,3 +354,12 @@ PrintMotd no
 이후 VirtualBox Port Forwarding Rules 화면에는 `Rule1`, TCP, Host IP 빈칸, Host Port 0, Guest IP 빈칸, Guest Port 0의 미완성 행이 있었다. Name `ssh`, TCP, Host IP `127.0.0.1`, Host Port·Guest Port `4242`를 안내했다. 처음 Guest IP `10.0.2.15`를 제안했으나 사용자의 질문 후 일반 NAT 내장 DHCP라면 생략 가능하므로 빈칸을 권장하고 수동 고정 IP일 때 지정하는 것으로 설명을 정정했다. 어댑터 방식과 DHCP 자체는 직접 확인하지 않았다.
 
 저장 후 호스트에서 `ssh -p 4242 jungblee@127.0.0.1`로 접속하고, 최초 키 지문을 VM 콘솔에서 해당 알고리즘의 호스트 공개키와 대조하도록 안내했다. 일치하면 승인하고 터미널에서 비밀번호를 입력한 뒤 `hostname`·`whoami`로 `jungblee42`·`jungblee`를 확인하는 것이 목표다. 실제 규칙 저장·접속 결과는 아직 없다.
+
+
+## 2026-10-14 — 호스트 SSH의 인증 전 연결 종료 관측
+
+주 대화가 확인한 사용자 포트 전달 화면은 Name `ssh`, TCP, Host `127.0.0.1:4242`, Guest `10.0.2.15:4242`였다. Guest IP 생략 가능 설명과 별개로 사용자는 명시한 주소를 유지했다.
+
+호스트에서 `ssh -p 4242 jungblee@127.0.0.1`과 `ssh -p 4242 jungblee@localhost` 모두 `kex_exchange_identification: Connection closed by remote host`, `Connection closed by 127.0.0.1 port 4242`로 실패했다. 사용자 인증 전 연결 종료이며 원인은 아직 확인되지 않았다. 이를 비밀번호 오류나 root SSH 거절 검증으로 해석하지 않는다.
+
+VM 콘솔에서 `ip -br addr`와 `sudo journalctl -u sshd -n 30 --no-pager`를 요청했다. 현재 Guest IP와 sshd 도달·거절 로그를 확인할 단계이며 결과는 아직 없다.
