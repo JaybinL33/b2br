@@ -322,3 +322,10 @@ PrintMotd no
 ```
 
 `sudoedit /etc/ssh/sshd_config.d/00-b2br.conf`로 `Port 4242`·`PermitRootLogin no` 두 줄을 작성하고 `sudo sshd -t`와 `sudo sshd -T`의 해당 출력으로 검사하도록 안내했다. 파일 저장·검사 결과는 아직 없으며 SELinux 허용 준비 전에는 재시작하지 않도록 했다.
+
+
+## 2026-10-14 — SSH 설정 검사 통과와 SELinux 포트 등록 안내
+
+사용자 화면을 확인한 주 대화의 전달 근거: `sudo sshd -t`는 암호 입력 후 오류 없이 종료했고, `sudo sshd -T`의 필터 출력은 `port 4242`와 `permitrootlogin no`였다. 설정 검사 체크포인트를 완료했다. 실행 중 서비스의 반영이나 실제 접속 성공까지 확인한 것은 아니다.
+
+다음으로 `policycoreutils-python-utils` 설치, `semanage port -a -t ssh_port_t -p tcp 4242` 등록, `semanage port -l`의 SSH 유형 조회를 sudo로 실행하도록 안내했다. 관리 도구·옵션과 포트 유형 등록의 목적, 방화벽 개방과의 차이를 설명하고 이미 정의 오류에는 임의의 `-m` 변경 대신 기존 유형을 확인하도록 했다. 실행 결과는 아직 없으며 다음은 firewalld 현황 확인이다.

@@ -313,6 +313,22 @@ permitrootlogin no
 
 추가 port 줄이나 다른 값·오류가 있으면 Include 경로와 중복 설정을 다시 확인한다. **SELinux의 4242 허용 준비 전에는 sshd를 재시작하지 않는다.** 검사 통과 후 방화벽·접속 경로 준비와 서비스 반영, 실제 리스닝·접속 검증으로 이어간다. [선택 이유와 공식 검사 옵션](targets.md#5-sshfirewalldselinux).
 
+## 15. SELinux에 SSH 포트 등록
+
+관리 도구를 설치하고 TCP 4242를 SSH 포트 유형에 등록한 뒤 확인한다. 설치가 성공한 다음 줄로 진행한다.
+
+```bash
+sudo dnf install policycoreutils-python-utils
+sudo semanage port -a -t ssh_port_t -p tcp 4242
+sudo semanage port -l | grep ssh_port_t
+```
+
+`ssh_port_t`의 `tcp` 목록에 4242가 포함되는 것이 기대 결과다. 기존 22가 이 목록에 남아 있어도 SSH 리스닝이나 방화벽 개방을 뜻하지 않는다.
+
+**이미 정의되었다는 오류가 나오면** 임의로 `-m`으로 바꾸지 않는다. `sudo semanage port -l`에서 TCP 4242의 기존 유형·범위를 확인한다. 이미 `ssh_port_t`에 포함되면 재등록 없이 확인하고, 다른 유형이면 용도를 먼저 확인한다.
+
+SELinux 등록은 방화벽 개방과 별개다. 다음은 firewalld 현황 확인이며 아직 sshd를 재시작하지 않는다. [개념과 공식 읽기 범위](targets.md#5-sshfirewalldselinux).
+
 ## 이후 단위
 
 SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

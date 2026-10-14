@@ -228,6 +228,10 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 [공식 sshd 매뉴얼](https://man.openbsd.org/sshd)과 설치된 `man sshd`에서 `-t`·`-T`를 읽는다. `-t`는 설정 유효성과 호스트 키의 건전성을 검사하고, `-T`는 검사 후 유효 설정을 출력하고 종료한다. `Match` 조건별 판단이 필요하면 `-C`의 접속 조건 지정 부분을 읽는다. 출력에서 `port 4242`·`permitrootlogin no`를 대조하되, 이 결과는 실행 중 서비스의 리스닝이나 실제 접속 성공을 증명하지 않는다. 설정 검사 후 SELinux에서 4242의 SSH 사용을 허용할 준비를 마치고 방화벽·접속 경로를 점검한 다음 서비스를 반영한다. 그 전에는 재시작하지 않는다. [작성·검사 절차](cheatsheet.md#14-별도-ssh-설정-작성과-검사).
 
+**SELinux에 SSH 포트 등록:** 위 RHEL 10 OpenSSH 1.5.3 `Setting a non-default port for SSH`의 패키지 전제조건과 SELinux 등록 → firewalld 구성 → 서비스 재시작 순서를 읽는다. `policycoreutils-python-utils`는 `semanage` 관리 도구를 제공한다. [semanage-port 매뉴얼](https://man7.org/linux/man-pages/man8/semanage-port.8.html)과 설치된 `man semanage-port`의 `DESCRIPTION`, `-a`·`-t`·`-p`·`-l`, SSH 예시를 대조한다.
+
+TCP 4242를 `ssh_port_t`에 등록하면 SELinux 정책상 sshd가 사용할 수 있는 포트 유형에 연결된다. `-a`는 항목 추가, `-t`는 SELinux 유형, `-p`는 프로토콜, `-l`은 목록 조회다. 이는 방화벽의 트래픽 허용이나 sshd의 포트 변경을 대신하지 않는다. 목록의 `ssh_port_t` TCP 항목에 4242가 포함되는지 확인한다. 이미 정의된 포트라는 오류가 나면 기존 유형·범위를 먼저 확인하고 임의로 `-m`으로 덮어쓰지 않는다. 이미 같은 유형이면 재등록할 필요가 없고, 다른 유형이면 사용 목적을 확인한 뒤 판단한다. 이후 firewalld 현황을 확인한다. [등록·확인 절차](cheatsheet.md#15-selinux에-ssh-포트-등록).
+
 **존재와 용도만:** SSH 공개키 인증은 비밀번호 외의 인증 방식이고 SELinux 거절 로그는 정책 문제를 추적하는 단서다. 공개키 방식이 필요하거나 정상 설정 후에도 거절될 때 해당 부분을 더 읽는다. Enforcing·Permissive·Disabled의 차이 자체는 필수 이해 범위다.
 
 **이번에 미룰 것과 이유:** SSH 암호 알고리즘 수학·스마트카드·점프 호스트, nftables 내부 규칙 생성, 자체 SELinux 정책 모듈 작성은 이번 접속 경로의 요구가 아니다. 인증 인프라 확장이나 기존 정책으로 해결할 수 없는 서비스 운영 때 학습한다. firewalld·SELinux를 끄는 것을 범위 축소로 삼지 않는다.
