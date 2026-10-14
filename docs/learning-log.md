@@ -377,3 +377,16 @@ VM 콘솔에서 `ip -br addr`와 `sudo journalctl -u sshd -n 30 --no-pager`를 �
 주 대화가 확인한 화면에서 VM 내부의 `ssh -p 4242 jungblee@127.0.0.1`은 ED25519 fingerprint 확인 질문까지 도달했다. SSH 응답은 확인했지만 키 지문 대조·승인이나 사용자 인증 성공까지 확인한 것은 아니다. 어댑터 1 전체 화면에는 NAT, Enable Network Adapter 체크, Cable Connected 체크가 보였다. 포트 전달 값은 앞서 확인한 `127.0.0.1:4242` → `10.0.2.15:4242`다.
 
 사용자가 VM 설정 창을 열어 둔 상태여서 바깥 설정 창도 OK로 저장한 뒤 호스트 SSH 재시도를 안내했다. 같은 실패가 이어지면 호스트에서 `ss -lntp 'sport = :4242'`로 포트 점유 프로세스를 확인하도록 했다. 재시도·포트 조회 결과는 아직 없으며, 저장 미완료가 연결 종료의 원인이라고 확정하지 않는다.
+
+
+## 2026-10-14 — 호스트 리스닝·VirtualBox 전달 규칙 확인
+
+주 대화에서 전달한 관측: 호스트 `ss`에는 `LISTEN 127.0.0.1:4242`, `Send-Q 5`가 표시됐고 Process 칸은 비어 있었다. 따라서 이 출력으로 점유 프로세스를 특정하지 않는다. `VBoxManage showvminfo b2br`의 NIC 1은 NAT, cable on, MAC `08002732C370`이며 규칙 `ssh`는 TCP host `127.0.0.1:4242` → guest `10.0.2.15:4242`였다.
+
+VM 루프백 SSH는 호스트 키 질문까지 응답하지만 호스트 SSH의 인증 전 연결 종료 원인은 여전히 미확정이다. 패킷 관찰을 위해 요청한 tcpdump는 사용자가 없다고 답했다. 설치는 진행하지 않고 호스트에서 다음 로그 조회를 안내했다.
+
+```bash
+VBoxManage showvminfo b2br --log 0 | grep -i -e nat -e 4242 -e forward -e bind
+```
+
+NAT·포워딩·바인딩 로그 결과는 아직 없다.
