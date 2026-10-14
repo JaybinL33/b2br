@@ -150,7 +150,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 | `enforcing = 1` | 품질 실패를 경고만 하고 넘기지 않고 거절한다. 기본값 1을 정책에 명시한다. |
 | `enforce_for_root` | 안내에서는 값 없이 켜는 표기를 사용한다. root가 변경할 때도 품질 실패를 거절하지만, root는 이전 암호를 입력하지 않아 이전·새 비밀번호 비교는 생략된다. |
 
-사전 검사 등 나머지 기본값은 유지한다. 일반 계정의 이전 비밀번호 비교는 사용자가 직접 `passwd`를 실행하는 경로에서 검증해야 한다. 관리자의 대리 변경으로는 `difok` 동작을 입증할 수 없다. 재실습 순서는 jungblee의 `passwd` 성공 → `sudo passwd root` 성공 → `chage -l jungblee`와 `sudo chage -l root` 조회다. 마지막 변경일이 실제 날짜로 바뀌고 만료일은 30일 뒤이며 2/30/7이 유지되는지 확인한다. 정상 변경 성공은 각 위반 조건을 거절한다는 증거와 별개다. 이후 재변경에는 최소 2일 제한이 영향을 줄 수 있다. 오류가 나면 비밀번호를 제외한 메시지를 보고 판단한다. 비밀번호는 기록하지 않는다.
+사전 검사 등 나머지 기본값은 유지한다. 일반 계정의 이전 비밀번호 비교는 사용자가 직접 `passwd`를 실행하는 경로에서 검증해야 한다. 관리자의 대리 변경으로는 `difok` 동작을 입증할 수 없다. 특히 `sudo passwd jungblee`도 root 권한으로 다른 계정의 비밀번호를 바꾸므로 이전 비밀번호 비교를 생략한다. sudo 인증에서 입력하는 암호는 PAM password 스택에 제공할 변경 대상의 이전 암호와 다르다. `enforce_for_root`는 이 비교 생략을 되돌리는 옵션이 아니다. 재실습 순서는 jungblee의 `passwd` 성공 → `sudo passwd root` 성공 → `chage -l jungblee`와 `sudo chage -l root` 조회다. 마지막 변경일이 실제 날짜로 바뀌고 만료일은 30일 뒤이며 2/30/7이 유지되는지 확인한다. 정상 변경 성공은 각 위반 조건을 거절한다는 증거와 별개다. 이후 재변경에는 최소 2일 제한이 영향을 줄 수 있다. 오류가 나면 비밀번호를 제외한 메시지를 보고 판단한다. 비밀번호는 기록하지 않는다.
 
 ## 4. sudo 정책과 감사 로그
 
@@ -269,6 +269,8 @@ SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 
 **전체 흐름과 첫 단위:** 시스템 상태 수집 → 요구 형식으로 출력·wall 방송 → 부팅 시점과 10분 주기의 cron 예약 순서로 구성한다. 첫 단위는 원문 10쪽의 OS 아키텍처·커널 버전·물리 및 가상 프로세서 수다. VM에서 원자료를 읽고 각 값의 뜻을 설명한 뒤 해당 부분만 코드로 옮긴다.
 
 [GNU uname 매뉴얼](https://man7.org/linux/man-pages/man1/uname.1.html)과 설치된 `man uname`의 `-a`, `-s`, `-r`, `-v`, `-m`, `-o`를 읽어 커널 이름·릴리스·빌드 버전·머신 아키텍처·OS 표기를 구분한다. `uname -a`는 배포판의 제품명·릴리스를 확인하는 명령과 다르다. [util-linux lscpu 매뉴얼](https://man7.org/linux/man-pages/man1/lscpu.1.html)의 `DESCRIPTION` 중 정보 출처와 가상 환경 설명, `NOTES`의 출력 형식 주의를 읽는다. VM 출력의 `CPU(s)`는 논리 CPU 수, `Socket(s)`는 게스트에 보이는 소켓 수로 읽고 물리 프로세서·가상 CPU 지표의 근거를 구분한다. 필요하면 cores/threads와 온라인 CPU 목록을 함께 보되 VM 토폴로지를 호스트의 실제 하드웨어 수로 해석하지 않는다. 지금은 출력 이해가 목표이며 NUMA·캐시·명령어 플래그와 전체 스크립트 구현은 뒤로 미룬다. [첫 조회 절차](cheatsheet.md#21-monitoring-첫-조회-os와-cpu).
+
+**계산용 CPU 출력:** 위 lscpu 매뉴얼의 `-p`·`-b`·`-a`를 읽는다. 기본 요약의 화면 배치는 바뀔 수 있으므로 계산할 때는 `lscpu -p=SOCKET,CPU`로 필요한 열과 순서를 지정한다. `#` 설명 줄을 제외한 행에서 첫 열은 소켓 ID, 둘째 열은 논리 CPU ID다. 소켓 ID의 서로 다른 값 개수와 CPU 데이터 행 수를 각각 세는 원리를 먼저 이해한다. `-p`는 기본적으로 온라인 CPU를 보여 주므로 전체 CPU 수와 대조할 때 오프라인 CPU 유무도 확인한다. 소켓 ID 자체를 개수로 쓰거나 1부터 시작한다고 가정하지 않는다. 과제의 물리 프로세서 지표는 여기서 게스트가 보고하는 소켓 수로 해석하며 `nproc` 명령의 CPU 수와 혼동하지 않는다.
 
 **반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 10–11쪽에서 먼저 지표와 방송 조건을 읽는다. [Rocky Task Management](https://docs.rockylinux.org/books/admin_guide/11-tasks/)의 `Generalities`, `How the service works`, `Scheduling tasks` 아래 `The crontab command`·`The crontab file`·`Task execution process`로 예약 구조를 잡는다. 실제 작성 시 VM의 `man 5 crontab`에서 시간 필드·환경·`@reboot`, `man wall`의 `DESCRIPTION`을 읽고, 아래 표의 지표를 하나 선택할 때마다 해당 명령의 출력 필드 설명만 읽는다.
 

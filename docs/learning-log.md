@@ -449,3 +449,14 @@ monitoring 학습은 상태 수집 → 요구 형식 출력·wall → 부팅 시
 추가 전달 내용으로 supervisor 아래 `ftpkg-srv.py`와 다른 worker가 존재함을 확인했다. 해당 Python 파일 읽기는 `Permission denied`였으며, 정확한 4242 소켓 PID를 특정하지 못했다. 서비스 내부의 파일 존재만으로 그 파일이 해당 소켓 소유자라고 단정하지 않는다.
 
 사용자가 두 전달 방식의 과제 적합성을 물어 저장소 원문 v5.2 인쇄 8쪽(PDF 9쪽)을 재확인했다. SSH와 방화벽의 4242 요구는 VM 내부 기준이며 호스트 전달 포트를 지정하지 않는다. 두 방식 모두 해당 포트 요구에 부합하고, 현재 성공한 다른 루프백의 4242를 유지하면 호스트에서도 4242를 쓰려는 목표를 충족한다고 설명했다.
+
+
+## 2026-10-14 — monitoring 첫 출력 확인과 CPU 계산용 조회 안내
+
+주 대화가 확인한 사용자 화면에서 `uname -a`의 커널 이름은 `Linux`, 호스트명은 `jungblee42`, 릴리스는 `6.12.0-211.16.1.el10_2.0.1.x86_64`, 아키텍처·OS 표기는 `x86_64`·`GNU/Linux`였다. lscpu는 Architecture `x86_64`, CPU(s) `2`, 온라인 `0,1`, Thread(s) per core `1`, Core(s) per socket `2`, Socket(s) `1`을 표시했다. 과제 지표의 근거로 게스트 소켓 1개·가상 CPU 2개를 읽으며 호스트 물리 하드웨어 개수로 해석하지 않는다.
+
+Hypervisor vendor에는 `KVM`이 보였으나 확인된 VirtualBox 환경을 다른 하이퍼바이저 실행으로 단정하지 않았다. 다음은 `lscpu -p=SOCKET,CPU`에서 소켓 ID 중복과 CPU 행 수를 확인하는 단계다. 해당 출력은 아직 없으며 전체 스크립트는 작성하지 않았다.
+
+## 2026-10-14 — 이전 비밀번호 비교 경로 설명 보완
+
+공식 libpwquality pam_pwquality 매뉴얼의 `difok`·`enforce_for_root`를 대조했다. `difok=7`과 root 품질 강제는 유지하되, 일반 사용자가 sudo 없이 `passwd`를 실행하는 경로와 root 권한의 변경을 구분했다. `sudo passwd root`뿐 아니라 `sudo passwd jungblee`도 이전 암호 비교를 생략하므로 `enforce_for_root`가 이를 복원하지 않는다고 보완했다. 기존 정상 변경 성공과 별개로 실제 `difok` 위반 거절은 미검증이다.
