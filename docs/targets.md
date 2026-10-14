@@ -399,6 +399,12 @@ sudoreplay의 `-l` 목록에서 한 줄이 한 세션인 형식을 확인한 환
 
 [util-linux wall 매뉴얼](https://man7.org/linux/man-pages/man1/wall.1.html)의 `DESCRIPTION`과 `-n`만 먼저 읽고 설치된 `man wall`과 대조한다. 메시지나 파일 인자가 없으면 표준입력을 읽어 현재 로그인한 사용자 터미널에 전달한다. 긴 줄은 접힐 수 있고 기본 배너가 붙으며 원문에서 배너는 선택 사항이다. 지금 예시는 기본 배너를 유지한다. root 실행은 메시지 수신을 거부한 터미널에 쓸 수 있는 권한과 관련되지만 실제 tty1·SSH 양쪽 수신은 직접 관찰해야 한다. 부팅 방송·10분 주기와 구별해 우선 수동 한 번의 방송만 확인한다.
 
+### monitoring 설치 경로·소유권과 crond
+
+[GNU install 매뉴얼](https://man7.org/linux/man-pages/man1/install.1.html)의 `DESCRIPTION`, `-o`·`-g`·`-m`을 읽고 설치된 `man install`과 대조한다. install은 파일을 복사하면서 소유자·그룹·권한을 지정한다. `/usr/local/sbin/monitoring.sh`를 root 소유로 설치하는 이유는 root가 예약 실행할 코드가 일반 사용자의 편집으로 바뀌지 않도록 하기 위해서다. 755는 소유자의 읽기·쓰기·실행과 그룹·기타의 읽기·실행을 뜻한다. 상위 디렉터리도 일반 사용자가 교체·수정할 수 없는 관리 경로라는 전제가 필요하다. 원본 편집과 설치본 갱신은 별도 작업이다.
+
+[Cronie cron 매뉴얼](https://man7.org/linux/man-pages/man8/cron.8.html)의 `DESCRIPTION`에서 데몬과 crontab의 관계를 읽고 설치된 `man crond` 또는 `man cron`과 대조한다. 기존 Rocky Task Management 읽기 범위에서 서비스 동작·예약 구조를 다시 연결한다. `systemctl status crond --no-pager`는 실행 상태와 서비스 정보를 조회한다. 서비스가 실행 중이라는 사실과 monitoring 예약이 등록·실행되었다는 사실은 다르다. 먼저 설치본 소유권·권한과 crond 상태를 확인하고 이후 root 예약 실행으로 진행한다. 이 단계에서는 cron 항목을 등록하지 않는다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.

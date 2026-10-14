@@ -621,6 +621,18 @@ sudo bash monitoring.sh
 
 VM 콘솔 tty1과 SSH 터미널을 모두 로그인 상태로 두고 같은 12개 항목이 한 방송으로 수신되는지 각각 확인한다. Architecture처럼 긴 줄은 wall이 화면 줄을 나눌 수 있어 화면 줄 수 대신 항목 내용을 대조한다. 오류가 없는지도 확인한다. [그룹·파이프·wall 읽기 범위](targets.md#monitoring-그룹-출력과-wall).
 
+## 35. root 소유 실행 파일 설치와 crond 상태 조회
+
+검토한 `monitoring.sh`가 있는 VM 디렉터리에서 실행한다.
+
+```bash
+sudo install -o root -g root -m 755 monitoring.sh /usr/local/sbin/monitoring.sh
+ls -l /usr/local/sbin/monitoring.sh
+systemctl status crond --no-pager
+```
+
+설치본의 소유자·그룹이 `root root`, 권한이 `-rwxr-xr-x`인지 확인한다. crond의 현재 상태와 활성화 정보를 읽는다. 설치본은 원본의 복사이므로 이후 원본을 수정하면 검토 후 다시 설치해야 한다. 이 단계는 파일 설치와 서비스 상태 조회이며 예약 등록은 별도 단계다. [공식 자료와 설계 이유](targets.md#monitoring-설치-경로소유권과-crond).
+
 ## 이후 단위
 
 단일 방송 검증 → 설치 경로·소유권 → cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

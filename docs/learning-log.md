@@ -650,3 +650,12 @@ sudo I/O 로깅의 PTY 관련 가능성은 조사 중이며 원인으로 확정�
 원인을 구분하기 위해 `tty`와 `sudo sh -c 'tty; who'` 조회를 요청했으며 아직 결과는 없다. 주 대화에서 공식 wall 소스와 sudoers의 set_utmp·I/O logging 설명을 근거로, sudo I/O 로깅 PTY와 원래 SSH PTY가 각각 방송을 받은 뒤 전달되어 중복 표시될 가능성을 제시했다. 이는 조사 가설이며 실제 PTY·로그인 기록과 대조하기 전에는 원인으로 확정하지 않는다.
 
 로깅이나 requiretty를 비활성화하지 않고, 최종 root cron에서는 스크립트를 sudo 없이 실행하는 방향을 설명했다. 설정을 변경하거나 cron을 적용한 것은 아니다. 일회 진단 명령은 이 기록에만 두고 정상 치트시트에는 추가하지 않았다.
+
+
+## 2026-10-14 — sudo PTY·로그인 기록 확인과 설치 단계 제안
+
+사용자의 일반 셸 `tty`는 `/dev/pts/0`, sudo sh 안의 `tty`는 `/dev/pts/1`이었다. sudo 안의 who에는 기존 tty1·pts/0과 추가 pts/1이 모두 jungblee로 표시되었다. sudo 실행의 추가 PTY와 로그인 기록은 확인했다. 이는 원래 터미널의 직접 수신과 sudo PTY에서 전달된 수신이 겹친다는 설명에 부합하지만 wall의 실제 write 대상을 추적한 것은 아니므로 전달 경로까지 확정하지 않는다.
+
+로깅·requiretty 등 보안 설정을 유지하고 최종 root cron에서 sudo 없이 실행해 단일 수신 여부를 확인할 예정이다. root cron의 실제 방송은 아직 검증하지 않았다.
+
+다음으로 `sudo install -o root -g root -m 755 monitoring.sh /usr/local/sbin/monitoring.sh`, 설치본 `ls -l`, `systemctl status crond --no-pager`를 제안했다. 복사와 동시에 소유권·권한을 지정하고 root 예약 실행 파일의 일반 사용자 수정을 막는 이유를 설명했다. 아직 사용자 실행 결과는 없으며 cron 등록도 제안하지 않았다. 이번 작업은 문서 반영이며 사용자 VM의 파일 설치나 서비스 변경을 수행하지 않았다.
