@@ -302,7 +302,7 @@ cron의 사용자·환경·경로와 wall의 수신 대상을 구분한다. 사�
 
 ### monitoring 메모리·디스크의 읽기 범위
 
-[free 매뉴얼](https://man7.org/linux/man-pages/man1/free.1.html)의 `DESCRIPTION`에서 total·used·free·shared·buff/cache·available, `OPTIONS`에서 `-m`만 먼저 읽는다. 설치된 VM의 `man free`와 대조한다. free는 완전히 미사용인 메모리이며 available은 새 프로그램에 사용할 수 있는 양의 추정치다. 현재 upstream의 used 정의는 total − available이지만 설치 버전의 정의를 확인하고, 표시 단위로 반올림된 숫자로 정확한 등식을 기대하지 않는다. Swap은 RAM과 따로 읽는다.
+[procps-ng free 공식 매뉴얼](https://gitlab.com/procps-ng/procps/-/raw/master/man/free.1)의 `DESCRIPTION`에서 total·used·free·shared·buff/cache·available, `OPTIONS`에서 `-m`만 먼저 읽는다. 설치된 VM의 `man free`와 대조한다. free는 완전히 미사용인 메모리이며 available은 새 프로그램에 사용할 수 있는 양의 추정치다. 현재 upstream의 used 정의는 total − available이지만 설치 버전의 정의를 확인하고, 표시 단위로 반올림된 숫자로 정확한 등식을 기대하지 않는다. Swap은 RAM과 따로 읽는다.
 
 [df 매뉴얼](https://man7.org/linux/man-pages/man1/df.1.html)의 `DESCRIPTION`, `-B`·`--total`·`-x`와 단위 설명을 설치된 `man df`와 대조한다. `df -BM --total -x tmpfs -x devtmpfs`는 지정 유형을 제외한 마운트 파일시스템을 MiB 단위로 보여 준다. 어떤 마운트가 합계에 들어가는지 먼저 확인한다. 파일시스템의 Size·Used·Avail·Use%를 구분하고 예약 공간·표시 반올림 때문에 Avail을 단순히 Size − Used로 단정하지 않는다. 파일시스템 합계를 가상 디스크 용량·LVM의 미할당 공간·swap과 혼동하지 않는다.
 
@@ -320,6 +320,24 @@ cron의 사용자·환경·경로와 wall의 수신 대상을 구분한다. 사�
 ```
 
 요구 문장은 가용량을 언급하지만 예시는 사용량/전체처럼 표현한다. 원문은 디스크 퍼센트가 used/size인지 `df`의 Use%인지, 파일시스템 집계 범위가 무엇인지 명시하지 않는다. 예시의 `MB`·`Gb` 표기도 그대로 인용한 것이며, 이를 근거로 바이트 환산 기준·분자 단위·반올림 규칙을 임의로 확정하지 않는다. 조회 명령의 MiB 단위와 원문 예시 표기는 별개다. 이 구간에서는 원자료와 정의를 읽고, 계산·출력 선택은 근거를 정리한 뒤 진행한다.
+
+### monitoring 메모리·디스크의 계산과 awk
+
+원문에 계산식이 없으므로 이 부분 구현은 두 지표 모두 **used/total × 100**을 선택한다. 이는 구현의 선택이며 원문의 명시 조건이 아니다. `free -m`과 `df -m`의 정수 출력값을 계산 입력으로 쓴다. 원문 예시의 `MB`·`Gb` 라벨은 유지하지만 실제 메모리와 디스크 used는 MiB, 디스크 total의 `$2 / 1024`는 GiB다. `%.0f`로 전체 용량을 반올림해 표시해도 비율의 분모는 변환 전 `$2`다. 퍼센트는 메모리 소수 둘째 자리, 디스크 정수로 표시한다. 도구 자체의 MiB 표시 정밀도와 printf의 표시 반올림을 구분한다.
+
+[GNU df 매뉴얼](https://www.gnu.org/software/coreutils/manual/html_node/df-invocation.html)의 `-m`·`--total`·`-x`와 `--output` 필드만 읽는다. 웹 페이지 접근이 안 되면 [공식 매뉴얼 원본](https://github.com/coreutils/coreutils/blob/master/doc/coreutils.texi)의 `df invocation`을 찾는다. 매뉴얼은 `pcent`를 used/size로 요약하지만, [실제 src/df.c](https://github.com/coreutils/coreutils/blob/master/src/df.c)의 `PCENT_FIELD` 계산은 일반적인 비음수 값에서 `used / (used + available) × 100`을 올림한다. reserved 공간 등의 영향으로 이 분모는 전체 size와 다를 수 있다. 소스에서는 이 계산 블록만 대조하며 전체 C 구현을 공부할 필요는 없다. 설치된 버전의 매뉴얼·출력도 함께 확인한다.
+
+awk는 이번 두 행을 읽는 데 필요한 범위만 익힌다. 기본적으로 공백으로 나눈 첫 필드가 `$1`이며 `$2`·`$3`는 total·used다. `$1 == "Mem:"` 또는 `$1 == "total"`이라는 조건이 맞는 행에만 `{...}` 동작을 적용한다. `printf`의 `%s`는 문자열, `%.2f`·`%.0f`는 표시 소수 자릿수, `%%`는 문자 `%`다. 작은따옴표는 셸이 `$1` 등을 먼저 확장하지 않도록 awk 프로그램을 감싼다. [GNU awk 매뉴얼](https://www.gnu.org/software/gawk/manual/gawk.html)의 `Fields`·`Patterns`·`Printf` 해당 항목이나 설치된 `man awk`에서 이 요소만 찾는다.
+
+`LC_ALL=C`는 그 명령의 출력 언어·로케일을 고정해 `Mem:`·`total` 같은 행 이름을 비교하기 위한 선택이다. 파이프 앞의 환경 지정은 앞 명령에만 적용되며 뒤의 awk까지 자동으로 전파되지는 않는다. 현재 부분 예시의 소수점 출력은 실행 환경과 대조하고 전체 스크립트 검증 때 로케일 범위도 점검한다.
+
+### monitoring CPU와 부팅 시각의 읽기 범위
+
+[procps-ng vmstat 공식 매뉴얼](https://gitlab.com/procps-ng/procps/-/raw/master/man/vmstat.8)의 `DESCRIPTION`, `delay`·`count`, `FIELD DESCRIPTION FOR VM MODE`의 `CPU`만 읽는다. `vmstat 1 2`의 첫 CPU 표본은 부팅 이후 평균, 둘째는 직전 1초 구간이다. 프로세스·메모리 열은 이 평균 설명과 다르게 순간 상태이므로 구분한다. 기본 출력에서 `id`가 15열인지 헤더와 실제 열을 대조하고 옵션으로 열 구성을 바꾸면 다시 확인한다.
+
+`awk 'END {...}'`는 입력을 다 읽은 뒤 한 번 실행하므로 이 출력에서는 마지막 수치 행의 `$15`를 사용한다. `100 - id`는 idle을 제외한 비율로 `wa`(I/O 대기)와 `st`(VM이 빼앗긴 시간)도 포함한다. 따라서 load average나 순수 연산 실행시간 비율과 같지 않다. `#CPU load`는 출력 라벨이며 측정량의 정의는 이 계산으로 설명한다. `%.1f`는 출력 자릿수일 뿐 원자료의 측정 정밀도를 높이지 않는다.
+
+[procps-ng uptime 공식 매뉴얼](https://gitlab.com/procps-ng/procps/-/raw/master/man/uptime.1)의 `-s`·`--since`는 부팅 시각을 `yyyy-mm-dd HH:MM:SS` 형식으로 출력한다. 설치된 `man uptime`의 해당 옵션과 원자료를 대조한다. `cut -c 1-16`은 앞 16자를 선택해 원문 예시처럼 분까지만 표시한다. 초를 시간 반올림하는 것이 아니라 초 부분을 생략한다. 명령 치환의 결과를 큰따옴표로 감싸 날짜와 시각을 하나의 printf 인자로 전달한다. 설치된 `man cut`에서 `-c`와 위치 범위만 읽는다. 두 부분 예시 모두 명령 실패·빈 출력·CPU 열 변경에 대한 처리는 전체 스크립트 검증에서 다시 다룬다.
 
 ### monitoring 첫 구현의 흐름
 

@@ -483,6 +483,35 @@ df -BM --total -x tmpfs -x devtmpfs
 
 표시값은 반올림되므로 행별 숫자의 합과 total이 정확히 일치한다고 가정하지 않는다. 먼저 집계 대상·단위·사용량과 가용량의 의미를 정하고 원문 예시와 대조한다. 계산 코드와 출력 형식은 그 다음 단위에서 작성한다. [공식 읽기 범위와 원문 표기의 한계](targets.md#monitoring-메모리디스크의-읽기-범위).
 
+## 25. monitoring 메모리·디스크 출력
+
+원자료의 열과 집계 대상을 확인한 뒤 부분 스크립트에 다음 두 줄을 추가하고 `bash monitoring.sh`로 실행한다.
+
+```bash
+LC_ALL=C free -m | awk '$1 == "Mem:" {printf "#Memory Usage: %s/%sMB (%.2f%%)\n", $3, $2, $3 / $2 * 100}'
+LC_ALL=C df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "#Disk Usage: %s/%.0fGb (%.0f%%)\n", $3, $2 / 1024, $3 / $2 * 100}'
+```
+
+메모리는 Mem 행, 디스크는 total 행의 used/total로 사용률을 계산한다. 원문 예시의 `MB`·`Gb` 표기를 따르지만 실제로 메모리와 디스크 사용량은 MiB, 디스크 전체 표시값은 GiB다. 디스크 퍼센트는 GiB로 반올림한 표시값이 아니라 MiB 원자료로 계산한다. `df`의 Use%와 동일한 값일 필요는 없다. [계산 선택과 awk 읽기 범위](targets.md#monitoring-메모리디스크의-계산과-awk).
+
+## 26. monitoring CPU·부팅 시각 조회와 부분 출력
+
+먼저 VM에서 원자료를 읽는다.
+
+```bash
+LC_ALL=C vmstat 1 2
+uptime -s
+```
+
+vmstat의 헤더에서 `id`가 15열인지 확인하고 두 번째 수치 행을 읽는다. `uptime -s`의 `YYYY-MM-DD HH:MM:SS` 날짜·시각을 확인한다. CPU 열 배치를 확인한 환경에서는 다음 부분 예시를 추가하고 `bash monitoring.sh`로 대조한다.
+
+```bash
+LC_ALL=C vmstat 1 2 | awk 'END {printf "#CPU load: %.1f%%\n", 100 - $15}'
+printf '#Last boot: %s\n' "$(uptime -s | cut -c 1-16)"
+```
+
+CPU 출력은 직전 1초 구간의 `100 - id`이며, I/O 대기·steal도 포함한다. 시간에 따라 변하므로 이전 조회와 숫자가 같아야 하는 것은 아니다. 부팅 시각은 같은 부팅 세션의 원자료와 대조한다. [측정 구간과 해석](targets.md#monitoring-cpu와-부팅-시각의-읽기-범위).
+
 ## 이후 단위
 
 나머지 monitoring 지표 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
