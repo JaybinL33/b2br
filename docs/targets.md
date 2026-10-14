@@ -236,6 +236,12 @@ TCP 4242를 `ssh_port_t`에 등록하면 SELinux 정책상 sshd가 사용할 수
 
 `--get-active-zones`는 현재 활성 zone과 연결된 인터페이스·출처를 보여 준다. `--list-all`은 zone을 지정하지 않으면 기본 zone을 조회하므로 두 출력의 zone 이름과 대상 인터페이스를 대조한다. 기본 zone이 대상 인터페이스의 활성 zone과 다르면 실제 zone을 지정해 읽는다. `--permanent` 없는 조회는 현재 실행 구성이며, 서비스 이름으로 허용된 항목도 있으므로 `ports`만으로 개방 범위를 판단하지 않는다. `services`·`ports`·출처·추가 규칙을 읽고 변경 대상을 정한다. [정상 조회 절차](cheatsheet.md#16-firewalld-활성-zone과-규칙-조회).
 
+**방화벽 변경과 서비스 반영:** 위 공식 firewall-cmd 매뉴얼의 `--permanent`, `--add-port`, `--remove-service`, `--reload`와 Rocky 입문서의 `Saving your changes`를 읽는다. permanent 변경은 저장 구성이며 reload로 실행 구성에 반영된다. 이 실습은 IPv4 접속을 기준으로 대상 zone에 TCP 4242를 허용하고 불필요한 `ssh`·`cockpit`·`dhcpv6-client` 서비스 허용을 제거한다. DHCPv6를 사용하는 환경에서는 `dhcpv6-client` 제거를 그대로 적용하지 않는다. 서비스 허용 제거는 해당 프로그램 삭제·중지를 뜻하지 않는다.
+
+대상 zone의 runtime·permanent 모두 `services`가 비고 `ports`가 `4242/tcp`인지 대조하되 추가 규칙도 함께 확인한다. runtime의 인터페이스 연결과 permanent의 명시적 인터페이스 항목은 구분한다. permanent 칸이 비었다는 이유만으로 연결 실패라고 단정하거나 인터페이스를 추가하지 않고, 부팅 후 활성 zone도 확인한다.
+
+SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 실행 상태와 실제 리스닝을 확인한다. 설치된 `man systemctl`의 `restart`·`is-active`, `man ss`의 `-l`·`-n`·`-t`·`-p`를 읽는다. 목표는 `active`, sshd의 TCP 4242 리스닝, TCP 22 리스닝 없음이다. IPv4와 IPv6 리스닝이 각각 한 줄씩 표시될 수 있다. 이 결과와 호스트에서의 일반 사용자 접속·root 거절은 별도 검증이며, VirtualBox 네트워크 방식과 필요한 포트 전달도 실제 설정으로 확인한다. [반복 절차](cheatsheet.md#17-firewalld-규칙-변경과-대조).
+
 **존재와 용도만:** SSH 공개키 인증은 비밀번호 외의 인증 방식이고 SELinux 거절 로그는 정책 문제를 추적하는 단서다. 공개키 방식이 필요하거나 정상 설정 후에도 거절될 때 해당 부분을 더 읽는다. Enforcing·Permissive·Disabled의 차이 자체는 필수 이해 범위다.
 
 **이번에 미룰 것과 이유:** SSH 암호 알고리즘 수학·스마트카드·점프 호스트, nftables 내부 규칙 생성, 자체 SELinux 정책 모듈 작성은 이번 접속 경로의 요구가 아니다. 인증 인프라 확장이나 기존 정책으로 해결할 수 없는 서비스 운영 때 학습한다. firewalld·SELinux를 끄는 것을 범위 축소로 삼지 않는다.

@@ -344,6 +344,34 @@ sudo firewall-cmd --zone=ZONE --list-all
 
 zone 이름과 `interfaces`·`sources`·`services`·`ports`·추가 규칙을 읽는다. `ports`가 비어 있어도 서비스로 허용된 포트가 있을 수 있다. 조회 결과를 확인한 뒤 변경할 규칙을 정한다. [zone 개념과 공식 읽기 범위](targets.md#5-sshfirewalldselinux).
 
+## 17. firewalld 규칙 변경과 대조
+
+앞 조회에서 대상 zone을 확인한다. 아래는 `public`이고 `ssh`·`cockpit`·`dhcpv6-client`가 허용된 IPv4 실습 구성의 절차다. zone이 다르면 실제 이름으로 바꾸고 제거 대상도 조회 결과와 대조한다. **DHCPv6를 사용하는 환경에서는 `dhcpv6-client` 제거를 그대로 적용하지 않는다.** VM 콘솔에서 진행하거나 기존 접속을 유지하며 작업한다.
+
+```bash
+sudo firewall-cmd --permanent --zone=public --add-port=4242/tcp
+sudo firewall-cmd --permanent --zone=public --remove-service=ssh
+sudo firewall-cmd --permanent --zone=public --remove-service=cockpit
+sudo firewall-cmd --permanent --zone=public --remove-service=dhcpv6-client
+sudo firewall-cmd --reload
+sudo firewall-cmd --zone=public --list-all
+sudo firewall-cmd --permanent --zone=public --list-all
+```
+
+변경·reload의 성공을 확인하고, 두 조회 모두 `services`가 비어 있으며 `ports`는 `4242/tcp`인지 대조한다. 추가 허용 규칙도 살핀다. runtime의 대상 인터페이스 연결을 확인하되 permanent의 인터페이스 칸이 비었다고 임의로 추가하지 않는다. [개념과 읽을 범위](targets.md#5-sshfirewalldselinux).
+
+## 18. sshd 재시작과 리스닝 확인
+
+SSH 설정 검사·SELinux 포트 등록·방화벽 준비를 마친 뒤 실행한다.
+
+```bash
+sudo systemctl restart sshd
+sudo systemctl is-active sshd
+sudo ss -lntp
+```
+
+기대 결과는 `active`, sshd 프로세스의 4242 리스닝, 22 리스닝 없음이다. IPv4·IPv6로 두 줄이 표시되는 것은 정상일 수 있다. 오류나 다른 포트가 보이면 설정과 서비스 상태를 확인한다. 다음으로 VirtualBox 네트워크 설정과 호스트의 SSH 접속 경로를 확인하고 일반 사용자 접속·root 거절을 검증한다.
+
 ## 이후 단위
 
 SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

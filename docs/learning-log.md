@@ -336,3 +336,12 @@ PrintMotd no
 주 대화가 확인한 사용자 화면에서 `policycoreutils-python-utils` 설치가 `Complete`로 끝났고, 최종 `sudo semanage port -l | grep ssh_port_t` 출력은 `ssh_port_t tcp 4242, 22`였다. SELinux의 TCP 4242 등록 체크포인트를 완료했다. 처음 유형 이름을 `ssh_port`로 입력해 invalid type 오류가 났으나 사용자가 `ssh_port_t`로 고쳐 재실행했다. 목록의 22는 실제 리스닝·방화벽 개방과 다르며 삭제를 지시하지 않았다.
 
 다음으로 `sudo firewall-cmd --get-active-zones`와 `sudo firewall-cmd --list-all`을 안내했다. 기본 zone 출력이 `enp0s3`의 활성 zone과 같은지 대조하도록 설명했다. 조회 결과는 아직 없으며 zone 이름·허용 서비스는 미확인이다.
+
+
+## 2026-10-14 — firewalld 변경 확인과 sshd 재시작 안내
+
+주 대화에서 전달한 화면 근거: 변경 전 기본·활성 zone은 `public`, 인터페이스는 `enp0s3`, 허용 서비스는 `cockpit dhcpv6-client ssh`였다. permanent public에 `4242/tcp` 추가, 세 서비스 제거, reload가 모두 `success`였다. IPv4 실습의 선택이며 DHCPv6 환경에 같은 제거를 무조건 적용하지 않도록 설명했다.
+
+변경 후 runtime·permanent의 `--list-all` 모두 `services`는 비어 있고 `ports`는 `4242/tcp`였다. runtime 인터페이스는 `enp0s3`, permanent 인터페이스 칸은 비어 있었다. 방화벽 변경과 두 구성의 대조를 확인했다.
+
+다음으로 `sudo systemctl restart sshd`, `sudo systemctl is-active sshd`, `sudo ss -lntp`를 안내했다. 결과는 아직 없으며 4242 리스닝·22 리스닝 없음과 호스트 SSH 접속, VirtualBox 네트워크 설정 확인은 남아 있다.
