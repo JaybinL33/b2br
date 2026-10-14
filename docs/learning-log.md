@@ -736,3 +736,10 @@ Cronie의 run_reboot_jobs와 REBOOT_LOCK 처리를 대조해 일반 서비스 �
 사용자의 `sudo crontab -l`에서 PATH가 유지되고 `*/10`·`@reboot` 두 monitoring 줄 모두 첫 #이 제거되어 정상 복구된 것을 확인했다. 30분 무방송에 따른 중단 검증과 예약 설정 복구 확인은 완료다. 복구 후 자동 방송 수신은 아직 확인하지 않았다.
 
 다음 읽기 전용 검증으로 `sudo firewall-cmd --list-all`을 요청했다. 재부팅 후 출력의 zone·enp0s3 연결·빈 services·4242/tcp만 허용된 상태를 대조할 예정이며 결과는 아직 없다. 기본 zone 조회이므로 대상 인터페이스 연결도 함께 확인한다. `127.42.42.42` 접속안은 여전히 적용 미확인이며 기준 경로를 변경하지 않았다. 이번 문서 작업에서 VM이나 호스트 설정은 변경하지 않았다.
+
+
+## 2026-10-14 — 재부팅 후 활성 방화벽 규칙 유지 확인
+
+사용자 VM의 `firewall-cmd --list-all`에서 public이 default·active이고 인터페이스는 enp0s3였다. services는 비어 있고 ports는 `4242/tcp`였다. protocols·source-ports·forward-ports·rich rules도 비어 있었으며 forward는 yes, masquerade는 no였다. 재부팅 후 대상 인터페이스의 활성 zone 규칙 유지 검증을 완료로 기록한다. forward yes가 모든 인바운드 포트 개방을 뜻하는 것은 아니라고 설명했다.
+
+다음으로 `cat /etc/os-release`, `systemctl get-default`, `rpm -q xorg-x11-server-Xorg gnome-shell gdm`을 요청했다. 아직 결과는 없다. 대표 패키지 부재만으로 모든 GUI·그래픽 서버의 부재를 증명했다고 판단하지 않는다. 복구 후 자동 방송 확인도 별도 대기 상태다. 이번 문서 작업에서는 VM 설정이나 패키지를 변경하지 않았다.

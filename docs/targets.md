@@ -262,7 +262,7 @@ SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 
 | Rocky는 firewalld 사용, VM 부팅 시 활성, 필수 구성에서 4242만 개방 | `systemctl is-active firewalld`, `systemctl is-enabled firewalld`, `sudo firewall-cmd --get-active-zones`, `sudo firewall-cmd --list-all-zones`, `sudo firewall-cmd --permanent --list-all-zones` |
 | SELinux가 부팅 시 실행되며 과제에 맞게 구성 | `sestatus`, 재부팅 후 상태와 SSH 등 필요한 기능의 동작 확인 |
 
-방화벽은 포트 목록뿐 아니라 활성 zone의 서비스·규칙·허용 범위도 본다. 기본 `ssh` 서비스가 22번을 열고 있지 않은지 확인한다. 현재 실행 설정과 영구 설정을 구분한다. SSH 설정·리스닝·실제 접속은 각각 확인하며 호스트의 포트 전달과 VM 내부 4242도 구분한다. 원문은 SELinux의 부팅 시 실행과 과제에 맞는 구성을 요구한다. 이번 실습은 `getenforce`·`sestatus`로 부팅 후 Enforcing 상태와 로드된 정책을 확인하고, 필요한 SSH 동작이 허용되는지 검증하는 것을 목표로 한다. 포트 유형·라벨·거절 로그를 읽고, 비활성화나 Permissive 상태로 문제를 덮은 것을 완료로 기록하지 않는다.
+방화벽은 포트 목록뿐 아니라 활성 zone의 서비스·규칙·허용 범위도 본다. zone의 `forward: yes`는 zone 내부 전달 허용을 나타내며 모든 로컬 인바운드 포트를 개방한다는 뜻이 아니다. 기본 `ssh` 서비스가 22번을 열고 있지 않은지 확인한다. 현재 실행 설정과 영구 설정을 구분한다. SSH 설정·리스닝·실제 접속은 각각 확인하며 호스트의 포트 전달과 VM 내부 4242도 구분한다. 원문은 SELinux의 부팅 시 실행과 과제에 맞는 구성을 요구한다. 이번 실습은 `getenforce`·`sestatus`로 부팅 후 Enforcing 상태와 로드된 정책을 확인하고, 필요한 SSH 동작이 허용되는지 검증하는 것을 목표로 한다. 포트 유형·라벨·거절 로그를 읽고, 비활성화나 Permissive 상태로 문제를 덮은 것을 완료로 기록하지 않는다.
 
 ## 6. monitoring.sh와 cron·wall
 
