@@ -17,7 +17,7 @@ Born2beRoot는 가상 머신에 최소 구성의 Linux 서버를 만들고 디�
 - [직접 만들고 대조할 목표](docs/targets.md): 디스크 구조 예시와 단위별 필수 상태·확인 방법
 - [최소 치트시트](docs/cheatsheet.md): 처음부터 재실습하는 절차·명령·설정·기대 결과
 
-이 실습은 Rocky Minimal·VirtualBox, LUKS 위 LVM, SSH 4242와 firewalld·SELinux를 사용한다. 구체적인 파티션 용량과 보안 선택은 [목표 문서](docs/targets.md)에 둔다.
+이 실습은 Rocky Minimal·VirtualBox, LUKS 위 LVM, SSH 4242와 firewalld·SELinux를 사용한다. 호스트 접속 기준은 `127.42.42.42:4242`다. 구체적인 파티션 용량과 보안 선택은 [목표 문서](docs/targets.md)에 둔다.
 
 **확인한 상태:** 모니터링 12항목 출력, root 소유 설치본, 첫 cron 방송의 해당 터미널 단일 수신, 재부팅 후 서비스·SELinux·활성 방화벽 규칙 유지 및 @reboot 작업 시작·종료 기록, 두 예약 줄 주석 처리 후 30분 무방송을 통한 중단 검증과 예약 설정 복구. **남은 확인:** 여러 터미널 수신, 설정 복구 후 자동 방송, 비밀번호 품질 거절과 평가 재현. 부팅 작업 로그만으로 내부 오류 부재나 방송 수신까지 확정하지 않는다. 세부 근거와 이전 이력은 [학습 기록](docs/learning-log.md)에 둔다.
 

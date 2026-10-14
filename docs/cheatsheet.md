@@ -380,19 +380,19 @@ sudo ss -lntp
 |---|---|
 | Name | `ssh` |
 | Protocol | `TCP` |
-| Host IP | `127.0.0.2` |
+| Host IP | `127.42.42.42` |
 | Host Port | `4242` |
 | Guest IP | 빈칸: 내장 DHCP 사용 조건 |
 | Guest Port | `4242` |
 
-Host IP `127.0.0.2`와 Host Port `4242`는 이 문서의 일관된 접속 예시다. 실제 저장한 Host IP·Port가 다르면 이후 모든 접속 명령도 함께 바꾼다. 호스트에서 사용 가능한 다른 포트를 선택해도 되며, 아래 SSH 명령의 `-p`에도 그 값을 쓴다. 게스트 SSH 포트는 과제 요구인 `4242`를 유지한다.
+Host IP `127.42.42.42`와 Host Port `4242`는 이 문서의 일관된 접속 예시다. 실제 저장한 Host IP·Port가 다르면 이후 모든 접속 명령도 함께 바꾼다. 호스트에서 사용 가능한 다른 포트를 선택해도 되며, 아래 SSH 명령의 `-p`에도 그 값을 쓴다. 게스트 SSH 포트는 과제 요구인 `4242`를 유지한다.
 
 수동 고정 IP라면 Guest IP에 실제 VM 주소를 지정한다. Guest IP 생략과 달리 **Guest Port는 지정해야 한다.** 다른 네트워크 방식이면 이 규칙을 그대로 적용하지 않고 접속 경로를 확인한다.
 
 포트 전달 창을 확인한 뒤 **바깥 VM 설정 창도 OK로 저장**한다. 이후 **호스트 터미널**에서 실행한다.
 
 ```bash
-ssh -p 4242 jungblee@127.0.0.2
+ssh -p 4242 jungblee@127.42.42.42
 ```
 
 최초 접속에서 제시된 키가 ED25519이면 **VM 콘솔**에서 다음 공개키 지문을 조회해 비교한다.
@@ -421,7 +421,7 @@ exit
 아래 `4242`는 호스트 포트 예시다. 일반 사용자 접속에 성공한 실제 Host Port가 다르면 `-p` 값을 그 포트로 바꾼다.
 
 ```bash
-ssh -p 4242 -o NumberOfPasswordPrompts=1 root@127.0.0.2
+ssh -p 4242 -o NumberOfPasswordPrompts=1 root@127.42.42.42
 ```
 
 비밀번호를 요청하면 올바른 root 비밀번호를 터미널에 입력한다. 기대 결과는 인증 거절과 root 셸에 진입하지 못하는 것이다. `NumberOfPasswordPrompts=1`은 클라이언트의 비밀번호 질문 횟수 제한이며 서버의 root 차단 정책이 아니다. 연결 실패·잘못된 비밀번호만으로 root 차단 성공을 판단하지 않고, 일반 사용자 접속 성공 및 `permitrootlogin no`와 함께 대조한다. [옵션과 검증 근거](targets.md#5-sshfirewalldselinux).
@@ -431,7 +431,7 @@ ssh -p 4242 -o NumberOfPasswordPrompts=1 root@127.0.0.2
 호스트에서 일반 사용자로 다시 접속한다. `4242`는 예시이며 실제 선택한 Host Port로 바꾼다.
 
 ```bash
-ssh -p 4242 jungblee@127.0.0.2
+ssh -p 4242 jungblee@127.42.42.42
 ```
 
 접속한 VM 셸에서 실행한다.
@@ -659,7 +659,7 @@ sudo reboot
 SSH 연결이 끊기면 VM 콘솔에서 LUKS 암호를 입력하고 부팅·로그인한다. 호스트에서 저장한 포트 전달 경로로 다시 접속한다. 현재 실습 경로의 예시는 다음과 같다.
 
 ```bash
-ssh -p 4242 jungblee@127.0.0.2
+ssh -p 4242 jungblee@127.42.42.42
 ```
 
 접속한 VM에서 조회한다.
