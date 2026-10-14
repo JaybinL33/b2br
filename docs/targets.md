@@ -351,6 +351,14 @@ awk는 이번 두 행을 읽는 데 필요한 범위만 익힌다. 기본적으�
 
 [iproute2 ss 매뉴얼](https://man7.org/linux/man-pages/man8/ss.8.html)의 `DESCRIPTION`, `-H`·`-t`·`-n`, `STATE-FILTER`의 `established`를 읽는다. `ss -Htn state established`는 헤더를 생략하고 TCP의 ESTABLISHED 소켓을 숫자 주소·포트로 조회한다. 출력 행에서 로컬·상대 주소와 포트를 읽고 행 수를 확인한다. 이 수는 현재 관측되는 소켓 수이며 사용자 수·고유 상대 호스트 수·LISTEN 포트 수와 다르다. 조회하는 네트워크 네임스페이스의 범위이며 SSH 등 연결 변화에 따라 달라질 수 있다. 빈 출력은 정상 종료했을 때만 해당 상태의 소켓이 없다는 뜻으로 읽는다. 필터·행 의미를 확인한 뒤 집계 코드를 작성한다.
 
+### monitoring LVM·TCP 부분 구현의 읽기 범위
+
+lsblk 매뉴얼의 `-r`·`--raw`와 `-n`·`--noheadings`를 이어 읽는다. `lsblk -rn -o TYPE`은 트리 장식과 제목 없이 TYPE만 출력해 행 전체를 검사하기 위한 입력을 만든다. [GNU grep 매뉴얼](https://www.gnu.org/software/grep/manual/grep.html)의 `-q`·`-x` 및 종료 상태 설명을 읽는다. `-q`는 일치한 내용을 출력하지 않고 일치 여부를 종료 상태로 알리며 `-x`는 행 전체가 `lvm`인 경우만 일치시킨다.
+
+[GNU Bash 매뉴얼](https://www.gnu.org/software/bash/manual/html_node/Conditional-Constructs.html)의 `if`와 설치된 `man bash`의 `Pipelines`만 대조한다. if는 출력 문자열이 아니라 명령의 종료 상태가 0인지로 분기한다. 기본 파이프라인의 종료 상태는 마지막 명령인 grep의 상태다. 따라서 이 부분 예시는 정상 조회 결과의 존재/부재를 구분하는 단계이며, 조회 실패를 안전하게 no로 판정하는 완성 구현은 아니다. 명령 오류·pipefail 등은 전체 스크립트 검증에서 따로 점검한다.
+
+TCP 쪽은 ss의 `-H`가 제목을 없애고 `-t`가 TCP를 선택하며 `-n`이 숫자 표기를 유지하고 `state established`가 상태를 한정한다. 설치된 `man wc`에서 `-l`의 줄바꿈 개수 의미만 읽는다. 정상적인 ss 출력의 소켓 행을 세는 것으로, 시스템 전체 연결의 양 끝을 하나로 중복 제거하는 계산은 아니다. 두 끝이 같은 관측 범위에 보이면 각각의 소켓 행이 될 수 있다. 사용자 수나 고유 연결 상대 수로 해석하지 않는다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.

@@ -523,6 +523,21 @@ ss -Htn state established
 
 lsblk의 TYPE 열에서 `lvm`이 있는지 확인한다. 장치 이름과 트리 관계를 읽되 장치 행 수를 LVM 활성 여부와 혼동하지 않는다. ss는 헤더 없는 현재 ESTABLISHED TCP 소켓 목록이다. 각 행의 로컬·상대 주소와 포트를 읽고 행 수를 확인한다. 연결 수를 로그인 사용자 수로 해석하지 않는다. 조회가 오류 없이 끝났는지도 함께 확인한다. [공식 읽기 범위](targets.md#monitoring-lvmtcp-연결의-읽기-범위)를 대조한 뒤 해당 출력 코드를 작성한다.
 
+## 28. monitoring LVM·TCP 연결 부분 출력
+
+VM 터미널에서 원자료를 확인한 뒤 스크립트에 추가하고 `bash monitoring.sh`로 대조한다.
+
+```bash
+if lsblk -rn -o TYPE | grep -qx lvm; then
+    printf '#LVM use: yes\n'
+else
+    printf '#LVM use: no\n'
+fi
+printf '#Connections TCP : %s ESTABLISHED\n' "$(ss -Htn state established | wc -l)"
+```
+
+LVM 출력은 TYPE에 `lvm`이 있는지, TCP 출력은 같은 시점의 필터된 소켓 행 수와 대조한다. 연결 수는 조회 시점에 따라 바뀔 수 있다. [조건 검사와 집계의 의미](targets.md#monitoring-lvmtcp-부분-구현의-읽기-범위).
+
 ## 이후 단위
 
 나머지 monitoring 지표 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
