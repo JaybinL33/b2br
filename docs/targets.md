@@ -393,6 +393,12 @@ sudoreplay의 `-l` 목록에서 한 줄이 한 세션인 형식을 확인한 환
 
 표시 라벨은 `#Sudo : … cmd`지만 측정량은 현재 보관된 I/O 실행 세션 수다. sudo 셸 내부 명령 수·성공 종료 횟수·영구 누적 총수를 뜻하지 않는다. 기본 파이프라인에서 sudoreplay가 실패해도 wc가 0을 출력할 수 있으므로 0이라는 숫자만으로 정상 조회를 판정하지 않는다. 권한·조회 오류·기록 보존 범위는 전체 스크립트 검증에서 점검한다.
 
+### monitoring 그룹 출력과 wall
+
+[GNU Bash Command Grouping](https://www.gnu.org/software/bash/manual/html_node/Command-Grouping.html)과 설치된 `man bash`의 `Compound Commands`·`Pipelines`를 읽는다. `{ ...; }`는 명령 목록을 묶고, 이 예시에서는 마지막 명령 뒤 줄바꿈이 구분자 역할을 한다. 중괄호는 별도 토큰이므로 독립된 줄로 두면 경계를 분명히 할 수 있다. 그룹 전체의 표준출력이 파이프를 통해 wall 한 번의 표준입력으로 전달된다. 각 printf마다 wall을 호출하는 구조가 아니다. 파이프는 표준오류를 자동으로 전달하거나 숨기지 않으며, 구문 검사 성공이 명령 실행·방송 성공을 뜻하지 않는다.
+
+[util-linux wall 매뉴얼](https://man7.org/linux/man-pages/man1/wall.1.html)의 `DESCRIPTION`과 `-n`만 먼저 읽고 설치된 `man wall`과 대조한다. 메시지나 파일 인자가 없으면 표준입력을 읽어 현재 로그인한 사용자 터미널에 전달한다. 긴 줄은 접힐 수 있고 기본 배너가 붙으며 원문에서 배너는 선택 사항이다. 지금 예시는 기본 배너를 유지한다. root 실행은 메시지 수신을 거부한 터미널에 쓸 수 있는 권한과 관련되지만 실제 tty1·SSH 양쪽 수신은 직접 관찰해야 한다. 부팅 방송·10분 주기와 구별해 우선 수동 한 번의 방송만 확인한다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.
