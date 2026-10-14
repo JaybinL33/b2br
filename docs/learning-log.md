@@ -345,3 +345,12 @@ PrintMotd no
 변경 후 runtime·permanent의 `--list-all` 모두 `services`는 비어 있고 `ports`는 `4242/tcp`였다. runtime 인터페이스는 `enp0s3`, permanent 인터페이스 칸은 비어 있었다. 방화벽 변경과 두 구성의 대조를 확인했다.
 
 다음으로 `sudo systemctl restart sshd`, `sudo systemctl is-active sshd`, `sudo ss -lntp`를 안내했다. 결과는 아직 없으며 4242 리스닝·22 리스닝 없음과 호스트 SSH 접속, VirtualBox 네트워크 설정 확인은 남아 있다.
+
+
+## 2026-10-14 — SSH 리스닝 확인과 NAT 전달·접속 안내
+
+주 대화가 확인한 화면에서 sshd 재시작은 오류가 없었고 `is-active`는 `active`였다. `ss -lntp`에는 sshd의 `0.0.0.0:4242`와 `[::]:4242` LISTEN 두 줄뿐이며 22 리스닝은 없었다. 서비스 반영·리스닝 체크포인트를 완료했다.
+
+이후 VirtualBox Port Forwarding Rules 화면에는 `Rule1`, TCP, Host IP 빈칸, Host Port 0, Guest IP 빈칸, Guest Port 0의 미완성 행이 있었다. Name `ssh`, TCP, Host IP `127.0.0.1`, Host Port·Guest Port `4242`를 안내했다. 처음 Guest IP `10.0.2.15`를 제안했으나 사용자의 질문 후 일반 NAT 내장 DHCP라면 생략 가능하므로 빈칸을 권장하고 수동 고정 IP일 때 지정하는 것으로 설명을 정정했다. 어댑터 방식과 DHCP 자체는 직접 확인하지 않았다.
+
+저장 후 호스트에서 `ssh -p 4242 jungblee@127.0.0.1`로 접속하고, 최초 키 지문을 VM 콘솔에서 해당 알고리즘의 호스트 공개키와 대조하도록 안내했다. 일치하면 승인하고 터미널에서 비밀번호를 입력한 뒤 `hostname`·`whoami`로 `jungblee42`·`jungblee`를 확인하는 것이 목표다. 실제 규칙 저장·접속 결과는 아직 없다.

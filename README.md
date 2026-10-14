@@ -19,7 +19,7 @@ Born2beRoot는 가상 머신에 최소 구성의 Linux 서버를 만들고 디�
 
 사용자는 학교 컴퓨터와 개인 NixOS 환경에서 **Rocky 10.2 Minimal**로 전체 과정을 해봤으며, 아직 익숙하지 않아 반복 실습하고 싶다고 밝혔다. 환경과 버전은 사용자 제공 정보다. 이전 실습의 설치 버전·구성 상태·평가 통과 여부는 독립적으로 확인하지 않았다. 이 경험을 이번 학습의 완료 기록으로 간주하지 않는다.
 
-**이번 반복 실습의 현재 상태:** 디스크·그룹·비밀번호 기간과 sudo 정책·로그 검증을 진행했고, SSH 설정 검사와 SELinux의 TCP 4242 등록을 확인했다. firewalld의 `public` zone은 runtime·permanent 모두 `services`가 비어 있고 `ports`는 `4242/tcp`다. 다음은 [sshd 재시작과 리스닝 확인](docs/cheatsheet.md#18-sshd-재시작과-리스닝-확인)이며 결과는 아직 없다. 호스트 SSH 접속·VirtualBox 네트워크 설정과 비밀번호 품질 위반 거절 검증은 남아 있다. 세부 확인 근거와 이력은 [학습 기록](docs/learning-log.md)에 둔다.
+**이번 반복 실습의 현재 상태:** 디스크·그룹·비밀번호 기간과 sudo 정책·로그 검증을 진행했고, SSH 설정 검사와 SELinux의 TCP 4242 등록을 확인했다. firewalld의 `public` zone은 runtime·permanent 모두 `services`가 비어 있고 `ports`는 `4242/tcp`다. sshd 재시작 후 `active`와 IPv4·IPv6의 4242 리스닝, 22 리스닝 없음을 확인했다. 다음은 [VirtualBox 포트 전달과 호스트 SSH 접속](docs/cheatsheet.md#19-virtualbox-포트-전달과-호스트-접속)이다. 어댑터 방식·DHCP 여부와 규칙 저장·접속 결과는 아직 미확인이며 root SSH 거절·비밀번호 품질 위반 거절 검증도 남아 있다. 세부 확인 근거와 이력은 [학습 기록](docs/learning-log.md)에 둔다.
 
 원문·번역·가이드는 요구사항을 찾는 자료이고, 학습 기록은 직접 적용한 결과를 남기는 문서다. 문서를 읽거나 예시를 확인한 것만으로 체크리스트를 완료 처리하지 않는다.
 

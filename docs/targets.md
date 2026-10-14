@@ -242,6 +242,10 @@ TCP 4242를 `ssh_port_t`에 등록하면 SELinux 정책상 sshd가 사용할 수
 
 SSH 설정 검사·SELinux 등록·방화벽 준비 후 sshd를 재시작하고 실행 상태와 실제 리스닝을 확인한다. 설치된 `man systemctl`의 `restart`·`is-active`, `man ss`의 `-l`·`-n`·`-t`·`-p`를 읽는다. 목표는 `active`, sshd의 TCP 4242 리스닝, TCP 22 리스닝 없음이다. IPv4와 IPv6 리스닝이 각각 한 줄씩 표시될 수 있다. 이 결과와 호스트에서의 일반 사용자 접속·root 거절은 별도 검증이며, VirtualBox 네트워크 방식과 필요한 포트 전달도 실제 설정으로 확인한다. [반복 절차](cheatsheet.md#17-firewalld-규칙-변경과-대조).
 
+**호스트에서 VM으로 접속:** [VirtualBox 7.2 공식 네트워크 문서](https://docs.oracle.com/en/virtualization/virtualbox/7.2/user/networkingdetails.html)의 `Network Address Translation (NAT)`와 `Configuring Port Forwarding with NAT`를 읽는다. 먼저 실제 어댑터 연결 방식을 확인한다. 일반 NAT라면 호스트 `127.0.0.1:4242`를 게스트 TCP 4242로 전달하는 로컬 접속 규칙을 선택한다. Host IP는 호스트에서 받을 주소이고 Guest Port는 전달 목적지 포트이므로 반드시 지정한다. 내장 DHCP로 주소를 받는 일반 NAT에서는 Guest IP를 생략할 수 있어 빈칸을 기본으로 삼는다. 내장 DHCP가 아닌 수동 고정 IP라면 실제 Guest IP를 지정한다. VM의 주소나 포트 전달 창만으로 NAT·DHCP 사용을 확정하지 않는다.
+
+처음 접속할 때 서버 호스트 키 지문을 VM 콘솔의 공개키 지문과 대조한다. [공식 ssh-keygen 매뉴얼](https://man.openbsd.org/ssh-keygen)의 `-l`·`-f`와 설치된 매뉴얼을 읽는다. ED25519를 제시하면 `/etc/ssh/ssh_host_ed25519_key.pub`를 비교하고, 다른 알고리즘이면 해당 호스트 공개키를 비교한다. 같은 알고리즘의 지문이 일치한 뒤 신뢰를 승인한다. 호스트 키 확인은 서버 식별이고 이후 비밀번호 입력은 사용자 인증이다. 로그인 뒤 `hostname`·`whoami`로 목적지와 사용자를 대조한다. [전달 값과 접속 절차](cheatsheet.md#19-virtualbox-포트-전달과-호스트-접속).
+
 **존재와 용도만:** SSH 공개키 인증은 비밀번호 외의 인증 방식이고 SELinux 거절 로그는 정책 문제를 추적하는 단서다. 공개키 방식이 필요하거나 정상 설정 후에도 거절될 때 해당 부분을 더 읽는다. Enforcing·Permissive·Disabled의 차이 자체는 필수 이해 범위다.
 
 **이번에 미룰 것과 이유:** SSH 암호 알고리즘 수학·스마트카드·점프 호스트, nftables 내부 규칙 생성, 자체 SELinux 정책 모듈 작성은 이번 접속 경로의 요구가 아니다. 인증 인프라 확장이나 기존 정책으로 해결할 수 없는 서비스 운영 때 학습한다. firewalld·SELinux를 끄는 것을 범위 축소로 삼지 않는다.

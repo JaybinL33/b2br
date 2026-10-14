@@ -372,6 +372,42 @@ sudo ss -lntp
 
 기대 결과는 `active`, sshd 프로세스의 4242 리스닝, 22 리스닝 없음이다. IPv4·IPv6로 두 줄이 표시되는 것은 정상일 수 있다. 오류나 다른 포트가 보이면 설정과 서비스 상태를 확인한다. 다음으로 VirtualBox 네트워크 설정과 호스트의 SSH 접속 경로를 확인하고 일반 사용자 접속·root 거절을 검증한다.
 
+## 19. VirtualBox 포트 전달과 호스트 접속
+
+어댑터 연결 방식이 **일반 NAT인지 먼저 확인**한다. 일반 NAT의 내장 DHCP를 사용하는 경우 Port Forwarding Rules에 다음 규칙을 작성하고 저장한다.
+
+| 항목 | 값 |
+|---|---|
+| Name | `ssh` |
+| Protocol | `TCP` |
+| Host IP | `127.0.0.1` |
+| Host Port | `4242` |
+| Guest IP | 빈칸: 내장 DHCP 사용 조건 |
+| Guest Port | `4242` |
+
+수동 고정 IP라면 Guest IP에 실제 VM 주소를 지정한다. Guest IP 생략과 달리 **Guest Port는 지정해야 한다.** 다른 네트워크 방식이면 이 규칙을 그대로 적용하지 않고 접속 경로를 확인한다.
+
+저장 후 **호스트 터미널**에서 실행한다.
+
+```bash
+ssh -p 4242 jungblee@127.0.0.1
+```
+
+최초 접속에서 제시된 키가 ED25519이면 **VM 콘솔**에서 다음 공개키 지문을 조회해 비교한다.
+
+```bash
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+```
+
+다른 알고리즘이 제시되면 해당 호스트 공개키 파일의 지문을 비교한다. 일치할 때 호스트의 접속 질문에 `yes`를 입력하고, 비밀번호는 터미널 요청에 입력한다. 불일치하면 승인하지 않고 대상·키를 확인한다. 접속 후 다음을 실행한다.
+
+```bash
+hostname
+whoami
+```
+
+이 실습의 기대값은 각각 `jungblee42`, `jungblee`다. 다른 로그인명으로 재실습하면 그 계정과 호스트명에 맞춰 대조한다. [조건과 공식 근거](targets.md#5-sshfirewalldselinux).
+
 ## 이후 단위
 
 SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
