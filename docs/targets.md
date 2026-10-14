@@ -339,6 +339,18 @@ awk는 이번 두 행을 읽는 데 필요한 범위만 익힌다. 기본적으�
 
 [procps-ng uptime 공식 매뉴얼](https://gitlab.com/procps-ng/procps/-/raw/master/man/uptime.1)의 `-s`·`--since`는 부팅 시각을 `yyyy-mm-dd HH:MM:SS` 형식으로 출력한다. 설치된 `man uptime`의 해당 옵션과 원자료를 대조한다. `cut -c 1-16`은 앞 16자를 선택해 원문 예시처럼 분까지만 표시한다. 초를 시간 반올림하는 것이 아니라 초 부분을 생략한다. 날짜 형식과 부분 코드의 실행 확인은 서로 다른 도구가 보고하는 시각의 일치 확인과 구분한다. 명령 치환의 결과를 큰따옴표로 감싸 날짜와 시각을 하나의 printf 인자로 전달한다. 설치된 `man cut`에서 `-c`와 위치 범위만 읽는다. 두 부분 예시 모두 명령 실패·빈 출력·CPU 열 변경에 대한 처리는 전체 스크립트 검증에서 다시 다룬다.
 
+### 부팅 시각의 출처와 읽기 깊이
+
+[procps-ng v4.0.4 uptime.c](https://gitlab.com/procps-ng/procps/-/raw/v4.0.4/src/uptime.c)의 `print_uptime_since()`는 현재 시각에서 가동시간을 빼고 현지 시각으로 출력한다. `who -b`는 BOOT_TIME 기록을 읽는 경로다. [systemd v257 update-utmp.c](https://raw.githubusercontent.com/systemd/systemd/v257/src/update-utmp/update-utmp.c)의 `get_startup_monotonic_time()`·`on_reboot()`는 userspace 시작 타임스탬프를 가져와 실시간 시계로 변환해 부팅 기록을 쓰는 흐름을 보여 준다. 이 자료는 두 도구의 출처 차이를 설명하며 특정 VM에서 관측한 차이의 원인을 입증하지 않는다. 참조 소스 버전을 실제 설치 버전으로 간주하지 않는다.
+
+지금은 계산 시각과 저장된 기록의 차이만 설명하고 `uptime -s`의 분 단위 출력을 유지한다. 시계·부팅 타임라인의 상세 추적은 현재 과제 진행에 필요하지 않아 미룬다. 시간 정확성 자체가 목표가 되거나 다른 동작에 영향을 줄 때 설치 버전과 실제 기록을 함께 조사한다.
+
+### monitoring LVM·TCP 연결의 읽기 범위
+
+[util-linux lsblk 매뉴얼](https://man7.org/linux/man-pages/man8/lsblk.8.html)의 `DESCRIPTION`과 `-o`·`--output`만 읽고 설치된 `man lsblk`와 대조한다. `lsblk -o NAME,TYPE`은 장치 이름과 유형을 지정해 트리 관계를 읽기 위한 조회다. TYPE의 `lvm` 존재 여부를 보고, `disk`·`part`·`crypt`와 구분한다. 이것은 현재 보이는 블록 장치의 관측이며 LVM 패키지 설치 여부와는 다르다. 우선 원자료에서 유형을 찾고 yes/no 출력 코드는 이후에 작성한다.
+
+[iproute2 ss 매뉴얼](https://man7.org/linux/man-pages/man8/ss.8.html)의 `DESCRIPTION`, `-H`·`-t`·`-n`, `STATE-FILTER`의 `established`를 읽는다. `ss -Htn state established`는 헤더를 생략하고 TCP의 ESTABLISHED 소켓을 숫자 주소·포트로 조회한다. 출력 행에서 로컬·상대 주소와 포트를 읽고 행 수를 확인한다. 이 수는 현재 관측되는 소켓 수이며 사용자 수·고유 상대 호스트 수·LISTEN 포트 수와 다르다. 조회하는 네트워크 네임스페이스의 범위이며 SSH 등 연결 변화에 따라 달라질 수 있다. 빈 출력은 정상 종료했을 때만 해당 상태의 소켓이 없다는 뜻으로 읽는다. 필터·행 의미를 확인한 뒤 집계 코드를 작성한다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.

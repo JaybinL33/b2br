@@ -512,6 +512,17 @@ printf '#Last boot: %s\n' "$(uptime -s | cut -c 1-16)"
 
 CPU 출력은 직전 1초 구간의 `100 - id`이며, I/O 대기·steal도 포함한다. 시간에 따라 변하므로 이전 조회와 숫자가 같아야 하는 것은 아니다. 부팅 시각 출력은 같은 `uptime -s` 원자료의 분 단위 값과 대조한다. 다른 도구의 시각과 자동으로 일치한다고 가정하지 않는다. [측정 구간과 해석](targets.md#monitoring-cpu와-부팅-시각의-읽기-범위).
 
+## 27. monitoring LVM·TCP 연결 원자료 조회
+
+VM 셸에서 조회한다.
+
+```bash
+lsblk -o NAME,TYPE
+ss -Htn state established
+```
+
+lsblk의 TYPE 열에서 `lvm`이 있는지 확인한다. 장치 이름과 트리 관계를 읽되 장치 행 수를 LVM 활성 여부와 혼동하지 않는다. ss는 헤더 없는 현재 ESTABLISHED TCP 소켓 목록이다. 각 행의 로컬·상대 주소와 포트를 읽고 행 수를 확인한다. 연결 수를 로그인 사용자 수로 해석하지 않는다. 조회가 오류 없이 끝났는지도 함께 확인한다. [공식 읽기 범위](targets.md#monitoring-lvmtcp-연결의-읽기-범위)를 대조한 뒤 해당 출력 코드를 작성한다.
+
 ## 이후 단위
 
 나머지 monitoring 지표 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
