@@ -679,3 +679,12 @@ Cronie의 run_reboot_jobs와 REBOOT_LOCK 처리를 대조해 일반 서비스 �
 다음으로 저장 후 `sudo reboot`, VM 콘솔의 LUKS 해제·로그인, 호스트의 `ssh -p 4242 jungblee@127.0.0.2` 재접속을 안내했다. VM에서 sshd·firewalld·crond의 is-active, getenforce, 이번 부팅의 crond journal을 조회하도록 요청했다. 아직 결과가 없으며 @reboot 실행·재부팅 후 서비스·재접속은 미검증이다. 부팅 직후 로그인 사용자가 없으면 wall 화면이 없을 수 있어 실행 로그와 수신 화면을 구분한다.
 
 이번 문서 작업에서 기존 체크아웃과 직전 커밋을 정상적으로 읽었고 작업 트리는 깨끗했다. 저장 환경 복구 작업은 필요하지 않았다. 사용자 VM의 재부팅이나 설정 변경을 직접 수행하지 않았다.
+
+
+## 2026-10-14 — 재부팅 후 서비스 유지 확인과 부팅 작업 로그 추가 조회
+
+사용자 VM 재부팅 후 sshd·firewalld·crond는 모두 `active`, SELinux는 `Enforcing`으로 확인했다. 서비스 실행 상태와 SELinux 모드 유지 검증을 완료로 기록한다.
+
+`journalctl -b -u crond`에는 18:41:57의 STARTUP(Cronie 1.7.0)과 기본 INFO 메시지만 보였고 monitoring 작업 실행 기록은 보이지 않았다. 이것만으로 @reboot 실행 완료 또는 실행 실패를 확정하지 않는다. 서비스 시작과 monitoring 작업 실행은 별도 증거다.
+
+작업 로그의 journal 식별자가 다를 가능성도 있어 `sudo crontab -l`과 `sudo journalctl -b -t CROND --no-pager`를 추가 요청했다. 아직 결과는 없다. @reboot 실행은 미검증으로 유지하며 이번 문서 작업에서 VM 설정이나 예약을 변경하지 않았다.
