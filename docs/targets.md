@@ -105,6 +105,20 @@ sudo lvs
 
 평가에서는 새 사용자를 만들고 그룹에 넣으며 호스트명을 변경할 수 있어야 한다. 이를 준비하며 사용자·그룹 생성, 기본·보조 그룹, 파일 소유권과 권한을 작은 실습으로 확인한다. 호스트명은 셸 프롬프트만 보지 않고 별도 조회와 재부팅 후 지속성을 확인한다. Rocky의 Kdump 설정은 과제에서 요구하지 않는다.
 
+### 저장된 호스트명과 현재 호스트명
+
+`/etc/hostname`은 부팅 때 사용할 정적 호스트명을 저장한다. systemd는 별도의 우선 설정이 없으면 부팅 중 이 값을 커널에 적용한다. 파일만 직접 편집하는 것은 현재 커널 이름을 즉시 바꾸는 작업과 다르므로, 저장된 이름과 현재 이름이 다를 수 있다.
+
+| 방법 | 바뀌는 대상 |
+|---|---|
+| `/etc/hostname` 직접 편집 | 저장된 정적 이름. 편집만으로 현재 이름이 즉시 변경된다고 판단하지 않는다. |
+| `hostname NAME` | 현재 커널 이름. 이 명령만으로 `/etc/hostname`에 영구 저장하지 않는다. |
+| `hostnamectl set-hostname NAME` | 별도 이름 선택 옵션 없이 사용하면 정적 이름을 저장하고 현재 이름도 함께 변경한다. |
+
+조회할 때는 `hostname`으로 현재 이름, `cat /etc/hostname`으로 저장된 이름을 각각 확인한다. 기존 셸 프롬프트에는 이전 이름이 남을 수 있다. 두 조회 결과가 같다는 사실과 재부팅 뒤에도 유지된다는 검증은 구분한다.
+
+**공식 근거와 읽을 범위:** systemd [hostname(5) 원문](https://github.com/systemd/systemd/blob/main/man/hostname.xml)의 `Description`·`Hostname semantics`, [hostnamectl(1) 원문](https://github.com/systemd/systemd/blob/main/man/hostnamectl.xml)의 `Description`·`hostname` 명령·`--static`/`--transient` 옵션을 읽는다. 최신 문서의 `hostname` 하위 명령 표기와 실습에서 사용한 `set-hostname`은 VM의 `man hostnamectl`과 대조한다. 단독 `hostname` 명령은 VM의 `man hostname`에서 조회·설정 동작을 확인한다. 이 설명 자체가 파일 직접 편집이나 재부팅 실습의 완료 증거는 아니다.
+
 ## 3. 비밀번호·PAM
 
 **반드시 읽을 범위:** 원문 8–9쪽의 기간·품질·root 예외·기존 비밀번호 갱신 조건을 기준으로 [Rocky User Management](https://docs.rockylinux.org/books/admin_guide/06-users/)의 `passwd command`, `chage command`, `/etc/shadow file`, `/etc/login.defs file`을 읽는다. [Rocky PAM 입문](https://docs.rockylinux.org/guides/security/pam/)은 `Introduction`부터 `Control Indicators`까지 읽어 네 처리 유형과 제어 흐름을 잡는다. 뒤의 `pam_cracklib`·`pam_tally` 예시는 현재 Rocky 10 구성의 설치·설정 지침으로 사용하지 않는다. [RHEL 10 authselect](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/configuring_authentication_and_authorization_in_rhel/configuring-user-authentication-using-authselect)에서는 2.1과 2.1.1, 2.2의 **현재 구성 조회 부분만** 읽는다. 프로필 전환 예시는 지금 실행하지 않는다.
