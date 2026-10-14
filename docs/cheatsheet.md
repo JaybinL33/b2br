@@ -282,6 +282,37 @@ sudo ls /etc/ssh/sshd_config.d
 
 본체에서 활성 `Include`의 위치·대상, `Port`, `PermitRootLogin`, `Match`를 찾는다. 목록에 나온 파일은 Include 패턴과 대조한 뒤 해당 경로를 `sudo cat`으로 읽는다. Include가 다른 경로를 가리키면 그 경로를 따른다. 파일명이나 주석만으로 적용값을 확정하지 않는다. 여러 `Port`는 함께 적용될 수 있으므로 4242 추가가 기존 포트 제거를 뜻하지 않는다. [읽기 순서와 공식 근거](targets.md#5-sshfirewalldselinux).
 
+## 14. 별도 SSH 설정 작성과 검사
+
+본체의 Include와 기존 포함 파일을 먼저 확인한 뒤 작성한다. 기존 암호 정책·PAM 설정은 유지한다.
+
+```bash
+sudoedit /etc/ssh/sshd_config.d/00-b2br.conf
+```
+
+다음 두 줄을 저장한다.
+
+```text
+Port 4242
+PermitRootLogin no
+```
+
+먼저 설정 검사를 실행하고, 오류가 없으면 유효 설정을 확인한다.
+
+```bash
+sudo sshd -t
+sudo sshd -T | grep -e '^port ' -e '^permitrootlogin '
+```
+
+`-t`는 오류 없이 종료해야 하며, 이어지는 출력의 기대값은 다음과 같다.
+
+```text
+port 4242
+permitrootlogin no
+```
+
+추가 port 줄이나 다른 값·오류가 있으면 Include 경로와 중복 설정을 다시 확인한다. **SELinux의 4242 허용 준비 전에는 sshd를 재시작하지 않는다.** 검사 통과 후 방화벽·접속 경로 준비와 서비스 반영, 실제 리스닝·접속 검증으로 이어간다. [선택 이유와 공식 검사 옵션](targets.md#5-sshfirewalldselinux).
+
 ## 이후 단위
 
 SSH·firewalld·SELinux 설정·접속 검증 → monitoring.sh·cron·wall → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

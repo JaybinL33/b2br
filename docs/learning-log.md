@@ -303,3 +303,22 @@ sudo의 auth·account 처리도 `system-auth`로 연결됨을 확인했다. 앞�
 사용자 화면을 확인한 주 대화의 전달 근거: sshd와 firewalld는 모두 `active`·`enabled`, SELinux는 `Enforcing`이었다. `enp0s3`는 `UP`이며 IPv4 주소는 `10.0.2.15/24`였다. 이 주소만으로 NAT 모드를 확정하지 않는다.
 
 다음 조회는 `sudo cat /etc/ssh/sshd_config`와 `sudo ls /etc/ssh/sshd_config.d`다. 설정 내용·4242 리스닝·일반 사용자 접속·root SSH 거절은 아직 확인하지 않았다.
+
+
+## 2026-10-14 — SSH 포함 설정 확인과 별도 파일 작성 안내
+
+주 대화가 사용자 화면 여섯 개에서 확인한 내용: 본체 상단에 활성 `Include /etc/ssh/sshd_config.d/*.conf`가 있고 `#Port 22`, `#PermitRootLogin prohibit-password`, 마지막 Match 예시는 모두 주석이었다. 활성 항목으로 `AuthorizedKeysFile .ssh/authorized_keys`와 `Subsystem sftp /usr/libexec/openssh/sftp-server`를 확인했다.
+
+디렉터리에는 `40-redhat-crypto-policies.conf`와 `50-redhat.conf`가 있었다. 40 파일은 `Include /etc/crypto-policies/back-ends/opensshserver.config`를 지정하며 해당 포함 파일 내부는 미확인이다. 50 파일의 활성 값은 다음과 같다.
+
+```text
+SyslogFacility AUTHPRIV
+ChallengeResponseAuthentication no
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials no
+UsePAM yes
+X11Forwarding yes
+PrintMotd no
+```
+
+`sudoedit /etc/ssh/sshd_config.d/00-b2br.conf`로 `Port 4242`·`PermitRootLogin no` 두 줄을 작성하고 `sudo sshd -t`와 `sudo sshd -T`의 해당 출력으로 검사하도록 안내했다. 파일 저장·검사 결과는 아직 없으며 SELinux 허용 준비 전에는 재시작하지 않도록 했다.
