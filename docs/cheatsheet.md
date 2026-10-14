@@ -538,6 +538,18 @@ printf '#Connections TCP : %s ESTABLISHED\n' "$(ss -Htn state established | wc -
 
 LVM 출력은 TYPE에 `lvm`이 있는지, TCP 출력은 같은 시점의 필터된 소켓 행 수와 대조한다. 연결 수는 조회 시점에 따라 바뀔 수 있다. [조건 검사와 집계의 의미](targets.md#monitoring-lvmtcp-부분-구현의-읽기-범위).
 
+## 29. monitoring 로그인 세션·IP·MAC 원자료 조회
+
+VM 터미널에서 조회한다.
+
+```bash
+who
+ip -br address
+ip -br link
+```
+
+who에서 사용자명과 터미널을 읽고, 같은 사용자가 여러 행에 있는지 확인한다. 세션 행 수와 중복을 제외한 사용자 수를 구분한다. ip 출력은 같은 인터페이스 이름으로 대조한다. `enp0s3`의 IPv4와 접두사 길이, 링크의 MAC 주소를 찾고 `lo` 및 IPv6 주소와 구분한다. 다른 환경이면 실제 인터페이스 이름을 확인한다. [공식 읽기 범위](targets.md#monitoring-로그인-세션ipmac의-읽기-범위)를 읽은 뒤 집계·출력 방식을 정한다.
+
 ## 이후 단위
 
-나머지 monitoring 지표 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
+사용자 수·IPv4/MAC·sudo 실행 횟수 수집·출력 → wall·cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
