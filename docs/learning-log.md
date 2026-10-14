@@ -806,3 +806,18 @@ passwd: password unchanged
 새 계정의 기간 정책 상속과 실제 변경일·30일 뒤 만료일을 확인했다. 앞선 생성·초기 설정 대기 상태를 해소했다.
 
 다음으로 `sudo chage -m 0 b2brtest`, `sudo -iu b2brtest`, `passwd`를 안내했다. 연습 계정 자신이 현재 비밀번호를 입력하고 다른 품질 조건을 유지하면서 한 글자만 바꾼 비밀번호를 시도해 유사성 거부를 확인할 계획이다. 아직 이 단계의 실행 결과는 없으며 최소 간격 변경·계정 전환·유사성 거부는 미검증이다. 시험 후 연습 계정의 최소 간격을 2일로 복원하거나 계정을 정리해야 한다. 기존 jungblee·root 정책은 변경하지 않으며 이번 문서 작업에서 사용자 VM을 조작하지 않았다.
+
+
+## 2026-10-14 — 일반 사용자 이전 비밀번호 유사성 거부 확인
+
+사용자가 `sudo chage -m 0 b2brtest`와 `sudo -iu b2brtest`를 실행한 뒤 b2brtest 자신의 `passwd`로 시험했다. Current password와 New password 입력 후 다음 메시지가 표시되었다.
+
+```text
+BAD PASSWORD: The password is too similar to the old one
+passwd: Authentication token manipulation error
+passwd: password unchanged
+```
+
+일반 사용자 자신의 이전 비밀번호 입력 경로에서 유사성 거부와 비밀번호 미변경을 확인했다. 이 결과를 정확히 difok 7의 경계까지 시험한 것으로 확대하지 않는다. 실제 비밀번호는 기록하지 않았다.
+
+현재 연습 계정 b2brtest의 최소 변경 간격은 0일로 적용된 상태다. `exit`로 원래 계정으로 돌아간 뒤 `sudo chage -m 2 b2brtest`, `sudo chage -l b2brtest`로 복원·확인하도록 안내했다. 복원 결과는 아직 대기 중이다. 연습 계정은 다음 SSH 로그인 검증을 위해 잠시 유지할 예정이며 삭제하지 않았다. 이번 문서 작업에서 사용자 VM 설정을 직접 변경하지 않았다.
