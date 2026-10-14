@@ -633,6 +633,30 @@ systemctl status crond --no-pager
 
 설치본의 소유자·그룹이 `root root`, 권한이 `-rwxr-xr-x`인지 확인한다. crond의 현재 상태와 활성화 정보를 읽는다. 설치본은 원본의 복사이므로 이후 원본을 수정하면 검토 후 다시 설치해야 한다. 이 단계는 파일 설치와 서비스 상태 조회이며 예약 등록은 별도 단계다. [공식 자료와 설계 이유](targets.md#monitoring-설치-경로소유권과-crond).
 
+## 36. root crontab 등록과 예약 방송 확인
+
+VM에서 root의 기존 예약을 편집한다.
+
+```bash
+sudo crontab -e
+```
+
+기존 내용을 보존하고 같은 monitoring 예약을 중복 추가하지 않는다. 아래는 root 사용자 crontab 내용이다. 기존 PATH 설정이 있다면 필요한 경로를 대조해 한 설정으로 정리한다.
+
+```cron
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/10 * * * * /bin/bash /usr/local/sbin/monitoring.sh
+@reboot /bin/bash /usr/local/sbin/monitoring.sh
+```
+
+저장한 뒤 등록 내용을 조회한다.
+
+```bash
+sudo crontab -l
+```
+
+root 사용자 열이나 sudo를 명령에 추가하지 않는다. crond 재시작은 필요 없다. VM의 시각 기준 다음 00·10·20·30·40·50분 경계에 SSH·콘솔 각각에서 방송이 한 번씩 수신되는지 확인한다. 목록 조회 성공과 예약 실행 성공을 구분하고, 부팅 실행은 별도로 검증한다. [시간 필드·환경·검증 범위](targets.md#root-crontab의-읽기-범위).
+
 ## 이후 단위
 
-단일 방송 검증 → 설치 경로·소유권 → cron → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
+예약·부팅 방송 및 중단 검증 → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.

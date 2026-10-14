@@ -405,6 +405,14 @@ sudoreplay의 `-l` 목록에서 한 줄이 한 세션인 형식을 확인한 환
 
 [Cronie cron 매뉴얼](https://man7.org/linux/man-pages/man8/cron.8.html)의 `DESCRIPTION`에서 데몬과 crontab의 관계를 읽고 설치된 `man crond` 또는 `man cron`과 대조한다. 기존 Rocky Task Management 읽기 범위에서 서비스 동작·예약 구조를 다시 연결한다. `systemctl status crond --no-pager`는 실행 상태와 서비스 정보를 조회한다. 서비스가 실행 중이라는 사실과 monitoring 예약이 등록·실행되었다는 사실은 다르다. 먼저 설치본 소유권·권한과 crond 상태를 확인하고 이후 root 예약 실행으로 진행한다. 이 단계에서는 cron 항목을 등록하지 않는다.
 
+### root crontab의 읽기 범위
+
+[Cronie crontab(1)](https://man7.org/linux/man-pages/man1/crontab.1.html)의 `-e`·`-l`, [crontab(5)](https://man7.org/linux/man-pages/man5/crontab.5.html)의 사용자별 실행 주체·환경 설정·시간 필드·step 값·`@reboot`를 읽는다. 설치된 `man crontab`, `man 5 crontab`과 대조한다. sudo crontab은 root 사용자 crontab을 편집하므로 `/etc/crontab`이나 `/etc/cron.d`처럼 사용자 이름 열을 넣지 않는다. 작업 자체도 root로 실행되어 명령 앞에 sudo가 필요 없다.
+
+다섯 필드는 분·시·일·월·요일 순서다. `*/10 * * * *`는 매시 00·10·20·30·40·50분이며 등록 시점부터 10분을 재는 방식이 아니다. 예약에 적용되는 시간대를 확인한다. `@reboot`는 시작 시 한 번 실행하는 별도 항목이며 로그인할 때마다 실행되는 것은 아니다. 부팅 때 터미널 로그인·네트워크 준비와 실행 시점은 별도로 확인해야 한다.
+
+PATH는 cron의 제한된 환경에서도 스크립트 안의 도구를 찾도록 지정하며 Bash와 설치본은 절대 경로로 호출한다. 기존 PATH와 다른 예약의 영향을 함께 읽고 기존 내용을 보존한다. Cronie는 crontab 변경을 감지하므로 편집 후 데몬 재시작이 필요 없다. `crontab -l`로 등록 내용을 확인한 뒤 실제 예정 시각에 두 터미널 각각의 단일 수신·오류 부재를 관찰한다. 등록 확인, 주기 실행, 부팅 실행, 스크립트 수정 없는 중단은 각각 별도 검증이다.
+
 ### monitoring 첫 구현의 흐름
 
 [첫 구현 예시](cheatsheet.md#23-monitoring-첫-구현-예시)는 OS·CPU 세 항목만 다룬다. `#!/bin/bash`는 파일을 직접 실행할 때 사용할 Bash 경로를 지정한다. `architecture=$(uname -a)`의 `$(...)`는 명령의 표준출력을 받아 변수 값으로 쓰며 끝의 줄바꿈은 제거한다.

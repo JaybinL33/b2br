@@ -659,3 +659,12 @@ sudo I/O 로깅의 PTY 관련 가능성은 조사 중이며 원인으로 확정�
 로깅·requiretty 등 보안 설정을 유지하고 최종 root cron에서 sudo 없이 실행해 단일 수신 여부를 확인할 예정이다. root cron의 실제 방송은 아직 검증하지 않았다.
 
 다음으로 `sudo install -o root -g root -m 755 monitoring.sh /usr/local/sbin/monitoring.sh`, 설치본 `ls -l`, `systemctl status crond --no-pager`를 제안했다. 복사와 동시에 소유권·권한을 지정하고 root 예약 실행 파일의 일반 사용자 수정을 막는 이유를 설명했다. 아직 사용자 실행 결과는 없으며 cron 등록도 제안하지 않았다. 이번 작업은 문서 반영이며 사용자 VM의 파일 설치나 서비스 변경을 수행하지 않았다.
+
+
+## 2026-10-14 — root 소유 설치 확인과 crontab 제안
+
+사용자 VM의 `/usr/local/sbin/monitoring.sh`는 `-rwxr-xr-x.`, 소유자·그룹 `root root`, 크기 1218바이트로 확인되었다. crond는 `active (running)`이고 `enabled`였다. 설치본 소유권·권한과 데몬 상태 확인을 완료했으며 이것을 예약 등록이나 실행 확인으로 간주하지 않는다.
+
+기존 내용을 보존하고 중복을 피하며 root crontab에 PATH, 매시 10분 경계 실행, 별도의 @reboot 실행을 등록하도록 제안했다. root 사용자 열과 sudo를 넣지 않고 crond 재시작도 필요 없음을 설명했다. `sudo crontab -l` 확인을 요청했다.
+
+안내 당시 전달된 시각은 18:35 KST였고 18:40 방송에서 SSH·콘솔 각각 한 번씩 수신되는지 확인하도록 요청했다. 아직 등록 내용이나 예약 방송 결과는 없다. 부팅 실행도 미검증이다. 이번 작업에서는 문서만 반영했으며 VM 설치·서비스 변경·cron 등록을 직접 수행하지 않았다.
