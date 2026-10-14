@@ -499,6 +499,8 @@ README의 첫 줄은 `*This project has been created as part of the 42 curriculu
    복사 취소·실패 시 다음 평가용으로 준비됐다고 판단하지 않는다. 같은 VM·원래 경로·UUID를 유지하는 복원이며 백업을 두 번째 디스크로 추가하는 절차가 아니다. VM 설정도 평가에서 변경됐다면 별도로 기준 설정과 대조한다.
 5. 다음 평가에서도 2–4의 조건을 확인한다. 재검증은 실행 중 디스크를 바꾸므로 다음 평가 전 다시 기준 상태와 해시를 맞춘다. 최종 설정 자체를 개선하려면 기존 백업으로 개선을 잃지 않도록 새 기준본·서명을 준비하고 실제 제출물 갱신 가능 여부를 확인한다.
 
+**선택적 지식 — cp 옵션:** `-i`는 대상 파일이 이미 있으면 덮어쓰기 전에 확인한다. `--sparse=always`는 충분히 긴 0 바이트 구간을 가능한 경우 실제 블록을 배정하지 않는 hole로 저장하려는 옵션이다. hole을 읽으면 같은 0 바이트가 나오므로 성공한 복사의 논리적 내용과 SHA-1은 유지되며 실제 할당 공간만 달라질 수 있다. 기본 `cp`도 sparse 원본의 hole 보존을 시도하므로 이 옵션은 필수가 아니다. 동적 VDI의 추가 절약량은 파일의 0 구간과 파일시스템에 달려 작을 수 있다는 판단이며 이 VM에서 측정하지 않았다. 정상 절차는 `cp -i`로 유지하고 복사 뒤 `cmp`·SHA-1을 대조한다. 근거는 [GNU cp 매뉴얼](https://www.gnu.org/software/coreutils/manual/html_node/cp-invocation.html)의 `--interactive`·`--sparse`이며, 이번에는 [공식 매뉴얼 소스](https://github.com/coreutils/coreutils/blob/master/doc/coreutils.texi)의 해당 항목을 확인했다.
+
 **공식 도구 근거:** [VirtualBox 7.1 First Steps](https://docs.oracle.com/en/virtualization/virtualbox/7.1/user/Introduction.html)의 `Snapshots`·`Cloning a Virtual Machine`, [Virtual Storage](https://docs.oracle.com/en/virtualization/virtualbox/7.1/user/storage.html)의 `Differencing Images`·`Cloning Disk Images`. 설치 버전의 화면과 대조한다. 이 절은 공식 동작에 근거한 안내이며 사용자 환경에서 백업·복원을 실행 검증한 기록은 아니다.
 
 ## 구간별 공식 자료 읽기

@@ -702,6 +702,21 @@ rpm -q xorg-x11-server-Xorg gnome-shell gdm
 
 배포판 이름·릴리스를 읽고 기본 부팅 대상이 무엇인지 확인한다. rpm은 지정한 세 패키지의 설치 여부를 조회한다. `not installed`는 해당 패키지 부재의 근거이며, 모든 그래픽 서버가 없다는 완전한 증명은 아니다. 기본 대상만으로 설치 패키지나 현재 실행 상태를 단정하지 않는다. [전체 설치 확인 범위](targets.md#1-설치-결과와-디스크-확인)와 대조한다.
 
+## 40. 종료된 VDI 기준 백업과 해시 대조
+
+호스트에서 실행한다. 대상 b2br가 `Powered Off`이고 스냅샷·차등 디스크가 없으며 Storage의 실제 연결 경로가 아래 원본과 같은지 먼저 확인한다. Git·VM 폴더 밖에 충분한 여유 공간을 마련한다. [전체 조건과 평가 후 복원](targets.md#평가-사이의-디스크-보존과-복원)을 먼저 읽는다.
+
+새 백업 폴더를 만들고 각 명령의 성공을 확인한 뒤 다음 줄로 진행한다. 폴더가 이미 있으면 중단해 새 이름을 고르며 기존 기준 보관본을 덮어쓰지 않는다.
+
+```bash
+mkdir "$HOME/goinfre/b2br-baseline-1ac763cd"
+cp -i -- "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi" "$HOME/goinfre/b2br-baseline-1ac763cd/b2br.vdi"
+cmp -- "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi" "$HOME/goinfre/b2br-baseline-1ac763cd/b2br.vdi"
+sha1sum "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi" "$HOME/goinfre/b2br-baseline-1ac763cd/b2br.vdi"
+```
+
+`cmp`가 정상 종료하고 두 해시가 같아야 한다. 복사 취소·실패는 완료가 아니다. 기준 보관본은 실행하거나 VirtualBox에 별도로 등록하지 않는다. 이 절은 재현 안내이며 백업 실행 완료 기록은 아니다.
+
 ## 이후 단위
 
 예약·부팅 방송 및 중단 검증 → 평가 재현·README·서명. 각 목표는 [전체 지도](targets.md#전체-학습-지도)에서 확인한다.
