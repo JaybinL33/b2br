@@ -33,3 +33,5 @@ Linux의 디렉터리 트리는 `/`에서 시작한다. 이 **루트 디렉터�
 우리 VM의 `/`, `/home`, `/var/log`는 별도 LV 위 ext4를 사용한다. 따라서 `/home`의 여유가 많아도 `/var/log`가 자동으로 그 공간을 빌려 쓰지 않는다. `findmnt`는 연결 관계, `df`는 파일시스템의 사용량, `du`는 경로 아래 파일의 사용량을 살피는 서로 다른 질문의 도구다.
 
 근거: [Linux VFS 개요](https://www.kernel.org/doc/html/latest/filesystems/vfs.html), [Rocky File System](https://docs.rockylinux.org/books/admin_guide/07-file-systems/), [fstab 공식 매뉴얼](https://github.com/util-linux/util-linux/blob/master/sys-utils/fstab.5.adoc). 파일을 읽을 권리는 [사용자와 권한](09-permissions.md)에서 이어진다.
+
+디렉터리별 역할·보존 기간·관리 주체와 실제 b2br 경로는 [Linux 디렉터리 지도](../directories.md)에서 이어진다. 파일의 원리를 반복하기보다 `/etc`·`/usr`·`/var`와 가상 파일시스템을 어떻게 구분해 찾는지 정리했다.
