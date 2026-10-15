@@ -15,7 +15,7 @@
 - [공식 과제 원문](en.subject.pdf)
 - [한국어 전체 번역](docs/ko/Born2beRoot-v5.2-ko-full.md) · [PDF](docs/ko/Born2beRoot-v5.2-ko-full.pdf)
 - [요구사항·평가 체크리스트](docs/ko/Born2beRoot-v5.2-ko-guide.md) · [PDF](docs/ko/Born2beRoot-v5.2-ko-guide.pdf)
-- [targets](docs/targets.md): 전체 구조, 선택 이유, 공식 자료의 읽을 범위와 목표
+- [개념·운영·진단·복구 안내서](docs/targets.md): 전체 구조와 증상별 진입점, 주제별 원리·공식 자료·복구 절차
 - [치트시트](docs/cheatsheet.md): 반복 실습의 명령·설정·기대 결과
 - [스피드런](docs/speedrun.md): Rocky 10.2 Minimal 신규 재구축의 필수 입력만 압축
 - [학습 기록](docs/learning-log.md): 실제 적용 결과, 확인 근거와 남은 검증
