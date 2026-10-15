@@ -214,6 +214,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ## 먼저 확인할 준비 공백
 
+[전체 요구사항 감사](requirements-audit.md)에 지표 정의·비밀번호 검사 한계와 조건별 근거를 모았다. 이 표의 과거 성공을 최신 문서 코드·새 sudo 정책의 적용 완료로 확대하지 않는다.
+
 | 항목 | 기록으로 확인된 범위 | 아직 준비·확인할 범위 |
 |---|---|---|
 | 계정 그룹 | 10월 13일 `id jungblee`에 `wheel,user42,sudo`가 모두 있음 | 새 로그인 셸의 `id`; 평가용 새 계정의 `evaluating`·`sudo` 가입 시연 |
