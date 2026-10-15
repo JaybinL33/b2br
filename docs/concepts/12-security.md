@@ -34,9 +34,13 @@
 
 **nftables**는 Linux 패킷 필터링 등의 규칙 체계이고 **iptables**는 오래 사용된 규칙 도구·인터페이스다. 배포판에서 iptables 명령이 nftables 기반 호환 계층을 사용할 수도 있다. 따라서 명령 이름만으로 커널의 실제 규칙 구현을 단정하지 않는다. firewalld를 통해 관리하는 경우 그 서비스가 만든 정책과 직접 작성한 규칙의 관계도 고려해야 한다.
 
-**DAC(임의 접근 제어)**는 파일 소유자 등이 권한을 조정하는 전통적 접근 제어 모델이다. **MAC(강제 접근 제어)**는 관리 정책에 따라 주체와 객체의 접근을 추가 제한한다. 여기의 MAC은 네트워크 MAC 주소와 같은 약자일 뿐 다른 개념이다. 파일 모드가 허용해도 강제 정책이 막으면 작업은 거절될 수 있다.
+서비스 취약점을 악용한 공격자는 그 프로세스가 가진 접근 권한을 이용할 수 있다. 파일 소유자·그룹과 rwx만으로는 “이 프로그램의 업무에 필요한 접근인가”를 충분히 나누기 어렵다. **SELinux**는 프로그램의 역할에 따른 정책으로 접근을 추가 검사해, 침해된 서비스가 다른 자료로 피해를 넓히는 범위를 줄인다. 웹서버가 웹 자료는 읽되 개인 자료는 읽지 못하게 하는 것이 한 예다. 이는 해당 접근을 허용하지 않는 정책이 적용됐을 때의 예이며 모든 설치의 고정 동작은 아니다.
 
-**SELinux**는 Linux에서 강제 접근 제어를 구현한다. 파일·프로세스 등의 **보안 문맥(context)**에는 type 같은 정책 판단 정보가 담긴다. **레이블**은 그 대상에 붙는 보안 속성이고, 정책은 프로세스 도메인이 어떤 type의 파일·포트 등에 접근할 수 있는지 판단한다. SSH 포트를 바꾸는 일이 sshd 설정, 방화벽, SELinux 포트 정책으로 나뉘는 이유다.
+이때 소유자 등이 설정하는 일반 권한 검사를 **DAC(임의 접근 제어)**, 관리 정책이 추가로 강제하는 검사를 **MAC(강제 접근 제어)**라고 한다. 여기의 MAC은 네트워크 MAC 주소와 다르다. Enforcing에서 파일 접근은 두 검사를 모두 통과해야 한다. DAC가 먼저 거절하면 SELinux의 허용 규칙으로 이를 뒤집을 수 없다. [Red Hat의 접근 제어 설명](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/using_selinux/getting-started-with-selinux_using-selinux).
+
+정책이 프로그램과 자료의 역할을 구분하려면 식별 정보가 필요하다. 그 정보가 **레이블·보안 문맥(context)**이며, 그 안의 **type**으로 프로세스가 어떤 종류의 파일·포트를 사용할지 판단하는 규칙을 작성한다. root로 실행되는 프로세스도 정책으로 제한할 수 있지만, unconfined처럼 제한이 적은 실행 영역도 있다. 따라서 root 여부만으로 SELinux의 제한 범위를 단정하지 않는다. [Red Hat의 confined/unconfined 설명](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/using_selinux/managing-confined-and-unconfined-users_using-selinux).
+
+b2br의 SSH 4242에서는 sshd 설정이 **어디에서 접속을 기다릴지**, firewalld가 **그곳으로 오는 통신을 허용할지**, SELinux의 `ssh_port_t` 매핑과 정책이 **SSH 프로세스가 그 포트를 사용할 수 있을지**를 각각 맡는다. 셋 중 하나의 변경으로 나머지까지 해결되지는 않는다. 실제 포트 정책은 [명령 참조](../commands.md#semanage), 설정과 진단 흐름은 [접속 구성](../targets.md#5-sshfirewalldselinux)을 따른다.
 
 **enforcing 모드**는 정책을 적용해 거절하고, **permissive 모드**는 허용하지 않을 접근을 기록하면서 SELinux 정책으로 차단하지 않는다. **AVC 거부 기록**은 SELinux의 접근 판단 실패를 조사할 단서다. 로그를 읽지 않고 SELinux 전체를 끄면 원인도 권한 경계도 함께 사라진다. **AppArmor**는 경로 중심의 프로파일로 프로그램 접근을 제한하는 또 다른 Linux 보안 체계다. 둘의 정책 표현은 다르며 사용 배포판의 실제 기본 구성을 확인해야 한다.
 
