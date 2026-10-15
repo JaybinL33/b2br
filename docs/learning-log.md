@@ -953,3 +953,40 @@ sparse는 필수 옵션이 아니므로 치트시트의 정상 백업 절차는 
 루트 README에 학습 안내와 제출 설명이 섞여 있다는 지적에 따라 역할을 분리했다. 루트 README는 학습 저장소 목적·자료 안내와 제출 파일 위치만 간결히 설명한다. 새 `submission/README.md`는 실제 제출 저장소 루트의 README.md로 복사할 독립 문서이며 private 저장소 링크·학습 로그·진행률·미확인 목록에 의존하지 않는다. 기존 targets와 학습 이력은 보존했다.
 
 원문 v5.2 인쇄 12–13쪽과 직접 대조해 제출 문서의 첫 줄 이탤릭 지정 문구, Description, Instructions, Resources 및 AI 작업·사용 범위, Project description의 OS 선택 근거·각 OS 장단점, 파티션·보안·사용자·서비스 설계와 네 가지 비교를 확인했다. 확인된 구성과 기존 공식 자료를 설명으로 정리했으며 사용자 개인 동기나 다른 OS·도구의 실험 성과를 추가하지 않았다. 설명의 작성은 남은 VM 검증 완료나 제출 완료를 의미하지 않는다. 실제 학교 제출 저장소에는 접근·푸시하지 않았고 signature.txt도 만들지 않았다.
+
+
+## 2026-10-15 — 계정 DB의 wheel 미소속과 sudoers 문법 확인
+
+사용자가 다음 출력을 제공했다.
+
+```text
+[jungblee@jungblee42 ~]$ groups jungblee
+jungblee : jungblee user42 sudo
+```
+
+이름을 지정한 그룹 조회에서 jungblee의 그룹 목록에 user42·sudo가 있고 wheel은 없음을 확인했다. 이는 계정 DB 기준이며 현재 로그인 셸이 보유한 보조 그룹까지 갱신되었다는 증거는 아니다. 앞선 wheel 소속·권한 확인 기록은 당시 상태로 보존한다. wheel 제거 명령 자체나 이번 sudoers 파일 내용은 제공되지 않았다.
+
+`sudo visudo -c`의 결과도 제공되었다.
+
+```text
+/etc/sudoers: parsed OK
+/etc/sudoers.d/90-b2br: parsed OK
+```
+
+전체 sudoers 문법 검사 통과를 확인했다. 기존 셸에는 이전 wheel 보조 그룹이 남아 있을 수 있으므로 이 명령의 성공을 wheel 없는 새 로그인에서의 sudo 실행 성공으로 기록하지 않는다. `%sudo ALL=(ALL:ALL) ALL` 줄을 직접 확인한 것도 아니며, 새 로그인에 적용되는 허용 정책과 실행 결과는 아직 대기다.
+
+다음 안내는 기존 관리자 세션을 유지한 채 호스트의 새 터미널에서 접속하는 것이다.
+
+```bash
+ssh -p 4242 jungblee@127.42.42.42
+```
+
+접속한 새 셸에서 아래 결과를 확인할 예정이다.
+
+```bash
+id
+sudo -l
+sudo whoami
+```
+
+새 셸의 wheel 미소속, 실제 허용 정책, sudo whoami의 root 출력을 함께 대조한다. 이 접속·조회·실행 결과는 아직 받지 않았다. 이번 작업은 사용자 출력의 문서 반영이며 VM·계정·sudoers·디스크를 직접 변경하지 않았다.
