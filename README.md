@@ -12,6 +12,8 @@
 
 ## 학습 자료
 
+- [디펜스 핵심 정리](docs/defense.md): 첨부 평가 순서별 답변·시연·복구와 미확인 준비 항목
+
 - [공식 과제 원문](en.subject.pdf)
 - [한국어 전체 번역](docs/ko/Born2beRoot-v5.2-ko-full.md) · [PDF](docs/ko/Born2beRoot-v5.2-ko-full.pdf)
 - [요구사항·평가 체크리스트](docs/ko/Born2beRoot-v5.2-ko-guide.md) · [PDF](docs/ko/Born2beRoot-v5.2-ko-guide.pdf)
