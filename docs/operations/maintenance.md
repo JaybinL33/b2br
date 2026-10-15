@@ -1,5 +1,7 @@
 # 프로세스·서비스·로그·업데이트·복구
 
+개념부터 읽기: [패키지](../concepts/13-packages.md) · [서비스와 시간](../concepts/14-services.md) · [로그와 지표](../concepts/15-observability.md) · [백업](../concepts/16-backup.md)
+
 [전체 안내서](../targets.md) · [부팅·저장장치](storage.md) · [계정·접속](access.md)
 
 설정값과 monitoring 전체 소스는 [치트시트](../cheatsheet.md)에 유지한다. 여기서는 실행 상태·시간·로그·패키지 변경을 연결하고, 바뀐 상태를 되돌리는 범위를 판단한다. 예제는 운영 방법이며 실제 VM에서 새 검증을 완료했다는 의미가 아니다.

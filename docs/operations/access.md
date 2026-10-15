@@ -1,5 +1,7 @@
 # 사용자·권한·원격 접속 운영
 
+개념부터 읽기: [권한과 sudo](../concepts/09-permissions.md) · [PAM](../concepts/10-authentication.md) · [네트워크](../concepts/11-network.md) · [SSH와 보안](../concepts/12-security.md)
+
 [전체 안내서](../targets.md) · [부팅·저장장치](storage.md) · [서비스 운영](maintenance.md)
 
 이 문서의 예시는 jungblee, SSH 4242, enp0s3/public, 호스트 포워딩 `127.42.42.42:4242` 구성에 맞춘다. 설정 원문은 [치트시트](../cheatsheet.md)에 두며, 다른 장치·zone에 그대로 적용하지 않는다.
