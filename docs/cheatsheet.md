@@ -482,18 +482,18 @@ df -BM --total -x tmpfs -x devtmpfs
 
 전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
-메모리는 Mem 행, 디스크는 total 행의 used/total로 사용률을 계산한다. 원문 예시의 `MB`·`Gb` 표기를 따르지만 실제로 메모리와 디스크 사용량은 MiB, 디스크 전체 표시값은 GiB다. 디스크 퍼센트는 GiB로 반올림한 표시값이 아니라 MiB 원자료로 계산한다. `df`의 Use%와 동일한 값일 필요는 없다. [계산 선택과 awk 읽기 범위](targets.md#monitoring-메모리디스크의-계산과-awk).
+메모리는 Mem 행, 디스크는 total 행의 used/total로 사용률을 계산한다. 사용량과 전체 용량은 둘 다 MiB로 표시한다. `memory`·`disk`는 단일 수치가 아니라 awk가 만든 사용량/전체·단위·퍼센트의 표시 문자열이며 최종 printf가 항목 이름을 붙인다. `df`의 Use%와 동일한 값일 필요는 없다. [계산 선택과 awk 읽기 범위](targets.md#monitoring-메모리디스크의-계산과-awk).
 
 ## 26. monitoring CPU·부팅 시각 조회와 부분 출력
 
 먼저 VM에서 원자료를 읽는다.
 
 ```bash
-LC_ALL=C vmstat 1 2
+vmstat 1 2
 uptime -s
 ```
 
-vmstat의 헤더에서 `id`가 15열인지 확인하고 두 번째 수치 행을 읽는다. `uptime -s`의 `YYYY-MM-DD HH:MM:SS` 날짜·시각을 확인한다. CPU 열 배치를 확인한 뒤 전체 코드의 CPU load·Last boot 두 줄과 대조한다.
+vmstat의 헤더에서 `id`가 15열인지 확인하고 두 번째 수치 행을 읽는다. `uptime -s`의 `YYYY-MM-DD HH:MM:SS` 날짜·시각을 확인한다. CPU 열 배치를 확인한 뒤 전체 코드의 CPU load·Last boot 수집 변수와 출력부를 대조한다.
 
 전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
@@ -568,39 +568,44 @@ sudo sudoreplay -d /var/log/sudo -l | tail -n 5
 
 ## 34. 전체 출력을 wall 한 번으로 전달
 
-아래는 앞 단위에서 직접 적용한 코드를 한곳에 모은 `monitoring.sh`다. 현재 학습 구성의 재현 기준이며, 오류 처리와 남은 평가 검증의 범위는 targets·학습 기록을 따른다. 대상 NIC는 `enp0s3`·IPv4 하나이며, 지표 해석과 한계는 위 단위 및 targets에서 확인한다. 기존 파일이 있으면 내용을 대조하고 **조각을 중복 추가하지 않는다.**
+아래는 기존 코드를 **수집 → 변수 → 출력** 순서로 통일한 승인 버전의 `monitoring.sh`다. 모든 수집은 방송 그룹 앞에서 하고, 그룹 안에서는 항목 이름과 변수 값만 출력한다. 문서의 재현 기준을 갱신한 것이며 사용자 VM의 설치본이 바뀌었다는 뜻은 아니다. 오류 처리와 남은 평가 검증의 범위는 targets·학습 기록을 따른다. 대상 NIC는 `enp0s3`·IPv4 하나이며, 지표 해석과 한계는 위 단위 및 targets에서 확인한다. 기존 파일이 있으면 내용을 대조하고 **조각을 중복 추가하지 않는다.**
 
 ```bash
 #!/bin/bash
-{
-    architecture=$(uname -a)
-    physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
-    virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
+export LC_ALL=C
 
+architecture=$(uname -a)
+physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
+virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
+memory=$(free -m | awk '$1 == "Mem:" {printf "%s/%sMiB (%.2f%%)", $3, $2, $3 / $2 * 100}')
+disk=$(df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "%s/%sMiB (%.0f%%)", $3, $2, $3 / $2 * 100}')
+cpu_load=$(vmstat 1 2 | awk 'END {printf "%.1f", 100 - $15}')
+last_boot=$(uptime -s | cut -c 1-16)
+
+if lsblk -rn -o TYPE | grep -qx lvm; then
+    lvm_use=yes
+else
+    lvm_use=no
+fi
+
+connections=$(ss -Htn state established | wc -l)
+users=$(who | awk '{print $1}' | sort -u | wc -l)
+ip_address=$(ip -4 -o address show dev enp0s3 | awk '{print $4}' | cut -d / -f 1)
+mac_address=$(cat /sys/class/net/enp0s3/address)
+sudo_count=$(sudoreplay -d /var/log/sudo -l | wc -l)
+
+{
     printf '#Architecture: %s\n' "$architecture"
     printf '#CPU physical : %s\n' "$physical"
     printf '#vCPU : %s\n' "$virtual"
-
-    LC_ALL=C free -m | awk '$1 == "Mem:" {printf "#Memory Usage: %s/%sMB (%.2f%%)\n", $3, $2, $3 / $2 * 100}'
-    LC_ALL=C df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "#Disk Usage: %s/%.0fGb (%.0f%%)\n", $3, $2 / 1024, $3 / $2 * 100}'
-
-    LC_ALL=C vmstat 1 2 | awk 'END {printf "#CPU load: %.1f%%\n", 100 - $15}'
-    printf '#Last boot: %s\n' "$(uptime -s | cut -c 1-16)"
-
-    if lsblk -rn -o TYPE | grep -qx lvm; then
-        printf '#LVM use: yes\n'
-    else
-        printf '#LVM use: no\n'
-    fi
-    printf '#Connections TCP : %s ESTABLISHED\n' "$(ss -Htn state established | wc -l)"
-
-    users=$(who | awk '{print $1}' | sort -u | wc -l)
-    ip_address=$(ip -4 -o address show dev enp0s3 | awk '{print $4}' | cut -d / -f 1)
-    mac_address=$(cat /sys/class/net/enp0s3/address)
+    printf '#Memory Usage: %s\n' "$memory"
+    printf '#Disk Usage: %s\n' "$disk"
+    printf '#CPU load: %s%%\n' "$cpu_load"
+    printf '#Last boot: %s\n' "$last_boot"
+    printf '#LVM use: %s\n' "$lvm_use"
+    printf '#Connections TCP : %s ESTABLISHED\n' "$connections"
     printf '#User log: %s\n' "$users"
     printf '#Network: IP %s (%s)\n' "$ip_address" "$mac_address"
-
-    sudo_count=$(sudoreplay -d /var/log/sudo -l | wc -l)
     printf '#Sudo : %s cmd\n' "$sudo_count"
 } | wall
 ```

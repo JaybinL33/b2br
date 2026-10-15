@@ -228,12 +228,12 @@ sha256sum /usr/local/sbin/monitoring.sh
 
 **지표 목록 근거 — 과제 p.10, 아래 계산 방식은 현재 치트시트 구현.**
 
-**설명:** root cron이 Bash 스크립트를 실행하고 `{ ...; } | wall`로 한 번 방송한다. root cron 안에 sudo를 또 넣지 않는다. cron은 달력 기준이며 `*/10`은 매시 0·10·20…분, 부팅 즉시 실행은 별도의 `@reboot`다. 다음 자료가 어떤 출력이 되는지 코드를 짚어 설명한다.
+**설명:** root cron이 Bash 스크립트를 실행한다. 시작의 `export LC_ALL=C` 아래에서 모든 값을 변수에 모으고, 마지막 `{ printf...; } | wall`에서 항목 이름과 값을 한 번 방송한다. memory·disk는 awk가 만든 표시 문자열이다. root cron 안에 sudo를 또 넣지 않는다. cron은 달력 기준이며 `*/10`은 매시 0·10·20…분, 부팅 즉시 실행은 별도의 `@reboot`다. 다음 자료가 어떤 출력이 되는지 코드를 짚어 설명한다.
 
 | 출력 | 이 구현의 원자료·해석 |
 |---|---|
 | Architecture / CPU physical / vCPU | `uname -a`; `lscpu -p`의 고유 온라인 소켓 수·온라인 CPU 행 수. 호스트 물리 CPU를 직접 센 값은 아님 |
-| Memory / Disk | `free -m`, `df -m --total`의 used/total. 실제 MiB·GiB와 표기 차이, tmpfs/devtmpfs 제외 설명 |
+| Memory / Disk | `free -m`, `df -m --total`의 used/total. 사용량·전체 모두 MiB, df Use%와 산식 차이 및 tmpfs/devtmpfs 제외 설명 |
 | CPU load / Last boot | `vmstat 1 2` 마지막 표본의 `100-id`(직전 1초, 순수 계산 시간만은 아님), `uptime -s` |
 | LVM / TCP | `lsblk` TYPE에 lvm 존재; `ss`의 ESTABLISHED TCP 소켓 행 수 |
 | User log / Network | `who`의 고유 사용자명 수; enp0s3의 IPv4·MAC. 세션 수와 사용자 수 구별 |

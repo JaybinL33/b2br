@@ -406,13 +406,15 @@ cron의 사용자·환경·경로와 wall의 수신 대상을 구분한다. 사�
 
 ### monitoring 메모리·디스크의 계산과 awk
 
-원문에 계산식이 없으므로 이 부분 구현은 두 지표 모두 **used/total × 100**을 선택한다. 이는 구현의 선택이며 원문의 명시 조건이 아니다. `free -m`과 `df -m`의 정수 출력값을 계산 입력으로 쓴다. 원문 예시의 `MB`·`Gb` 라벨은 유지하지만 실제 메모리와 디스크 used는 MiB, 디스크 total의 `$2 / 1024`는 GiB다. `%.0f`로 전체 용량을 반올림해 표시해도 비율의 분모는 변환 전 `$2`다. 퍼센트는 메모리 소수 둘째 자리, 디스크 정수로 표시한다. 도구 자체의 MiB 표시 정밀도와 printf의 표시 반올림을 구분한다.
+원문에 계산식이 없으므로 이 부분 구현은 두 지표 모두 **used/total × 100**을 선택한다. 이는 구현의 선택이며 원문의 명시 조건이 아니다. `free -m`과 `df -m`의 정수 출력값을 계산 입력으로 쓴다. 현재 승인 버전은 메모리·디스크의 used와 total을 모두 MiB로 표시한다. 디스크 total을 GiB로 환산하지 않으며 df의 Use%를 채택하지도 않는다. 퍼센트는 메모리 소수 둘째 자리, 디스크 정수로 표시한다. 도구 자체의 MiB 표시 정밀도와 printf의 표시 반올림을 구분한다.
 
 [GNU df 매뉴얼](https://www.gnu.org/software/coreutils/manual/html_node/df-invocation.html)의 `-m`·`--total`·`-x`와 `--output` 필드만 읽는다. 웹 페이지 접근이 안 되면 [공식 매뉴얼 원본](https://github.com/coreutils/coreutils/blob/master/doc/coreutils.texi)의 `df invocation`을 찾는다. 매뉴얼은 `pcent`를 used/size로 요약하지만, [실제 src/df.c](https://github.com/coreutils/coreutils/blob/master/src/df.c)의 `PCENT_FIELD` 계산은 일반적인 비음수 값에서 `used / (used + available) × 100`을 올림한다. reserved 공간 등의 영향으로 이 분모는 전체 size와 다를 수 있다. 소스에서는 이 계산 블록만 대조하며 전체 C 구현을 공부할 필요는 없다. 설치된 버전의 매뉴얼·출력도 함께 확인한다.
 
 awk는 이번 두 행을 읽는 데 필요한 범위만 익힌다. 기본적으로 공백으로 나눈 첫 필드가 `$1`이며 `$2`·`$3`는 total·used다. `$1 == "Mem:"` 또는 `$1 == "total"`이라는 조건이 맞는 행에만 `{...}` 동작을 적용한다. `printf`의 `%s`는 문자열, `%.2f`·`%.0f`는 표시 소수 자릿수, `%%`는 문자 `%`다. 작은따옴표는 셸이 `$1` 등을 먼저 확장하지 않도록 awk 프로그램을 감싼다. [GNU awk 매뉴얼](https://www.gnu.org/software/gawk/manual/gawk.html)의 `Fields`·`Patterns`·`Printf` 해당 항목이나 설치된 `man awk`에서 이 요소만 찾는다.
 
-`LC_ALL=C`는 그 명령의 출력 언어·로케일을 고정해 `Mem:`·`total` 같은 행 이름을 비교하기 위한 선택이다. 파이프 앞의 환경 지정은 앞 명령에만 적용되며 뒤의 awk까지 자동으로 전파되지는 않는다. 현재 부분 예시의 소수점 출력은 실행 환경과 대조하고 전체 스크립트 검증 때 로케일 범위도 점검한다.
+`memory=$(...)`·`disk=$(...)`는 awk가 작성한 표시 문자열을 저장한다. awk는 항목 이름이나 마지막 개행 없이 `사용량/전체MiB (퍼센트)`를 만들고, 마지막 Bash printf가 `#Memory Usage`·`#Disk Usage` 이름과 개행을 붙인다. 따라서 변수에 원시 숫자만 저장한다고 설명하지 않는다.
+
+스크립트 시작의 `export LC_ALL=C`는 free의 `Mem:`·df의 `total`을 문자열로 선택하기 위해 로케일을 고정하며, 자식 명령인 free·df와 파이프 뒤 awk에도 환경으로 전파된다. vmstat는 행 이름을 선택하지 않고 마지막 행의 숫자 열을 읽는다. 일반 `bash monitoring.sh` 실행은 부모 셸·다른 cron 작업·시스템 전체의 로케일을 바꾸지 않는다. 반면 `source monitoring.sh`는 현재 셸에서 실행하므로 설정이 그 셸에 남는다. 개별 `LC_ALL=C 명령` 접두사는 그 명령에만 적용된다는 점과 구분한다.
 
 ### monitoring CPU와 부팅 시각의 읽기 범위
 
@@ -478,7 +480,7 @@ sudoreplay의 `-l` 목록에서 한 줄이 한 세션인 형식을 확인한 환
 
 ### monitoring 그룹 출력과 wall
 
-[GNU Bash Command Grouping](https://www.gnu.org/software/bash/manual/html_node/Command-Grouping.html)과 설치된 `man bash`의 `Compound Commands`·`Pipelines`를 읽는다. `{ ...; }`는 명령 목록을 묶고, 이 예시에서는 마지막 명령 뒤 줄바꿈이 구분자 역할을 한다. 중괄호는 별도 토큰이므로 독립된 줄로 두면 경계를 분명히 할 수 있다. 그룹 전체의 표준출력이 파이프를 통해 wall 한 번의 표준입력으로 전달된다. 각 printf마다 wall을 호출하는 구조가 아니다. 파이프는 표준오류를 자동으로 전달하거나 숨기지 않으며, 구문 검사 성공이 명령 실행·방송 성공을 뜻하지 않는다.
+[GNU Bash Command Grouping](https://www.gnu.org/software/bash/manual/html_node/Command-Grouping.html)과 설치된 `man bash`의 `Compound Commands`·`Pipelines`를 읽는다. `{ ...; }`는 명령 목록을 묶고, 이 예시에서는 마지막 명령 뒤 줄바꿈이 구분자 역할을 한다. 중괄호는 별도 토큰이므로 독립된 줄로 두면 경계를 분명히 할 수 있다. 현재 구조는 그룹 앞에서 모든 값을 변수에 수집하고, 그룹 안의 printf들로 보고서만 작성한다. 예를 들어 LVM 분기는 바로 출력하지 않고 `lvm_use=yes/no`를 저장하며, TCP 조회 결과는 `connections`에 저장한다. 이렇게 수집부와 출력부를 같은 순서로 작성하면 처음부터 각 항목을 추가하기 쉽다. 그룹 전체의 표준출력이 파이프를 통해 wall 한 번의 표준입력으로 전달된다. 각 printf마다 wall을 호출하는 구조가 아니다. 파이프는 표준오류를 자동으로 전달하거나 숨기지 않으며, 구문 검사 성공이 명령 실행·방송 성공을 뜻하지 않는다. 이번 변경은 작성 구조를 통일한 비교용 단순 버전이다. 실패 처리는 추가하지 않았으므로 vmstat 입력이 비면 END 계산이 100%를 만들거나, 앞 수집 명령이 실패해도 wc가 0을 반환하는 한계는 남는다. 수집을 그룹 앞에 옮겼다는 사실만으로 이 문제가 해결되지는 않는다.
 
 [util-linux wall 매뉴얼](https://man7.org/linux/man-pages/man1/wall.1.html)의 `DESCRIPTION`과 `-n`만 먼저 읽고 설치된 `man wall`과 대조한다. 메시지나 파일 인자가 없으면 표준입력을 읽어 현재 로그인한 사용자 터미널에 전달한다. 긴 줄은 접힐 수 있고 기본 배너가 붙으며 원문에서 배너는 선택 사항이다. 지금 예시는 기본 배너를 유지한다. root 실행은 메시지 수신을 거부한 터미널에 쓸 수 있는 권한과 관련되지만 실제 tty1·SSH 양쪽 수신은 직접 관찰해야 한다. 부팅 방송·10분 주기와 구별해 우선 수동 한 번의 방송만 확인한다.
 

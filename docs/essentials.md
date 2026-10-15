@@ -216,7 +216,7 @@ sha256sum /usr/local/sbin/monitoring.sh
 sudo cat /usr/local/sbin/monitoring.sh
 ```
 
-**필수 판단:** root cron의 PATH와 아래 주기·부팅 예약, 전체 요구 지표·wall 방송을 확인한다. root cron 내부에 sudo를 다시 넣지 않는다. 코드·지표 해석은 [디펜스 monitoring](defense.md#9-monitoring-코드--매분--중단-재부팅--복구), 전체 코드는 [치트시트](cheatsheet.md#34-전체-출력을-wall-한-번으로-전달)에 둔다.
+**필수 판단:** root cron의 PATH와 아래 주기·부팅 예약, 전체 요구 지표·wall 방송을 확인한다. 현재 문서 코드는 export 한 번 → 모든 항목을 변수에 수집 → 마지막 printf 그룹으로 방송하는 구조다. memory·disk는 MiB의 used/total 표시 문자열이고 실패 처리를 추가한 버전은 아니다. root cron 내부에 sudo를 다시 넣지 않는다. 코드·지표 해석은 [디펜스 monitoring](defense.md#9-monitoring-코드--매분--중단-재부팅--복구), 전체 코드는 [치트시트](cheatsheet.md#34-전체-출력을-wall-한-번으로-전달)에 둔다.
 
 ```cron
 */10 * * * * /bin/bash /usr/local/sbin/monitoring.sh

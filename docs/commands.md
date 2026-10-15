@@ -38,7 +38,7 @@
 | `> 파일`, `>> 파일`, `2> 파일` | 출력 덮어쓰기·추가·오류 출력 연결 | `>`는 파일을 잘라낼 수 있음. `sudo 명령 > 파일`의 파일 열기는 보통 현재 셸 권한 |
 | `$(명령)` | 명령 출력을 가져와 다른 문자열·인수를 구성 | `$(uptime -s)`는 부팅 시각 출력으로 치환. 파이프와 달리 셸이 결과를 받아 사용 |
 | `"$변수"` | 변수 값을 확장하되 공백·패턴 때문에 인자가 갈라지는 것을 막음 | VDI 경로의 공백을 하나의 인자로 유지 |
-| `LC_ALL=C 명령` | 그 실행의 로케일을 지정 | `Mem:`·`total` 등 출력 해석을 일정하게 함. 전체 시스템 언어 변경이 아님 |
+| `LC_ALL=C 명령` / `export LC_ALL=C` | 한 명령에만 지정 / 이후 자식 명령에도 환경으로 전달 | 현재 monitoring은 export 한 번으로 free의 `Mem:`·df의 `total` 선택과 awk 환경을 통일. 시스템 전체 변경이 아니며 source 실행은 현재 셸에 남음 |
 | `{ ...; } \| wall` | 묶은 명령의 표준출력을 한 통로로 연결 | monitoring 여러 줄을 wall 한 번으로 전달 |
 
 `cd`, `exit`, `command`, `type`은 Bash 내장 명령이다. `printf`도 Bash 내장과 외부 실행 파일이 모두 있을 수 있다. `type printf`는 현재 셸이 무엇을 실행하는지, `command -v ssh`는 명령 탐색 결과를 보여 준다. `cd`는 현재 셸의 작업 디렉터리를 바꾸므로 외부 프로그램의 작업과 구분한다. `exit`는 현재 셸을 끝내며 SSH 안에서는 보통 호스트로 돌아간다. `sudo exit`로 원격 셸을 끝내는 것이 아니다. 셸의 전체 흐름은 [셸 장](concepts/04-shell.md), 문법 근거는 [Bash 매뉴얼 원문](https://man7.org/linux/man-pages/man1/bash.1.html)에 있다.
@@ -250,7 +250,7 @@ monitoring의 `lsblk -rn -o TYPE`은 TYPE 값만 받아 lvm 행 존재를 검사
 
 ### free
 
-**수집 · 조회.** `free [옵션]`는 메모리·swap 집계를 보여 준다. `-m`은 MiB, `-h`는 사람이 읽는 단위다. total·used·free·available은 다르며 available은 회수 가능한 캐시 등을 고려한 새 작업용 추정치다. b2br은 `LC_ALL=C free -m`의 Mem 행에서 used/total을 계산한다. 출력 열·used 정의는 설치된 procps 버전과 대조하며 free가 작다고 즉시 고갈이라고 하지 않는다. [free(1)](https://man7.org/linux/man-pages/man1/free.1.html).
+**수집 · 조회.** `free [옵션]`는 메모리·swap 집계를 보여 준다. `-m`은 MiB, `-h`는 사람이 읽는 단위다. total·used·free·available은 다르며 available은 회수 가능한 캐시 등을 고려한 새 작업용 추정치다. b2br은 스크립트 앞의 `export LC_ALL=C`를 물려받은 `free -m`의 Mem 행에서 used/total을 계산해 `memory` 표시 문자열에 담는다. 출력 열·used 정의는 설치된 procps 버전과 대조하며 free가 작다고 즉시 고갈이라고 하지 않는다. [free(1)](https://man7.org/linux/man-pages/man1/free.1.html).
 
 ### lscpu
 
@@ -380,7 +380,7 @@ b2br의 `rpm -q sudo openssh-server`는 설치 확인이고 `rpm -qf /usr/bin/ba
 
 **수집·가공 · 출력.** `printf 형식 [값...]`은 형식에 따라 값을 출력한다. Bash 내장과 외부 명령이 있고 awk 안의 printf는 awk 언어의 함수다. `%s`는 문자열, `%d`는 정수, `%.2f`는 소수 둘째 자리까지, `%%`는 퍼센트 문자, `\n`은 개행이다. 출력 끝에 개행이 자동으로 붙지 않는다.
 
-`printf '#Architecture: %s\n' "$architecture"`는 고정 형식과 데이터를 분리한다. 변수 자체를 형식 문자열로 쓰면 값 안의 %가 서식으로 해석될 수 있다. 이 문법을 cron 줄에 직접 넣으면 cron의 % 처리까지 별도로 고려해야 한다. [printf(1)](https://man7.org/linux/man-pages/man1/printf.1.html) · [Bash 내장 문법](https://man7.org/linux/man-pages/man1/bash.1.html).
+`printf '#Architecture: %s\n' "$architecture"`는 고정 형식과 데이터를 분리한다. 현재 monitoring은 모든 수집을 변수에 저장한 뒤 마지막 그룹에서 printf만 실행한다. `memory`·`disk`의 awk printf는 표시 문자열을 만들고, Bash printf는 항목 이름을 붙인다. `cpu_load`에는 숫자 문자열만 담아 최종 `%s%%`에서 퍼센트 기호를 붙인다. 변수 자체를 형식 문자열로 쓰면 값 안의 %가 서식으로 해석될 수 있다. 이 문법을 cron 줄에 직접 넣으면 cron의 % 처리까지 별도로 고려해야 한다. [printf(1)](https://man7.org/linux/man-pages/man1/printf.1.html) · [Bash 내장 문법](https://man7.org/linux/man-pages/man1/bash.1.html).
 
 ### cat
 

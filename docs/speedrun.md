@@ -117,35 +117,40 @@ vi monitoring.sh
 
 ```bash
 #!/bin/bash
-{
-    architecture=$(uname -a)
-    physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
-    virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
+export LC_ALL=C
 
+architecture=$(uname -a)
+physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
+virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
+memory=$(free -m | awk '$1 == "Mem:" {printf "%s/%sMiB (%.2f%%)", $3, $2, $3 / $2 * 100}')
+disk=$(df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "%s/%sMiB (%.0f%%)", $3, $2, $3 / $2 * 100}')
+cpu_load=$(vmstat 1 2 | awk 'END {printf "%.1f", 100 - $15}')
+last_boot=$(uptime -s | cut -c 1-16)
+
+if lsblk -rn -o TYPE | grep -qx lvm; then
+    lvm_use=yes
+else
+    lvm_use=no
+fi
+
+connections=$(ss -Htn state established | wc -l)
+users=$(who | awk '{print $1}' | sort -u | wc -l)
+ip_address=$(ip -4 -o address show dev enp0s3 | awk '{print $4}' | cut -d / -f 1)
+mac_address=$(cat /sys/class/net/enp0s3/address)
+sudo_count=$(sudoreplay -d /var/log/sudo -l | wc -l)
+
+{
     printf '#Architecture: %s\n' "$architecture"
     printf '#CPU physical : %s\n' "$physical"
     printf '#vCPU : %s\n' "$virtual"
-
-    LC_ALL=C free -m | awk '$1 == "Mem:" {printf "#Memory Usage: %s/%sMB (%.2f%%)\n", $3, $2, $3 / $2 * 100}'
-    LC_ALL=C df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "#Disk Usage: %s/%.0fGb (%.0f%%)\n", $3, $2 / 1024, $3 / $2 * 100}'
-
-    LC_ALL=C vmstat 1 2 | awk 'END {printf "#CPU load: %.1f%%\n", 100 - $15}'
-    printf '#Last boot: %s\n' "$(uptime -s | cut -c 1-16)"
-
-    if lsblk -rn -o TYPE | grep -qx lvm; then
-        printf '#LVM use: yes\n'
-    else
-        printf '#LVM use: no\n'
-    fi
-    printf '#Connections TCP : %s ESTABLISHED\n' "$(ss -Htn state established | wc -l)"
-
-    users=$(who | awk '{print $1}' | sort -u | wc -l)
-    ip_address=$(ip -4 -o address show dev enp0s3 | awk '{print $4}' | cut -d / -f 1)
-    mac_address=$(cat /sys/class/net/enp0s3/address)
+    printf '#Memory Usage: %s\n' "$memory"
+    printf '#Disk Usage: %s\n' "$disk"
+    printf '#CPU load: %s%%\n' "$cpu_load"
+    printf '#Last boot: %s\n' "$last_boot"
+    printf '#LVM use: %s\n' "$lvm_use"
+    printf '#Connections TCP : %s ESTABLISHED\n' "$connections"
     printf '#User log: %s\n' "$users"
     printf '#Network: IP %s (%s)\n' "$ip_address" "$mac_address"
-
-    sudo_count=$(sudoreplay -d /var/log/sudo -l | wc -l)
     printf '#Sudo : %s cmd\n' "$sudo_count"
 } | wall
 ```
