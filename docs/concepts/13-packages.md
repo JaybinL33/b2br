@@ -18,6 +18,8 @@
 
 **패키지 서명**은 신뢰한 키로 공급자의 패키지 여부와 무결성을 검증하는 데 쓰인다. HTTPS 다운로드와 패키지 서명은 서로 다른 계층의 검증이다. 신뢰할 키와 저장소를 잘못 추가하면 서명이 존재해도 원하지 않는 공급자를 신뢰할 수 있다. **미러**는 같은 저장소 내용을 여러 위치에서 제공해 접근성과 부하를 개선한다. 어느 미러인지보다 신뢰 설정과 메타데이터의 유효성이 핵심이다.
 
+검증을 연결하는 방식은 생태계마다 다르다. RPM에서는 개별 RPM 파일의 서명을 검증할 수 있다. Debian의 일반적인 APT 저장소에서는 서명된 `InRelease` 또는 `Release`와 분리 서명을 검증하고, 거기에 기록된 해시로 패키지 목록을, 다시 목록의 해시로 내려받은 `.deb`를 확인한다. 즉 APT가 모든 `.deb` 안의 개별 서명을 검사한다고 이해하면 안 된다. 이 연결은 신뢰한 저장소가 배포한 내용인지 확인하며, 패키지 코드가 무해하다는 심사까지 대신하지 않는다.
+
 **패키지 트랜잭션**은 설치·제거·갱신할 변경들의 한 묶음이다. 의존성 조건을 먼저 풀어 전체 변경 계획을 만드는 데 의미가 있다. 그러나 데이터베이스의 완전한 원자적 트랜잭션처럼 전원 장애와 설치 스크립트의 모든 부작용이 항상 되돌려지는 것은 아니다. 변경 기록이 있다고 전체 시스템의 과거 상태가 보존된 것도 아니다.
 
 ## 버전 번호보다 유지 관리 정책을 읽는다
@@ -30,4 +32,4 @@
 
 **롤백**은 변경 전 상태로 되돌리는 작업이다. 패키지 버전을 낮추는 것과 프로그램이 이미 바꾼 데이터 형식을 되돌리는 일은 별개다. **재현 가능한 빌드**는 같은 소스·환경 조건에서 동일한 산출물을 얻어 빌드 결과를 비교할 수 있게 하는 성질이다. 이는 공급 과정의 검증을 돕지만 실행 중인 서버의 설정과 데이터까지 저절로 재현해 주지는 않는다.
 
-근거: [Rocky Software Management](https://docs.rockylinux.org/books/admin_guide/13-softwares/), [DNF 명령 매뉴얼](https://dnf.readthedocs.io/en/latest/command_ref.html), [RPM 매뉴얼](https://rpm.org/docs/), [Debian 패키지 관리](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html), [Red Hat Backporting](https://access.redhat.com/security/updates/backporting), [Reproducible Builds](https://reproducible-builds.org/docs/definition/).
+근거: [APT 저장소 인증](https://manpages.debian.org/stable/apt/apt-secure.8.en.html), [Rocky Software Management](https://docs.rockylinux.org/books/admin_guide/13-softwares/), [DNF 명령 매뉴얼](https://dnf.readthedocs.io/en/latest/command_ref.html), [RPM 매뉴얼](https://rpm.org/docs/), [Debian 패키지 관리](https://www.debian.org/doc/manuals/debian-reference/ch02.en.html), [Red Hat Backporting](https://access.redhat.com/security/updates/backporting), [Reproducible Builds](https://reproducible-builds.org/docs/definition/).

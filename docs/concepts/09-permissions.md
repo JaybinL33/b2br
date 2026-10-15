@@ -14,6 +14,10 @@
 
 전통적인 Unix **파일 모드**는 소유자·그룹·기타에 대해 읽기·쓰기·실행 권한을 표현한다. 일반 파일의 읽기는 내용을 읽는 것, 쓰기는 내용을 바꾸는 것, 실행은 프로그램으로 실행할 수 있는 조건과 연결된다. 디렉터리의 실행 비트는 그 경로를 통과하거나 이름을 통해 항목에 접근하는 권리다. 따라서 최종 파일의 읽기 권한이 있어도 부모 디렉터리를 통과하지 못하면 읽을 수 없다.
 
+디렉터리의 **읽기(r)**는 그 안의 이름 목록을 읽는 권한이고, **쓰기(w)**는 항목을 만들거나 없애는 권한이다. 실제 항목 생성·삭제에는 보통 그 디렉터리의 검색 권한 **실행(x)**도 필요하다. 이름 목록을 볼 수 없어도 이름을 이미 알고 검색 권한이 있으면 해당 파일에 접근할 수 있다. 반대로 이름 목록이 보여도 검색 권한이 없으면 각 파일의 내용을 열지 못할 수 있다.
+
+예를 들어 자신이 쓰기·검색할 수 있는 디렉터리에 읽기 전용 파일이 있다고 하자. 파일 내용은 수정할 수 없어도 그 이름은 삭제할 수 있다. 삭제는 파일의 바이트 수정이 아니라 부모 디렉터리의 연결 변경이기 때문이다. sticky bit·ACL·SELinux 같은 추가 조건이 있으면 결과가 다시 제한된다. 파일을 보호할 때 파일 모드와 부모 디렉터리 권한을 함께 봐야 하는 이유다.
+
 숫자 표기 755는 소유자가 읽기·쓰기·실행, 그룹과 기타는 읽기·실행을 가진다는 뜻이다. 권한을 바꾸는 **chmod**와 소유자를 바꾸는 **chown**은 다른 속성을 바꾼다. monitoring 파일을 root 소유 755로 두면 일반 사용자가 읽고 실행할 수 있지만 그 코드를 수정할 수는 없다. 다만 코드 안에서 읽는 sudo 로그까지 일반 사용자에게 자동 허용되는 것은 아니다.
 
 **umask**는 새 파일·디렉터리를 만들 때 요청한 권한에서 어떤 권한을 제외할지 정한다. 이미 존재하는 파일의 모드를 일괄 변경하지 않는다. **ACL**은 소유자·한 그룹·기타라는 기본 구분을 넘어 특정 사용자나 그룹의 권한을 추가로 표현한다. 둘 다 접근 설정과 관련되지만 하나는 생성 시 기본 제한, 다른 하나는 대상 파일의 확장 접근 규칙이다.
@@ -32,4 +36,4 @@
 
 sudo의 **secure_path**는 sudo 실행 환경에서 명령 검색 경로를 제한한다. 절대 경로로 지정한 모든 명령의 허용 목록은 아니다. **TTY 요구**는 대화형 터미널이 있는 호출을 요구하는 조건이고, **I/O 로깅**은 명령의 입력·출력을 기록하는 기능이다. 신원 확인, 명령 허용, 환경 제한, 기록은 각각 다른 단계이므로 한 설정으로 나머지를 대신할 수 없다.
 
-근거: [Rocky User Management](https://docs.rockylinux.org/books/admin_guide/06-users/), [Rocky File System](https://docs.rockylinux.org/books/admin_guide/07-file-systems/), [sudoers 공식 매뉴얼](https://www.sudo.ws/docs/man/sudoers.man/), [Linux capabilities 매뉴얼](https://man7.org/linux/man-pages/man7/capabilities.7.html). 비밀번호와 로그인 처리의 연결은 [PAM](10-authentication.md)에서 계속된다.
+근거: [경로 탐색과 권한](https://man7.org/linux/man-pages/man7/path_resolution.7.html), [unlink의 삭제 조건](https://man7.org/linux/man-pages/man2/unlink.2.html), [Rocky User Management](https://docs.rockylinux.org/books/admin_guide/06-users/), [Rocky File System](https://docs.rockylinux.org/books/admin_guide/07-file-systems/), [sudoers 공식 매뉴얼](https://www.sudo.ws/docs/man/sudoers.man/), [Linux capabilities 매뉴얼](https://man7.org/linux/man-pages/man7/capabilities.7.html). 비밀번호와 로그인 처리의 연결은 [PAM](10-authentication.md)에서 계속된다.
