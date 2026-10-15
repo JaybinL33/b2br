@@ -107,7 +107,7 @@ sudo ls -ld /var/log/sudo
 sudo sudoreplay -d /var/log/sudo -l
 ```
 
-**필수 판단:** 문법 검사 통과, 인증 3회 제한·사용자 정의 실패 문구·TTY 요구·secure_path·입출력 기록을 설명한다. secure_path는 검색 경로이며 명령 허용 목록이 아니다. 현재 권한은 `%wheel` 규칙에서 오며 `sudo`라는 그룹 이름만으로 허용되지 않는다. 새 계정의 실제 허용은 `sudo -l -U defenseuser`로 확인할 수 있다. 평가자가 새 계정의 관리자 실행도 요구하고 현재 정책상 필요할 때만 `sudo usermod -aG wheel defenseuser`로 **그 일회성 계정**에 추가하고 새 로그인으로 확인한다. 원복은 위 일회성 계정 정리에 포함한다.
+**필수 판단:** 문법 검사 통과, 인증 3회 제한·사용자 정의 실패 문구·TTY 요구·secure_path·입출력 기록을 설명한다. secure_path는 검색 경로이며 명령 허용 목록이 아니다. 기존 실행 기록은 `%wheel` 규칙에 따른 것이다. 과제용 권장안은 기존 Defaults를 유지한 채 `sudo visudo -f /etc/sudoers.d/90-b2br`에서 `%sudo ALL=(ALL:ALL) ALL`을 추가하고 `sudo visudo -c`로 검사하는 것이다. 이는 아직 VM 적용·검증 전이다. 새 계정은 wheel에 넣지 않고 sudo 그룹 가입 후 `su - defenseuser`로 새 로그인해 `id`, `sudo -l`, `sudo whoami`(기대값 root)를 확인하고 `exit`로 돌아온다. 새 사용자 실행의 로그도 확인한다. [원문·평가 해석과 절차](targets.md#sudo-그룹의-권한-연결과-평가-해석). 실제 정책을 바꾸면 검증·정리 후 최종 디스크 백업·SHA-1·제출 signature를 다시 맞춘다.
 
 **로그 시연 — 게스트:** `sudo cat`을 실행해 비밀 없는 시험 문장을 입력하고 Ctrl+D로 끝낸다. 다시 `sudo sudoreplay -d /var/log/sudo -l`에서 그 명령의 ID를 찾는다. `sudo sudoreplay -d /var/log/sudo ID`로 출력, `sudo sudoreplay -d /var/log/sudo -f stdin,ttyin ID`로 입력을 대조한다. 조회 자체도 로그를 늘릴 수 있다. 다른 세션을 무차별 재생하거나 로그를 원복 명목으로 삭제하지 않는다. 세부 확인은 [디펜스 sudo](defense.md#6-sudo-정책과-로그)에 있다.
 

@@ -237,7 +237,7 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 ## 4. sudo 정책과 감사 로그
 
-**반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 9쪽과 [RHEL 10 Managing sudo access](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/security_hardening/managing-sudo-access) 8.1 `User authorizations in sudoers`, 8.2 `Granting sudo access to a user`로 권한 위임을 이해한다. 먼저 VM의 `man sudoers`에서 `User specification`, `Defaults`와 include 지시를 읽는다. [공식 sudoers 매뉴얼 원본](https://github.com/sudo-project/sudo/blob/main/docs/sudoers.man.in)에서도 같은 제목을 찾을 수 있다. 설정 시에는 `passwd_tries`, `badpass_message`, `requiretty`, `secure_path`, `log_input`, `log_output`, `iolog_dir`를 찾고, [공식 visudo 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/visudo.man.in)과 VM의 `man visudo`에서 `DESCRIPTION`, `-f`, `-c`, `-P`를 읽는다. visudo는 동시 편집을 잠그고 저장 전 문법을 검사한다. 별도 파일 편집의 문법 검사와 전체 파일의 소유권·모드 검사를 구분한다. 공식 매뉴얼에서 `-P`의 기본 모드 강제는 파일 경로를 지정하지 않을 때 기본 활성이다. 이번 기본 절차는 `visudo -P -f`로 명시해 편집 시 기본 sudoers 모드도 맞춘다. 같은 도구에서 편집과 모드 처리를 함께 하여 빠뜨릴 단계를 줄이려는 선택이다. 파일을 지정하지 않는 `visudo -c`는 포함 파일의 문법과 소유권·모드를 함께 검사한다. `Including other files from within sudoers`의 파일명 규칙과 `I/O LOGGING`도 해당 부분만 읽는다.
+**반드시 읽을 범위 — 이 구간에 들어갈 때:** 원문 9쪽과 [RHEL 10 Managing sudo access](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/security_hardening/managing-sudo-access) 8.1 `User authorizations in sudoers`, 8.2 `Granting sudo access to a user`로 권한 위임을 이해한다. 먼저 VM의 `man sudoers`에서 `User specification`, `Defaults`와 include 지시를 읽는다. [공식 sudoers 매뉴얼 원본](https://github.com/sudo-project/sudo/blob/main/docs/sudoers.man.in)에서도 같은 제목을 찾을 수 있다. 설정 시에는 `passwd_tries`, `badpass_message`, `requiretty`, `secure_path`, `log_input`, `log_output`, `iolog_dir`를 찾고, [공식 visudo 매뉴얼](https://github.com/sudo-project/sudo/blob/main/docs/visudo.man.in)과 VM의 `man visudo`에서 `DESCRIPTION`, `-f`, `-c`, `-P`를 읽는다. visudo는 동시 편집을 잠그고 저장 전 문법을 검사한다. 별도 파일 편집의 문법 검사와 전체 파일의 소유권·모드 검사를 구분한다. 공식 매뉴얼에서 `-P`의 기본 모드 강제는 파일 경로를 지정하지 않을 때 기본 활성이다. 기존 파일에 sudo 그룹 규칙을 추가하는 절차는 `visudo -f`로 편집하고 전체 검사를 한다. 신규 구축용 스피드런은 `visudo -P -f`로 새 파일의 기본 sudoers 모드까지 맞춘다. 기존 파일 편집과 신규 파일 생성의 목적을 구분한다. 파일을 지정하지 않는 `visudo -c`는 포함 파일의 문법과 소유권·모드를 함께 검사한다. `Including other files from within sudoers`의 파일명 규칙과 `I/O LOGGING`도 해당 부분만 읽는다.
 
 **설명할 수 있어야 할 것:** 실행 사용자·대상 사용자·허용 명령, TTY, 명령 검색 경로, 명령 기록과 입출력 기록의 차이다. 이들은 원문이 직접 요구하는 제한과 로그를 검증하는 데 필요하다. 문법 검사 성공과 실패 시도·메시지·로그 동작 성공은 따로 확인한다.
 
@@ -247,29 +247,74 @@ authselect가 관리하는 PAM 파일은 곧바로 편집하기보다 현재 프
 
 ### 현재 정책부터 읽기
 
-전체 목표를 세 묶음으로 나눈다. **권한 허용**은 누가 어느 호스트에서 어떤 사용자 권한으로 어떤 명령을 실행할 수 있는지, **실행 조건**은 실패 3회·오류 메시지·TTY·제한된 경로, **기록**은 입력·출력을 `/var/log/sudo/`에 남기는 것이다. 첫 묶음의 기존 정책을 읽은 뒤 실행 조건과 기록을 구성한다.
+전체 목표를 세 묶음으로 나눈다. **권한 허용**은 누가 어느 호스트에서 어떤 사용자 권한으로 어떤 명령을 실행할 수 있는지, **실행 조건**은 실패 3회·오류 메시지·TTY·제한된 경로, **기록**은 입력·출력을 `/var/log/sudo/`에 남기는 것이다. 기존 정책을 읽은 뒤 sudo 그룹의 실제 허용 규칙, 실행 조건과 기록을 함께 구성한다.
 
 `sudo -l`로 적용되는 허용 명령과 Defaults를 보고, sudoers 본체와 포함 파일에서 해당 규칙의 근거를 찾는다. 그룹 가입 자체가 권한을 주는 것은 아니며 적용되는 sudoers 규칙이 결정한다. `%wheel`처럼 그룹을 가리키는 활성 규칙에서 **누가 → 어느 호스트 → 어떤 사용자로 → 어떤 명령**을 읽는다. 주석과 활성 규칙, 암호를 요구하는 규칙과 NOPASSWD 규칙을 구분한다.
 
-본체의 `@include`·`@includedir` 또는 이전 표기 `#include`·`#includedir`도 찾는다. 후자의 `#`를 일반 주석으로 넘기지 않는다. 디렉터리에 파일이 있다는 것과 정책으로 읽힌다는 것은 다르므로 include 지시와 목록을 연결한다. `Defaults`는 실행 조건·동작 옵션을 정하며 허용 명령 규칙과 구분한다. `%wheel ALL=(ALL) ALL`은 wheel 구성원 → 모든 호스트 → 모든 대상 사용자 → 모든 명령이라는 네 부분으로 읽는다. 기존 `secure_path`는 sudo가 사용하는 PATH이며 절대 경로로 지정한 명령을 막는 허용 목록이 아니다. 이 실습의 경로 선택은 `/sbin:/bin:/usr/sbin:/usr/bin`이다. 기본 시스템 관리·실행 파일 디렉터리로 검색 범위를 한정한다. 필요한 권한 규칙과 이 경로가 이미 있으면 중복 추가하지 않는다.
+본체의 `@include`·`@includedir` 또는 이전 표기 `#include`·`#includedir`도 찾는다. 후자의 `#`를 일반 주석으로 넘기지 않는다. 디렉터리에 파일이 있다는 것과 정책으로 읽힌다는 것은 다르므로 include 지시와 목록을 연결한다. `Defaults`는 실행 조건·동작 옵션을 정하며 허용 명령 규칙과 구분한다. `%wheel ALL=(ALL) ALL`은 wheel 구성원 → 모든 호스트 → 모든 대상 사용자 → 모든 명령이라는 네 부분으로 읽는다. 기존 `secure_path`는 sudo가 사용하는 PATH이며 절대 경로로 지정한 명령을 막는 허용 목록이 아니다. 이 실습의 경로 선택은 `/sbin:/bin:/usr/sbin:/usr/bin`이다. 기본 시스템 관리·실행 파일 디렉터리로 검색 범위를 한정한다. sudo 그룹의 허용 규칙과 이 경로가 이미 있으면 중복 추가하지 않는다. wheel 허용만 있는 것은 sudo 그룹 허용을 갖춘 상태가 아니다.
 
 **sudo 필수 목표:** 인증 실패 시 시도 3회 제한, 직접 정한 오류 메시지, 작업의 입력·출력 모두 `/var/log/sudo/` 아래 기록, TTY 모드 활성화, sudo에서 사용 가능한 경로 제한(`secure_path` 관련 개념). 오류 문구는 아래 간결한 문장을 선택했고, 경로는 위 네 디렉터리를 기준으로 기존 설정과 대조한다.
 
 `sudo visudo -c`로 문법, `sudo -l`로 적용 정책을 살핀다. 별도로 실패 시도 제한·메시지·TTY 요구를 확인하고 직접 수행한 sudo 작업의 입출력 로그와 대조한다. 문법 통과만으로 동작 검증을 대신하지 않는다.
 
+### sudo 그룹의 권한 연결과 평가 해석
+
+**원문 명시:** 과제 v5.2 인쇄 p.8은 로그인 계정의 user42·sudo 가입과 엄격한 sudo 설정을 요구한다. p.9는 “To set up a strong configuration for your sudo group”이라고 하고 인증 제한·오류 문구·입출력 기록·TTY·경로 제한을 나열한다. `%sudo ALL=(ALL:ALL) ALL`이라는 정확한 줄을 지정한 것은 아니다.
+
+**평가 흐름에 따른 해석과 권장 구성:** 첨부 평가지 p.3에서 새 사용자를 sudo 그룹에 추가하고 p.4에서 sudo 실행과 로그를 확인한다. 따라서 sudo 가입을 형식으로만 처리하고 권한은 wheel로 우회하기보다, **sudo 그룹에 실제 sudoers 허용 규칙을 연결해 그 그룹으로 실행을 검증**하는 구성이 과제 의도에 맞는다. 이는 원문 인용과 구분한 구현 권장이다.
+
+**기록과 제안의 경계:** 기존 기록은 jungblee의 wheel·user42·sudo 가입, `%wheel ALL=(ALL) ALL`을 통한 관리자 실행이다. 이를 과거에 `%sudo`까지 적용·검증한 기록으로 바꾸지 않는다. 아래 `%sudo` 추가는 아직 VM에서 적용하거나 검증하지 않은 권장 변경이다. 기존 관리자 세션과 wheel 규칙은 유지하고, 같은 sudo 허용 규칙이 이미 있으면 중복 추가하지 않는다.
+
+```bash
+sudo visudo -f /etc/sudoers.d/90-b2br
+```
+
+기존 Defaults를 지우지 않고 다음 규칙을 추가한다.
+
+```text
+%sudo ALL=(ALL:ALL) ALL
+```
+
+sudo 그룹 구성원이 모든 호스트에서 모든 대상 사용자·그룹으로 모든 명령을 실행하도록 허용한다. NOPASSWD를 붙이지 않은 넓은 관리자 권한이므로 신뢰하는 관리자만 이 그룹에 넣는다.
+
+```bash
+sudo visudo -c
+```
+
+오류가 없으면 앞서 만든 일회성 새 사용자를 sudo 그룹에 추가한다. wheel에는 넣지 않는다. 여기서 “sudo 그룹만”은 관리자 권한을 주는 그룹 중 sudo만이라는 뜻이며, 기본 그룹이나 evaluating 소속은 유지한다. 기존 계정의 wheel을 제거해 시험하지 않는다.
+
+```bash
+sudo usermod -aG sudo defenseuser
+su - defenseuser
+```
+
+새 사용자의 암호로 새 로그인 셸을 연 뒤 아래를 실행한다. `id`에 sudo가 있고 wheel은 없어야 하며 `sudo whoami`는 그 새 사용자의 암호로 인증한 뒤 root를 출력해야 한다. `sudo -l`에서 직접 사용자 규칙 등 다른 허용 경로도 없는지 함께 읽는다.
+
+```bash
+id
+sudo -l
+sudo whoami
+exit
+```
+
+관리자 셸에서 sudo 로그에 새 사용자의 실행 기록이 생겼는지도 확인한다. 문법 검사 성공만으로 권한·인증·로그 검증을 대신하지 않는다. 이 계정은 뒤의 SSH·monitoring 시연까지 유지한다.
+
+**제출 기준 갱신:** 평가 전에 실제 정책을 변경했다면 검증과 일회성 계정 정리까지 마친 뒤 VM을 정상 종료하고, 변경 후 최종 디스크의 백업·SHA-1·제출 `signature.txt`를 같은 상태로 다시 맞춰야 한다. 이번 문서 변경은 디스크나 제출 파일을 갱신한 것이 아니다. [디스크 보존 절차](#평가-사이의-디스크-보존과-복원).
+
 ### 별도 sudo 파일 작성 안내
 
-`sudo visudo -P -f /etc/sudoers.d/90-b2br`로 아래 옵션을 작성한다. `-P`는 편집 모드에서 파일 모드를 기본 sudoers 모드로 설정한다. 파일 내용은 [치트시트](cheatsheet.md#8-sudo-실행-조건과-입출력-로그-설정)에 둔다. `includedir`는 이름에 점이 들어간 파일을 건너뛰므로 `.conf` 확장자를 붙이지 않는다. 근거는 위 공식 sudoers·visudo 매뉴얼의 해당 옵션과 include 설명이다.
+`sudo visudo -f /etc/sudoers.d/90-b2br`로 기존 Defaults를 유지하면서 sudo 그룹의 허용 규칙과 아래 옵션을 작성한다. 파일 내용은 [치트시트](cheatsheet.md#8-sudo-실행-조건과-입출력-로그-설정)에 둔다. `includedir`는 이름에 점이 들어간 파일을 건너뛰므로 `.conf` 확장자를 붙이지 않는다. 근거는 위 공식 sudoers·visudo 매뉴얼의 해당 옵션과 include 설명이다.
 
 | 설정 | 선택 이유 |
 |---|---|
+| `%sudo ALL=(ALL:ALL) ALL` | sudo 그룹 가입을 실제 관리자 실행 허용과 연결한다. |
 | `passwd_tries=3` | 비밀번호 인증 실패 시 최대 3회 시도를 명시한다. |
 | `badpass_message` | `Authentication failed. Please try again.`을 선택했다. 과제 고정 문구가 아닌 우리 선택이다. |
 | `requiretty` | 호출 사용자의 TTY를 요구한다. 명령을 별도 가상 터미널에서 실행하는 `use_pty`와 다르다. |
 | `log_input, log_output` | 입력과 출력을 모두 기록한다. |
 | `iolog_dir="/var/log/sudo"` | 과제의 입출력 로그 경로다. 필요한 로그 디렉터리는 sudo가 생성하므로 별도 mkdir 단계는 두지 않는다. |
 
-기본 재실습 흐름은 `sudo visudo -P -f /etc/sudoers.d/90-b2br` → 저장 → `sudo visudo -c` → `sudo -l`이다. 본체와 별도 파일 모두 `parsed OK`이고 오류가 없어야 전체 검사 통과다. 적용 목록 확인과 실패 횟수·TTY 거절·로그 동작 검증은 구분한다. 입출력 로그는 공개 Git에 올리지 않는다. 실제 검사 결과와 복구 이력은 [학습 기록](learning-log.md)에 둔다.
+기본 재실습 흐름은 `sudo visudo -f /etc/sudoers.d/90-b2br` → 저장 → `sudo visudo -c` → sudo 그룹의 새 사용자로 새 로그인 → `sudo whoami`다. 본체와 별도 파일 모두 `parsed OK`이고 오류가 없어야 전체 검사 통과다. 적용 목록 확인과 실패 횟수·TTY 거절·로그 동작 검증은 구분한다. 입출력 로그는 공개 Git에 올리지 않는다. 실제 검사 결과와 복구 이력은 [학습 기록](learning-log.md)에 둔다.
 
 ### 로그 생성과 출력 재생 확인
 

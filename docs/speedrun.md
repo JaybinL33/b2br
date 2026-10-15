@@ -79,7 +79,14 @@ Defaults badpass_message="Authentication failed. Please try again."
 Defaults requiretty
 Defaults log_input, log_output
 Defaults iolog_dir="/var/log/sudo"
+%sudo ALL=(ALL:ALL) ALL
 ```
+
+```bash
+sudo visudo -c
+```
+
+[sudo 그룹 새 로그인 검증·제출 기준 갱신](targets.md#sudo-그룹의-권한-연결과-평가-해석) · 문서 권장안, VM 적용·검증 전
 
 ## 5. Guest · jungblee · SSH / SELinux / firewalld
 

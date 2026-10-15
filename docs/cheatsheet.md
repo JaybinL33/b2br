@@ -166,13 +166,13 @@ sudo ls /etc/sudoers.d
 
 ## 8. sudo 실행 조건과 입출력 로그 설정
 
-앞 조회에서 wheel의 허용 규칙, secure_path, `/etc/sudoers.d` include를 확인한다. 필요한 권한·경로가 이미 있으면 중복 추가하지 않는다. 구성이 다르면 [정책 설명](targets.md#현재-정책부터-읽기)을 바탕으로 먼저 확인한다. 점 없는 파일명으로 편집하며 `-P`로 기본 sudoers 모드도 맞춘다.
+기존 wheel·secure_path·include를 확인하고 **sudo 그룹에도 실제 허용 규칙을 연결**한다. 아래는 아직 VM 적용·검증되지 않은 권장 변경이다. 기존 Defaults와 관리자 세션은 유지하며 같은 규칙이 이미 있으면 중복 추가하지 않는다. [원문과 평가 해석·검증 절차](targets.md#sudo-그룹의-권한-연결과-평가-해석)를 먼저 읽는다. 점 없는 파일명을 사용한다.
 
 ```bash
-sudo visudo -P -f /etc/sudoers.d/90-b2br
+sudo visudo -f /etc/sudoers.d/90-b2br
 ```
 
-다음 다섯 줄을 적는다.
+아래는 신규 구성의 내용이다. 기존 파일에서는 Defaults를 보존하고 빠진 허용 규칙을 추가한다.
 
 ```text
 Defaults passwd_tries=3
@@ -180,6 +180,7 @@ Defaults badpass_message="Authentication failed. Please try again."
 Defaults requiretty
 Defaults log_input, log_output
 Defaults iolog_dir="/var/log/sudo"
+%sudo ALL=(ALL:ALL) ALL
 ```
 
 저장 뒤 **현재 터미널을 유지**하고 전체 문법·파일 속성과 적용 목록을 확인한다.
@@ -189,7 +190,7 @@ sudo visudo -c
 sudo -l
 ```
 
-본체와 별도 파일 모두 `parsed OK`이고 오류가 없어야 한다. 적용 목록에서 위 설정을 대조한다. 오류가 있으면 다음 단계로 넘어가지 않는다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
+본체와 별도 파일 모두 `parsed OK`이고 오류가 없어야 한다. 적용 목록에서 위 설정을 대조한다. 기존 wheel 계정의 성공만으로 끝내지 않고, [sudo 소속·wheel 미소속 새 사용자의 새 로그인 검사](targets.md#sudo-그룹의-권한-연결과-평가-해석)에서 `sudo whoami`와 로그를 확인한다. 실제 변경 후에는 최종 디스크 백업·SHA-1·제출 signature도 갱신한다. 오류가 있으면 다음 단계로 넘어가지 않는다. 로그 디렉터리는 sudo가 필요할 때 생성한다. 입출력 로그는 공개 Git에 올리지 않는다. [설정 근거](targets.md#별도-sudo-파일-작성-안내).
 
 ## 9. 로그 생성과 출력 재생
 
