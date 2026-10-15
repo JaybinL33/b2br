@@ -30,7 +30,7 @@ ps -eo pid,ppid,user,stat,etime,args
 
 ## cron의 시간과 실행 환경
 
-cron은 로그인 셸을 그대로 복제하지 않는다. 실행 사용자, PATH, 작업 디렉터리, 환경변수, TTY 존재를 따로 생각해야 한다. 이 구성은 root 사용자 crontab에서 절대 경로의 `/bin/bash /usr/local/sbin/monitoring.sh`를 실행하며 PATH도 명시한다. 사용자 crontab에는 사용자명 열이 없고 `/etc/crontab` 형식과 섞으면 명령 해석이 달라진다.
+cron은 로그인 셸을 그대로 복제하지 않는다. 실행 사용자, PATH, 작업 디렉터리, 환경변수, TTY 존재를 따로 생각해야 한다. 이 구성은 root 사용자 crontab에서 절대 경로의 `/bin/bash /usr/local/sbin/monitoring.sh`를 실행하며 PATH 명시 줄은 제거한 상태다. 내부의 경로 없는 명령은 cron이 제공하는 실행 환경의 PATH로 검색한다. 그 실제 값은 출력으로 확인하지 않았고 sudo secure_path와 별개다. 사용자 crontab에는 사용자명 열이 없고 `/etc/crontab` 형식과 섞으면 명령 해석이 달라진다.
 
 crond는 crontab 변경을 감지하므로 `crontab -e` 저장마다 재시작하지 않는다. `*/10`은 시작 후 10분 대기가 아니라 매시 00·10·20·30·40·50분에 해당한다. 시간대·시계 변경은 예약 해석에 영향을 준다. `@reboot`는 일반 주기 항목과 다르며 이 Cronie 구성의 잠금 처리 때문에 단순 서비스 restart를 부팅 시험으로 대신하지 않는다. [Cronie crontab(5)](https://github.com/cronie-crond/cronie/blob/master/man/crontab.5)와 [기존 부팅 예약 설명](../targets.md#root-crontab의-읽기-범위)을 연결한다.
 
@@ -51,7 +51,7 @@ timedatectl
 
 wall 수신은 실행과 별도 단계다. 부팅 순간 로그인한 터미널이 없으면 실행됐어도 사람이 화면에서 못 볼 수 있다. 수동 sudo I/O용 PTY 때문에 같은 화면에 중복이 보이는 경우도 있다. root cron의 실제 출력·여러 터미널 수신과 원자료 12항목을 대조한다. 수동 실행은 **실제로 모든 대상 터미널에 방송**하므로 조용한 조회가 아니다. 영향이 허용될 때만 실행한다.
 
-중단은 monitoring의 두 예약 줄을 주석 처리하고 다른 root 예약·PATH를 보존한다. 복구는 같은 줄을 되살리고 다음 예정 시각의 실행과 수신을 확인한다. 스크립트를 지우거나 crond 전체를 중단하면 다른 작업까지 영향을 받는다. systemd timer는 의존성·누락 실행 처리 등이 필요할 때 알아볼 대안이지만 현재 cron 설계를 바꾸는 추가 과제가 아니다.
+중단은 monitoring의 두 예약 줄을 주석 처리하고 다른 root 예약을 보존하며 PATH 명시 줄은 추가하지 않는다. 복구는 같은 줄을 되살리고 다음 예정 시각의 실행과 수신을 확인한다. 스크립트를 지우거나 crond 전체를 중단하면 다른 작업까지 영향을 받는다. systemd timer는 의존성·누락 실행 처리 등이 필요할 때 알아볼 대안이지만 현재 cron 설계를 바꾸는 추가 과제가 아니다.
 
 ## 로그를 질문에 맞게 고른다
 

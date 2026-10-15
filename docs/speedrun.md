@@ -122,7 +122,7 @@ vi monitoring.sh
 
 `monitoring.sh`
 
-새 권장 코드는 used/total·사용률에 available을 추가해 원문 예시와 가용량 문구를 함께 반영한다. 실제 설치·실행 결과는 아직 받지 않았으며, 마지막으로 확인한 설치본에는 available 표시가 없다.
+현재 코드는 used/total·사용률에 available을 추가해 원문 예시와 가용량 문구를 함께 반영한다. 2026-10-15 KST 23:48 사용자 실행 결과에서 가용량 표시와 수동 방송 성공을 확인했다. 수정 후 설치본 전체 소스·bash -n 결과·해시는 첨부되지 않았다.
 
 ```bash
 #!/bin/bash
@@ -172,8 +172,9 @@ sudo crontab -e
 
 ## 7. Guest · root crontab
 
+현재 root crontab은 PATH 명시 줄 없이 `*/10`과 `@reboot` 두 예약을 사용하는 구성이다(사용자 적용 확인). cron이 제공하는 실행 환경의 PATH를 사용하며 `/bin/bash`와 스크립트는 절대경로로 호출한다. 스크립트 내부의 경로 없는 명령은 cron 환경의 PATH로 검색한다. 실제 cron PATH 값은 출력으로 확인하지 않았으므로 단정하지 않는다. sudo의 `secure_path`와는 별개이며 그 설정은 변경하지 않는다.
+
 ```cron
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 */10 * * * * /bin/bash /usr/local/sbin/monitoring.sh
 @reboot /bin/bash /usr/local/sbin/monitoring.sh
 ```

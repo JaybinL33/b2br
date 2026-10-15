@@ -453,7 +453,7 @@ cron의 사용자·환경·경로와 wall의 수신 대상을 구분한다. 사�
 
 ### monitoring 메모리·디스크의 계산과 awk
 
-원문에 계산식이 없으므로 이 부분 구현은 두 지표 모두 **used/total × 100**을 선택한다. 이는 구현의 선택이며 원문의 명시 조건이 아니다. `free -m`과 `df -m`의 정수 출력값을 계산 입력으로 쓴다. 새 권장 버전은 메모리·디스크의 used와 total을 모두 MiB로 표시하고, `free -m` Mem 행의 `$7`(available)과 `df -m --total` total 행의 `$4`(Avail)를 각각 MiB로 덧붙인다. 원문 예시의 used/total과 본문의 가용량 요구를 함께 반영하려는 선택이다. 이 변경의 실제 설치·실행 결과는 아직 받지 않았다. 디스크 total을 GiB로 환산하지 않으며 df의 Use%를 채택하지도 않는다. 퍼센트는 메모리 소수 둘째 자리, 디스크 정수로 표시한다. 도구 자체의 MiB 표시 정밀도와 printf의 표시 반올림을 구분한다.
+원문에 계산식이 없으므로 이 부분 구현은 두 지표 모두 **used/total × 100**을 선택한다. 이는 구현의 선택이며 원문의 명시 조건이 아니다. `free -m`과 `df -m`의 정수 출력값을 계산 입력으로 쓴다. 새 권장 버전은 메모리·디스크의 used와 total을 모두 MiB로 표시하고, `free -m` Mem 행의 `$7`(available)과 `df -m --total` total 행의 `$4`(Avail)를 각각 MiB로 덧붙인다. 원문 예시의 used/total과 본문의 가용량 요구를 함께 반영하려는 선택이다. 2026-10-15 KST 23:48 사용자 수동 방송에서 가용량 추가 적용을 확인했다. 수정 후 전체 소스·bash -n 결과·해시는 첨부되지 않았다. 디스크 total을 GiB로 환산하지 않으며 df의 Use%를 채택하지도 않는다. 퍼센트는 메모리 소수 둘째 자리, 디스크 정수로 표시한다. 도구 자체의 MiB 표시 정밀도와 printf의 표시 반올림을 구분한다.
 
 [GNU df 매뉴얼](https://www.gnu.org/software/coreutils/manual/html_node/df-invocation.html)의 `-m`·`--total`·`-x`와 `--output` 필드만 읽는다. 웹 페이지 접근이 안 되면 [공식 매뉴얼 원본](https://github.com/coreutils/coreutils/blob/master/doc/coreutils.texi)의 `df invocation`을 찾는다. 매뉴얼은 `pcent`를 used/size로 요약하지만, [실제 src/df.c](https://github.com/coreutils/coreutils/blob/master/src/df.c)의 `PCENT_FIELD` 계산은 일반적인 비음수 값에서 `used / (used + available) × 100`을 올림한다. reserved 공간 등의 영향으로 이 분모는 전체 size와 다를 수 있다. 소스에서는 이 계산 블록만 대조하며 전체 C 구현을 공부할 필요는 없다. 설치된 버전의 매뉴얼·출력도 함께 확인한다.
 
@@ -543,7 +543,7 @@ sudoreplay의 `-l` 목록에서 한 줄이 한 세션인 형식을 확인한 환
 
 다섯 필드는 분·시·일·월·요일 순서다. `*/10 * * * *`는 매시 00·10·20·30·40·50분이며 등록 시점부터 10분을 재는 방식이 아니다. 예약에 적용되는 시간대를 확인한다. `@reboot`는 시작 시 한 번 실행하는 별도 항목이며 로그인할 때마다 실행되는 것은 아니다. 부팅 때 터미널 로그인·네트워크 준비와 실행 시점은 별도로 확인해야 한다.
 
-PATH는 cron의 제한된 환경에서도 스크립트 안의 도구를 찾도록 지정하며 Bash와 설치본은 절대 경로로 호출한다. 기존 PATH와 다른 예약의 영향을 함께 읽고 기존 내용을 보존한다. Cronie는 crontab 변경을 감지하므로 편집 후 데몬 재시작이 필요 없다. `crontab -l`로 등록 내용을 확인한 뒤 실제 예정 시각에 두 터미널 각각의 단일 수신·오류 부재를 관찰한다. 등록 확인, 주기 실행, 부팅 실행, 스크립트 수정 없는 중단은 각각 별도 검증이다.
+현재 root crontab은 PATH 명시 줄 없이 `*/10`과 `@reboot` 두 예약을 사용하는 구성이다(사용자 적용 확인). cron이 제공하는 실행 환경의 PATH를 사용하며 `/bin/bash`와 스크립트는 절대경로로 호출한다. 스크립트 내부의 경로 없는 명령은 cron 환경의 PATH로 검색한다. 실제 cron PATH 값은 출력으로 확인하지 않았으므로 단정하지 않는다. sudo의 `secure_path`와는 별개이며 그 설정은 변경하지 않는다. 다른 예약은 보존한다. Cronie는 crontab 변경을 감지하므로 편집 후 데몬 재시작이 필요 없다. `crontab -l`로 등록 내용을 확인한 뒤 실제 예정 시각에 두 터미널 각각의 단일 수신·오류 부재를 관찰한다. 등록 확인, 주기 실행, 부팅 실행, 스크립트 수정 없는 중단은 각각 별도 검증이다.
 
 부팅 실행의 세부 근거는 [Cronie cron.c의 run_reboot_jobs](https://github.com/cronie-crond/cronie/blob/master/src/cron.c)에서 필요한 부분만 읽는다. REBOOT_LOCK이 있으면 @reboot 작업을 건너뛰므로 일반적인 crond 서비스 재시작을 부팅 테스트로 대신하지 않는다. 부팅 시 로그인 사용자가 없으면 wall을 읽을 터미널이 없을 수 있다. 이때 실행 로그와 실제 터미널 수신은 별개의 증거로 다룬다.
 

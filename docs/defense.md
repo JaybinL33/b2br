@@ -165,7 +165,9 @@ ssh -p 4242 defenseuser@127.42.42.42
 
 ### 진행 9 — monitoring 설명 → 매분 → 중단·재부팅 → 복구
 
-**말하기:** “관리자가 매번 여러 조회 명령을 입력하지 않아도 자원 사용량과 접속 상태를 한 보고서로 볼 수 있게 했습니다. 스크립트는 실행할 때마다 값을 모아 변수에 담고, 마지막 printf 그룹에서 보고서를 만들어 wall로 로그인한 터미널에 보냅니다. memory·disk에는 MiB의 사용량/전체와 비율을 담습니다. 새 권장 변경은 available을 함께 표시하며 아직 VM 적용 결과를 받지 않았습니다. `export LC_ALL=C`는 출력 언어가 달라져 `Mem:`·`total` 행을 못 찾는 문제를 피하려는 설정입니다.”
+**말하기:** “관리자가 매번 여러 조회 명령을 입력하지 않아도 자원 사용량과 접속 상태를 한 보고서로 볼 수 있게 했습니다. 스크립트는 실행할 때마다 값을 모아 변수에 담고, 마지막 printf 그룹에서 보고서를 만들어 wall로 로그인한 터미널에 보냅니다. memory·disk에는 MiB의 사용량/전체와 비율을 담습니다. available도 함께 표시하며 2026-10-15 KST 23:48 수동 방송에서 적용 결과를 확인했습니다. `export LC_ALL=C`는 출력 언어가 달라져 `Mem:`·`total` 행을 못 찾는 문제를 피하려는 설정입니다.”
+
+현재 root crontab은 PATH 명시 줄 없이 `*/10`과 `@reboot` 두 예약을 사용하는 구성이다(사용자 적용 확인). cron이 제공하는 실행 환경의 PATH를 사용하며 `/bin/bash`와 스크립트는 절대경로로 호출한다. 스크립트 내부의 경로 없는 명령은 cron 환경의 PATH로 검색한다. 실제 cron PATH 값은 출력으로 확인하지 않았으므로 단정하지 않는다. sudo의 `secure_path`와는 별개이며 그 설정은 변경하지 않는다.
 
 **예약과 연결:** “스크립트는 보고서를 만들고, cron은 언제 실행할지를 맡습니다. root crontab의 `*/10`은 매시 0·10·20…분이며 등록한 때부터 10분을 세는 방식은 아닙니다. `@reboot`는 서버 시작 시 실행을 위한 별도 예약입니다. 평가에서 실행 간격을 바꾸거나 중단할 때는 보고서 코드를 고치지 않고 예약만 바꾸므로, 다시 켤 때 같은 코드를 그대로 사용할 수 있습니다.”
 
@@ -179,7 +181,7 @@ sha256sum /usr/local/sbin/monitoring.sh
 sudo /bin/bash /usr/local/sbin/monitoring.sh
 ```
 
-**요청 시 변경:** 편집은 `sudo crontab -e`, 저장 확인은 `sudo crontab -l`로 한다. PATH와 다른 예약은 유지한다.
+**요청 시 변경:** 편집은 `sudo crontab -e`, 저장 확인은 `sudo crontab -l`로 한다. 다른 예약은 유지한다.
 
 | 순서 | 바꿀 것 → 보여줄 결과 |
 |---|---|
@@ -191,7 +193,6 @@ sudo /bin/bash /usr/local/sbin/monitoring.sh
 | 복구 | 아래 원래 예약으로 복원 → 매분·중복 줄이 없는지 조회하고 다음 10분 경계의 콘솔·SSH 방송 확인. 재부팅으로 끊긴 새 사용자 SSH는 다시 접속 |
 
 ```cron
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 */10 * * * * /bin/bash /usr/local/sbin/monitoring.sh
 @reboot /bin/bash /usr/local/sbin/monitoring.sh
 ```
@@ -437,13 +438,13 @@ sha256sum /usr/local/sbin/monitoring.sh
 | 출력 | 이 구현의 원자료·해석 |
 |---|---|
 | Architecture / CPU physical / vCPU | `uname -a`; `lscpu -p`의 고유 온라인 소켓 수·온라인 CPU 행 수. 호스트 물리 CPU를 직접 센 값은 아님 |
-| Memory / Disk | `free -m`, `df -m --total`의 used/total. 사용량·전체 모두 MiB. 새 권장 코드는 available도 MiB로 추가하며 적용 결과 대기. df Use%와 산식 차이 및 tmpfs/devtmpfs 제외 설명 |
+| Memory / Disk | `free -m`, `df -m --total`의 used/total. 사용량·전체 모두 MiB. available도 MiB로 표시하며 2026-10-15 KST 23:48 수동 방송에서 확인. df Use%와 산식 차이 및 tmpfs/devtmpfs 제외 설명 |
 | CPU load / Last boot | `vmstat 1 2` 마지막 표본의 `100-id`(직전 1초, 순수 계산 시간만은 아님), `uptime -s` |
 | LVM / TCP | `lsblk` TYPE에 lvm 존재; `ss`의 ESTABLISHED TCP 소켓 행 수 |
 | User log / Network | `who`의 고유 사용자명 수; enp0s3의 IPv4·MAC. 세션 수와 사용자 수 구별 |
 | Sudo | `/var/log/sudo`에 보관된 `sudoreplay -l` 세션 수. 보존 범위가 있으며 시스템 수명 전체 명령 횟수와 같지 않을 수 있음 |
 
-**변경과 검증 순서:** 먼저 crontab 원문·스크립트 해시·소유자/권한/경로를 보관한다. `sudo crontab -e`에서 **기존 주기 줄만** `* * * * * /bin/bash /usr/local/sbin/monitoring.sh`로 바꾼다. PATH와 다른 예약은 보존하고 10분 줄을 동시에 남기지 않는다. 1분 경계를 두 번 관찰하고 콘솔·SSH 각각의 수신을 확인한다. 다른 사용자 SSH 세션의 접속/종료나 비밀 없는 sudo 명령으로 TCP·사용자·sudo 수의 변화를 원자료와 대조한다. CPU·메모리가 반드시 증가해야 한다고 가정하지 않는다.
+**변경과 검증 순서:** 먼저 crontab 원문·스크립트 해시·소유자/권한/경로를 보관한다. `sudo crontab -e`에서 **기존 주기 줄만** `* * * * * /bin/bash /usr/local/sbin/monitoring.sh`로 바꾼다. 다른 예약은 보존하고 10분 줄을 동시에 남기지 않는다. 1분 경계를 두 번 관찰하고 콘솔·SSH 각각의 수신을 확인한다. 다른 사용자 SSH 세션의 접속/종료나 비밀 없는 sudo 명령으로 TCP·사용자·sudo 수의 변화를 원자료와 대조한다. CPU·메모리가 반드시 증가해야 한다고 가정하지 않는다.
 
 중단은 같은 편집기에서 monitoring의 주기 줄과 `@reboot` 줄을 **모두 주석 처리**한다. crond 전체 중지, 스크립트 이동·수정·chmod로 우회하지 않는다. `sudo crontab -l` 확인 후 `sudo reboot`한다. 재로그인 후 같은 `stat`·`sha256sum`과 경로로 불변을 확인하고, 현재 부팅의 작업 기록과 분 경계 관찰을 함께 본다.
 
@@ -453,7 +454,7 @@ sudo journalctl -b
 
 `-b`는 이번 부팅의 로그만 선택한다. 화면에서 `/monitoring.sh`로 검색하고 `n`으로 다음 기록, `q`로 종료한다. 중단 상태에서는 해당 cron 호출이 없어야 하며 조용한 화면만으로 판단하지 않는다. 부팅 때 수신자가 없으면 방송이 안 보일 수 있고, CMD·END 기록은 호출·종료 근거이지 12개 지표의 성공이나 터미널 수신 증거는 아니다. 필요하면 [유지 관리 진단](operations/maintenance.md)을 따른다.
 
-**복구:** 원래 PATH 및 아래 두 줄을 활성화하고 중복·매분 줄이 남지 않았는지 조회한다. 다음 10분 경계의 실제 방송까지 확인한다.
+**복구:** PATH 명시 줄 없이 아래 두 줄을 활성화하고 중복·매분 줄이 남지 않았는지 조회한다. 다음 10분 경계의 실제 방송까지 확인한다.
 
 ```cron
 */10 * * * * /bin/bash /usr/local/sbin/monitoring.sh

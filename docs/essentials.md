@@ -218,21 +218,23 @@ sha256sum /usr/local/sbin/monitoring.sh
 sudo cat /usr/local/sbin/monitoring.sh
 ```
 
-**필수 판단:** root cron의 PATH와 아래 주기·부팅 예약, 전체 요구 지표·wall 방송을 확인한다. 현재 문서 코드는 export 한 번 → 모든 항목을 변수에 수집 → 마지막 printf 그룹으로 방송하는 구조다. memory·disk는 MiB의 used/total·사용률·available 표시 문자열이다. available 추가는 새 권장 변경으로 VM 적용 결과는 아직 없으며, 실패 처리를 추가한 버전은 아니다. root cron 내부에 sudo를 다시 넣지 않는다. 코드·지표 해석은 [디펜스 monitoring](defense.md#9-monitoring-코드--매분--중단-재부팅--복구), 전체 코드는 [치트시트](cheatsheet.md#34-전체-출력을-wall-한-번으로-전달)에 둔다.
+현재 root crontab은 PATH 명시 줄 없이 `*/10`과 `@reboot` 두 예약을 사용하는 구성이다(사용자 적용 확인). cron이 제공하는 실행 환경의 PATH를 사용하며 `/bin/bash`와 스크립트는 절대경로로 호출한다. 스크립트 내부의 경로 없는 명령은 cron 환경의 PATH로 검색한다. 실제 cron PATH 값은 출력으로 확인하지 않았으므로 단정하지 않는다. sudo의 `secure_path`와는 별개이며 그 설정은 변경하지 않는다.
+
+**필수 판단:** PATH 명시 줄 없는 root cron의 아래 주기·부팅 예약, 전체 요구 지표·wall 방송을 확인한다. 현재 문서 코드는 export 한 번 → 모든 항목을 변수에 수집 → 마지막 printf 그룹으로 방송하는 구조다. memory·disk는 MiB의 used/total·사용률·available 표시 문자열이다. available 추가 적용은 2026-10-15 KST 23:48 수동 방송에서 확인했다. 실패 처리를 추가한 버전은 아니다. root cron 내부에 sudo를 다시 넣지 않는다. 코드·지표 해석은 [디펜스 monitoring](defense.md#9-monitoring-코드--매분--중단-재부팅--복구), 전체 코드는 [치트시트](cheatsheet.md#34-전체-출력을-wall-한-번으로-전달)에 둔다.
 
 ```cron
 */10 * * * * /bin/bash /usr/local/sbin/monitoring.sh
 @reboot /bin/bash /usr/local/sbin/monitoring.sh
 ```
 
-**시연 변경·원복 — 게스트:** 변경 전에 root crontab 원문과 위 경로·소유자·권한·SHA-256을 보관한다. 아래 모든 편집은 `sudo crontab -e`, 확인은 `sudo crontab -l`로 한다. 다른 작업과 PATH는 보존한다.
+**시연 변경·원복 — 게스트:** 변경 전에 root crontab 원문과 위 경로·소유자·권한·SHA-256을 보관한다. 아래 모든 편집은 `sudo crontab -e`, 확인은 `sudo crontab -l`로 한다. 다른 작업은 보존하며 PATH 명시 줄은 추가하지 않는다.
 
 | 단계 | 바꿀 부분·확인 |
 |---|---|
 | 매분 시연 | 기존 `*/10` 주기 줄만 `* * * * * /bin/bash /usr/local/sbin/monitoring.sh`로 교체. 기존 10분 줄을 함께 남기지 않음. 분 경계를 두 번 관찰하고 콘솔·SSH에서 수신 및 값의 원자료를 대조 |
 | 중단 | monitoring 주기 줄과 `@reboot` 줄 **둘 다** 줄 앞에 `#`를 넣음. 스크립트 수정·이동·chmod나 crond 전체 중지로 대신하지 않음. 이미 시작한 작업을 종료하는 명령은 아님 |
 | 중단 후 재부팅 | 주석 조회 후 `sudo reboot`. 재로그인해 같은 `stat`·`sha256sum`으로 위치·소유자·권한·내용 유지 확인. `sudo journalctl -b`로 이번 부팅만 보고 `/monitoring.sh`로 검색. 호출 부재와 다음 분 경계의 상태를 함께 관찰 |
-| 원복 | 원래 PATH와 위 10분·`@reboot` 두 줄을 활성화. 매분 줄·중복이 없어야 함. 다음 10분 경계의 실제 방송까지 확인 |
+| 원복 | PATH 명시 줄 없이 위 10분·`@reboot` 두 줄을 활성화. 매분 줄·중복이 없어야 함. 다음 10분 경계의 실제 방송까지 확인 |
 
 조용한 화면만으로 실행 중단을 증명하지 않는다. 부팅 때 수신 터미널이 없을 수 있다. cron의 CMD·END 기록은 호출·종료 근거이지 12개 지표의 성공이나 터미널 수신 증거는 아니다. 불필요한 로그 전체를 공유하지 말고 해당 작업·시각만 대조한다.
 
