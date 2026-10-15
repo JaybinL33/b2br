@@ -1,14 +1,192 @@
-# Born2beRoot 디펜스 핵심 정리
+# Born2beRoot 평가 진행과 상세 근거
 
-평가 순서대로 **말로 설명 → 직접 확인 → 요청한 변경 → 복구**한다. 개념을 처음 배우려면 [개념 설명서](concepts.md), 자세한 명령은 [치트시트](cheatsheet.md), 장애 판단은 [targets](targets.md)를 읽는다. 이 문서는 필수 평가 대비이며 보너스 구축 안내가 아니다.
+평가 자리에서는 [진행 순서](#평가-자리에서-따라갈-진행-순서)만 위에서 아래로 따라간다. 설명·조회·변경·원복을 한 흐름으로 묶었으며, 필요한 상세 근거는 각 단계에서 연결한다. 명령은 직접 적용한 결과가 아닌 시연안이고 현재 사실은 [학습 기록](learning-log.md)을 따른다.
 
-**출처 표기:** ‘평가지 p.N’은 사용자가 첨부한 `Projects Born2beroot En.pdf`의 PDF 1~5쪽이다. 전체 텍스트와 렌더링한 5쪽을 대조했다. 오른쪽 일부 문장이 실제로 잘려 있어 누락 부분을 복원하거나 인용하지 않는다. ‘과제 p.N’은 저장소 [원문 v5.2](../en.subject.pdf)의 인쇄 쪽 번호다. 평가 화면의 다른 사람 프로필·제출 주소는 옮기지 않았다.
+출처는 첨부 `Projects Born2beroot En.pdf` p.1~5와 저장소 [과제 v5.2](../en.subject.pdf) 인쇄 p.7~10·12~13·16~17이다. 이번에는 첨부 5쪽의 추출 텍스트와 과제 본문을 다시 대조했다. 첨부 오른쪽에서 잘린 문장은 복원하지 않는다. 아래 명령은 요구사항을 보여주는 선택이며 평가표의 지정 명령이 아니다. 필수 범위를 다루며 보너스 구축은 포함하지 않는다.
 
-**읽는 기준:** ‘평가 요구’는 첨부에서 확인한 항목, ‘대비 방법’은 이를 보여주기 위한 권장 명령이다. 명령 자체가 평가표의 지정 명령인 것은 아니다. 아래 코드는 VM에서 실행한 기록이 아니며, 한 블록씩 상황에 맞게 사용할 시연안이다. 현재 사실은 [학습 기록](learning-log.md)이 기준이다.
+## 평가 자리에서 따라갈 진행 순서
 
-목적별 경로·최소 명령·기대값을 빠르게 찾으려면 [과제 필수 참조](essentials.md)를 사용한다. 아래 문서는 평가 순서와 설명·시연 근거를 맡는다.
+**이 구간을 위에서 아래로 진행한다.** 말할 핵심을 먼저 설명하고, 조회 결과를 보여준 뒤 평가자가 요청한 변경을 한다. 자세한 근거는 각 단계 끝의 링크에서만 펼쳐 읽는다. 아래는 시연 계획이며 실제 VM 검증 기록이 아니다.
 
-시연 명령의 각 옵션·인수를 설명하려면 [명령어 중심 참조](commands.md)를 사용한다. 실행 줄을 외우는 것과 명령이 바꾸거나 조회하는 대상을 이해하는 것을 함께 준비한다.
+**준비:** 별도 표시가 없으면 VM의 `jungblee` 셸이다. 기존 관리자 콘솔은 유지한다. `defenseuser`는 새 계정 예시, `reviewer42`는 평가자 로그인+42로 바꾼다. 암호는 프롬프트에만 입력한다. 조회 결과가 예상과 다르면 다음 변경을 자동으로 이어 하지 않는다.
+
+**순서:** 제출물 → VM 개요 → 부팅·로그인 → 새 사용자·정책 → hostname·파티션 → sudo → 방화벽 → SSH → monitoring → 정리.
+
+### 진행 1 — 부팅 전에 제출물과 디스크
+
+**말하기:** “제출물은 README와 디스크의 SHA-1입니다. VM을 켜기 전에 실제 연결된 디스크와 서명을 대조하겠습니다.”
+
+**보여주기 — 호스트:** 본인 제출 저장소를 빈 폴더에 clone한 상태에서 README의 설명·설계·네 비교·AI 활용을 열어 보여준다. VirtualBox Storage에서 연결 파일을 확인하고 **Powered Off·스냅샷 없음**을 확인한다. 아래 경로는 확인한 실제 경로로 바꾼다.
+
+```bash
+cat signature.txt
+sha1sum "$HOME/goinfre/VirtualBox VMs/b2br/b2br.vdi"
+```
+
+**판단·다음:** 두 해시가 같아야 한다. 평가자와 평가용 cold snapshot 또는 디스크 사본 보존 절차를 정한 뒤 부팅한다. VM 파일은 Git에 넣지 않는다. 평가 뒤 디스크 복구는 마지막 단계에서 별도로 한다. [제출·보존 상세](#1-평가-시작-전-저장소디스크readme)
+
+### 진행 2 — VM과 선택한 OS 설명
+
+**말하기:** “VM은 호스트 자원을 나눠 별도의 커널과 OS를 실행합니다. Rocky Minimal을 골라 GUI 없이 DNF·SELinux·firewalld로 서버를 관리했습니다. Debian의 deb/APT와 달리 Rocky는 RPM/DNF를 사용합니다.”
+
+**보여주기:** README의 OS 선택·비교표를 짚는다. DNF는 패키지와 의존성을 관리하고, SELinux는 일반 파일 권한에 더해 보안 문맥과 정책으로 접근을 제한한다고 설명한다. 설정 변경은 없다. [질문별 설명](#2-프로젝트-개요-짧게-말로-답하기)
+
+### 진행 3 — 부팅과 일반 사용자 로그인
+
+**말하기:** “디스크 암호는 저장된 내용을 열고, 로그인 암호는 사용자를 인증합니다. 일반 계정으로 접속하고 필요한 관리 명령만 sudo로 실행합니다.”
+
+**보여주기:** 콘솔에서 암호화 해제 후 `jungblee`로 로그인한다. GUI 없는 부팅 화면과 아래 결과를 보여준다.
+
+```bash
+whoami
+cat /etc/os-release
+systemctl is-active sshd firewalld crond
+getenforce
+```
+
+**판단:** `jungblee`, Rocky, 서비스 `active`, `Enforcing`을 확인한다. 이 단계에서는 설정을 바꾸지 않는다. [부팅 확인 상세](#3-기본-부팅과-로그인)
+
+### 진행 4 — 계정 정책을 설명하고 새 사용자 만들기
+
+**말하기:** “제 계정은 wheel·user42·sudo에 속합니다. 과제의 그룹 가입 조건과 실제 sudo 허용 정책은 구분합니다. 암호는 기간과 품질을 각각 검사합니다.”
+
+**보여주기:** `id jungblee`, `chage -l jungblee`, `sudo chage -l root`로 그룹과 2/30/7일을 확인한다. `/etc/login.defs`의 기간 기본값, `/etc/security/pwquality.conf.d/90-local.conf`의 품질 설정을 `less`로 열어 설명한다. 길이 10·대소문자·숫자·연속 동일 문자 최대 3·사용자명 제외·이전 암호와 차이 7을 짚고, root는 이전 암호 비교만 예외라고 설명한다. 강한 암호 유도라는 장점과 잦은 변경의 사용 부담을 한 문장씩 말한다.
+
+**요청 시 변경:** 먼저 `getent passwd defenseuser`로 이름 충돌, `getent group evaluating`으로 그룹 존재를 확인한다. 없는 새 계정에만 진행하고, 그룹이 이미 있으면 groupadd는 생략한다.
+
+```bash
+sudo useradd -m defenseuser
+sudo passwd defenseuser
+sudo groupadd evaluating
+sudo usermod -aG evaluating defenseuser
+id defenseuser
+sudo chage -l defenseuser
+```
+
+**판단·유지:** evaluating 가입과 새 계정의 2/30/7을 확인한다. `-m`은 홈 생성, `-aG`는 기존 보조 그룹을 유지하며 추가한다. **이 계정을 뒤의 sudo·SSH·monitoring까지 유지한다.** [정책·PAM 상세](#4-사용자그룹비밀번호-정책)
+
+### 진행 5 — hostname 변경·재부팅·복원, 파티션 설명
+
+**말하기:** “호스트명은 로그인명+42입니다. 변경이 재부팅 뒤에도 유지되는지 확인하고 복원하겠습니다. 저장소는 LUKS 안의 LVM에서 용량을 나눴습니다.”
+
+```bash
+hostname
+sudo hostnamectl set-hostname reviewer42
+sudo reboot
+```
+
+**다시 로그인한 뒤:** `hostname`으로 바뀐 이름을 보여주고 다음처럼 복원한다. 재부팅으로 끊긴 연결은 다시 연다.
+
+```bash
+sudo hostnamectl set-hostname jungblee42
+hostname
+lsblk -f
+sudo vgs
+sudo lvs
+```
+
+**판단:** LUKS → PV → VG → LV → 파일시스템·마운트를 출력에서 짚는다. `/`·`/home`·`/var/log`·swap과 VG 여유를 설명한다. LVM은 PV 공간을 VG로 묶고 LV에 나눠 용량을 관리하는 계층이며 암호화 자체는 LUKS가 맡는다. `-f`는 암호화·파일시스템을 같이 보기 위해 쓴다. 저장장치는 변경하지 않는다. [파티션·재부팅 상세](#5-hostname-변경재부팅과-파티션)
+
+### 진행 6 — sudo 그룹 추가와 정책·로그 시연
+
+**말하기:** “sudo는 허용 정책에 따라 다른 사용자 권한으로 명령을 실행합니다. 이 VM의 관리자 허용은 wheel 규칙에서 오며 sudo라는 그룹 이름만으로 생기지 않습니다.”
+
+```bash
+rpm -q sudo
+sudo usermod -aG sudo defenseuser
+id defenseuser
+sudo -l
+sudo cat /etc/sudoers.d/90-b2br
+sudo ls /var/log/sudo
+sudo sudoreplay -d /var/log/sudo -l
+```
+
+**보여주기:** 설정에서 인증 최대 3회·실패 메시지·TTY·secure_path·입출력 기록을 짚는다. `sudo cat`에 비밀 없는 시험 문장을 입력하고 Ctrl+D로 끝낸다. 다시 목록을 조회해 새 ID를 찾고 `sudo sudoreplay -d /var/log/sudo ID`로 재생한다. 입력 확인은 [로그 상세](#6-sudo-정책과-로그)를 따른다. `-d`는 현재 로그 디렉터리, `-l`은 세션 목록이다.
+
+**요청 시 추가 변경:** 새 사용자의 관리자 실행까지 요구하면 정책을 확인한 뒤 일회성 계정만 `sudo usermod -aG wheel defenseuser`로 추가하고 새 로그인에서 확인한다. 기본 시연의 sudo는 기존 관리자 셸에서 실행한다. 계정 정리는 마지막에 하고, 로그는 삭제하지 않는다.
+
+### 진행 7 — 방화벽의 8080 추가·삭제
+
+**말하기:** “방화벽은 들어오는 통신을 제한합니다. 현재 4242를 허용하며, 8080을 잠깐 추가한 뒤 지우겠습니다.”
+
+```bash
+rpm -q firewalld
+sudo firewall-cmd --state
+sudo firewall-cmd --get-active-zones
+sudo firewall-cmd --zone=public --list-all
+```
+
+**요청 시 변경·원복:** 실제 NIC의 zone이 public인지 먼저 확인한다. 다르면 아래 public도 그 이름으로 바꾼다. 원래 8080이 없을 때만 추가·삭제한다.
+
+```bash
+sudo firewall-cmd --zone=public --add-port=8080/tcp
+sudo firewall-cmd --zone=public --list-all
+sudo firewall-cmd --zone=public --remove-port=8080/tcp
+sudo firewall-cmd --zone=public --list-all
+```
+
+**판단:** 추가된 8080과 삭제 후 원래 4242 정책을 보여준다. `--zone`은 실제 인터페이스 정책을 고르는 데 필요하다. 이번 변경은 runtime이며 영구 설정·서버·NAT를 추가하지 않는다. [방화벽 상세](#7-firewalld-4242-확인--8080-추가--삭제)
+
+### 진행 8 — 같은 새 사용자로 SSH, root 거절
+
+**말하기:** “SSH는 암호화된 원격 접속입니다. 서버는 4242에서 받고 일반 계정으로 접속하며 root 원격 로그인은 막았습니다.”
+
+**보여주기 — 기존 관리자 셸:** `rpm -q openssh-server`, `systemctl is-active sshd`, `sudo ss -lntp`로 설치·동작·4242 리스닝을 확인한다. `ss`의 옵션은 수신 중인 TCP 포트를 숫자로, 담당 프로세스와 함께 보기 위한 것이다. `sudo sshd -T | less`에서 `/permitrootlogin`으로 적용값 `no`를 찾고 `q`로 나온다.
+
+**호스트의 새 터미널:**
+
+```bash
+ssh -p 4242 defenseuser@127.42.42.42
+```
+
+접속한 셸에서 `whoami`, `id`로 같은 계정과 evaluating·sudo 가입을 확인한다. **이 세션은 다음 monitoring 수신용으로 유지한다.** 호스트의 다른 터미널에서 `ssh -p 4242 root@127.42.42.42`를 시도해 인증 거절을 보여준다. timeout은 root 정책 검증이 아니다. 키 확인이 나오면 콘솔의 공개키 지문과 대조한다. SSH 설정은 바꾸지 않는다. [SSH 상세](#8-ssh-새-사용자-접속과-root-거절)
+
+### 진행 9 — monitoring 설명 → 매분 → 중단·재부팅 → 복구
+
+**말하기:** “export로 자식 명령의 로케일을 맞추고 모든 값을 변수에 모은 뒤 printf 그룹을 wall로 보냅니다. memory·disk는 MiB의 used/total 표시 문자열입니다. root cron이 부팅 시와 매시 0·10·20…분에 실행합니다.”
+
+**보여주기 — 관리자 셸:** 코드의 수집부와 출력부를 짚고 수동 방송을 콘솔·새 사용자 SSH에서 확인한다. 먼저 아래 조회 결과를 보관해 중단 후와 비교한다.
+
+```bash
+sudo cat /usr/local/sbin/monitoring.sh
+sudo crontab -l
+ls -l /usr/local/sbin/monitoring.sh
+sha256sum /usr/local/sbin/monitoring.sh
+sudo /bin/bash /usr/local/sbin/monitoring.sh
+```
+
+**요청 시 변경:** 편집은 `sudo crontab -e`, 저장 확인은 `sudo crontab -l`로 한다. PATH와 다른 예약은 유지한다.
+
+| 순서 | 바꿀 것 → 보여줄 결과 |
+|---|---|
+| 매분 | 기존 `*/10` 주기 줄만 `* * * * * /bin/bash /usr/local/sbin/monitoring.sh`로 교체 → 두 분 경계에서 콘솔·SSH의 12항목 방송 확인 |
+| 값 변화 | 새 사용자 SSH에서 `exit` 후 다음 방송을 확인 → 사용자·TCP 수를 `who`, `ss -tn`과 대조. 같은 계정으로 다시 접속해 두 터미널 수신 확인 |
+| 중단 | monitoring 주기 줄과 `@reboot` 줄 **둘 다** 주석 처리 → 다음 분 경계와 예약 상태 확인. 스크립트·권한·crond 전체는 바꾸지 않음 |
+| 재부팅 | `sudo reboot` 후 로그인 → 같은 경로의 `ls -l`·`sha256sum`이 유지되고 monitoring 예약이 주석 상태인지 확인 |
+| 호출 확인 | `sudo journalctl -b` → `/monitoring.sh`로 검색하고 `n`으로 다음 항목, `q`로 종료. `-b`는 이번 부팅만 보기 위한 옵션. 주석 상태에서 해당 cron 호출이 없어야 함 |
+| 복구 | 아래 원래 예약으로 복원 → 매분·중복 줄이 없는지 조회하고 다음 10분 경계의 콘솔·SSH 방송 확인. 재부팅으로 끊긴 새 사용자 SSH는 다시 접속 |
+
+```cron
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/10 * * * * /bin/bash /usr/local/sbin/monitoring.sh
+@reboot /bin/bash /usr/local/sbin/monitoring.sh
+```
+
+**정확히 말하기:** “부팅 때 수신자가 없으면 방송이 안 보일 수 있고, cron의 CMD·END 기록은 호출·종료 근거이지 12개 지표의 성공이나 터미널 수신 증거는 아닙니다.” `@reboot`는 과제 p.10의 서버 시작 시 요구를 위한 구현 선택이다. 수집 실패 처리는 추가하지 않은 코드다. [지표·cron 상세](#9-monitoring-코드--매분--중단-재부팅--복구) · [계산과 구현 설명](targets.md#6-monitoringsh와-cronwall)
+
+### 진행 10 — 시연을 마친 뒤 정리
+
+**말하기:** “호스트명·방화벽·예약을 원래대로 돌리고 평가용 계정을 정리하겠습니다. 설정 원복과 디스크 서명 복구는 별개입니다.”
+
+**확인:** `hostname`은 jungblee42, 방화벽은 원래 정책, cron은 10분+부팅 예약인지 본다. 새 사용자 세션을 모두 로그아웃하고 남은 프로세스·보존할 파일을 확인한다. **이번에 만든 일회성 계정만** `sudo userdel -r defenseuser`로 삭제한다. `-r`은 홈 데이터도 삭제한다. evaluating도 이번에 만들었고 다른 사용처가 없을 때만 `sudo groupdel evaluating`로 지운다.
+
+**디스크:** VM 정상 종료 후 사전에 정한 [디스크 보존·복원 절차](targets.md#평가-사이의-디스크-보존과-복원)를 따르고 SHA-1을 다시 대조한다. 스냅샷 Delete만으로 원래 바이트가 돌아온다고 가정하거나 실행 중인 디스크를 덮어쓰지 않는다. [종료 상세](#10-종료복구와-중단-조건)
+
+---
+
+## 필요할 때 펼쳐 읽는 상세 근거
+
+아래는 진행본에서 참조하는 요구사항·설명·진단 자료다. 평가 중 모든 명령을 순서대로 추가 실행하는 목록이 아니다. 옵션의 뜻은 [명령어 참조](commands.md), 문제 원인과 복구는 [targets](targets.md)를 찾는다.
 
 ## 먼저 확인할 준비 공백
 
@@ -207,8 +385,8 @@ ssh -p 4242 defenseuser@127.42.42.42
 # 접속한 새 사용자 셸
 whoami
 id
-exit
-# 호스트: root는 로그인되어서는 안 된다
+# 이 세션은 monitoring 수신용으로 유지한다
+# 호스트의 다른 터미널: root는 로그인되어서는 안 된다
 ssh -p 4242 root@127.42.42.42
 ```
 
@@ -244,10 +422,10 @@ sha256sum /usr/local/sbin/monitoring.sh
 중단은 같은 편집기에서 monitoring의 주기 줄과 `@reboot` 줄을 **모두 주석 처리**한다. crond 전체 중지, 스크립트 이동·수정·chmod로 우회하지 않는다. `sudo crontab -l` 확인 후 `sudo reboot`한다. 재로그인 후 같은 `stat`·`sha256sum`과 경로로 불변을 확인하고, 현재 부팅의 작업 기록과 분 경계 관찰을 함께 본다.
 
 ```bash
-sudo journalctl -b -t CROND --no-pager
+sudo journalctl -b
 ```
 
-스크립트 호출이 없어야 하며, 조용한 화면만으로 실행 중단을 증명하지 않는다. 아직 로그인한 사람이 없는 `@reboot` 방송은 실행돼도 보이지 않을 수 있다. 필요하면 [유지 관리 진단](operations/maintenance.md)을 따른다.
+`-b`는 이번 부팅의 로그만 선택한다. 화면에서 `/monitoring.sh`로 검색하고 `n`으로 다음 기록, `q`로 종료한다. 중단 상태에서는 해당 cron 호출이 없어야 하며 조용한 화면만으로 판단하지 않는다. 부팅 때 수신자가 없으면 방송이 안 보일 수 있고, CMD·END 기록은 호출·종료 근거이지 12개 지표의 성공이나 터미널 수신 증거는 아니다. 필요하면 [유지 관리 진단](operations/maintenance.md)을 따른다.
 
 **복구:** 원래 PATH 및 아래 두 줄을 활성화하고 중복·매분 줄이 남지 않았는지 조회한다. 다음 10분 경계의 실제 방송까지 확인한다.
 

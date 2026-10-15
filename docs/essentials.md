@@ -1,6 +1,6 @@
 # Born2beRoot 필수 경로·명령 빠른 참조
 
-**목적별로 경로 → 조회 → 판단 → 평가 변경·원복을 찾는 문서다.** 신규 구축 순서는 [스피드런](speedrun.md), 설정 원문·전체 코드는 [치트시트](cheatsheet.md), 평가 순서와 설명은 [디펜스](defense.md), 디렉터리 원리는 [디렉터리 지도](directories.md)를 따른다.
+**목적별로 경로 → 조회 → 판단 → 평가 변경·원복을 찾는 문서다.** 신규 구축 순서는 [스피드런](speedrun.md), 설정 원문·전체 코드는 [치트시트](cheatsheet.md), 평가 자리에서 따라갈 순서는 [디펜스 진행본](defense.md#평가-자리에서-따라갈-진행-순서), 디렉터리 원리는 [디렉터리 지도](directories.md)를 따른다.
 
 명령 자체의 뜻이나 옵션을 찾으려면 [명령어 중심 참조](commands.md)를 읽는다. 특히 [systemctl](commands.md#systemctl), [usermod](commands.md#usermod), [firewall-cmd](commands.md#firewall-cmd), [crontab](commands.md#crontab)은 조회와 변경의 차이를 먼저 확인한다.
 
@@ -78,16 +78,18 @@ sudo useradd -m defenseuser
 sudo passwd defenseuser
 # evaluating이 없을 때만 실행
 sudo groupadd evaluating
-sudo usermod -aG evaluating,sudo defenseuser
+sudo usermod -aG evaluating defenseuser
 id defenseuser
 sudo chage -l defenseuser
 ```
 
-`-aG`는 기존 보조 그룹을 보존하며 추가한다. 새 계정의 2/30/7 적용 결과도 확인한다. sudo 그룹 가입은 뒤의 sudo 평가 항목까지 연결한 것이며 모든 새 계정에 user42를 추가해야 한다는 별도 조건은 아니다. 정책 기본값이 다르면 원인부터 조사한다. 원래 관리자 셸을 유지하고 새 SSH 세션에서 해당 계정의 신원을 확인한다. 비밀번호는 대화형 프롬프트에만 입력하고 명령 인자·문서에 적지 않는다.
+`-aG`는 기존 보조 그룹을 보존하며 추가한다. 새 계정의 2/30/7 적용 결과도 확인한다. sudo 그룹 추가는 다음 sudo 단계에서 시연한다. 모든 새 계정에 user42를 추가해야 한다는 별도 조건은 아니다. 정책 기본값이 다르면 원인부터 조사한다. 원래 관리자 셸을 유지하고 새 SSH 세션에서 해당 계정의 신원을 확인한다. 비밀번호는 대화형 프롬프트에만 입력하고 명령 인자·문서에 적지 않는다.
 
-**원복:** SSH·sudo 등 새 계정 시연까지 끝낸 뒤에만 정리한다. 해당 계정의 로그아웃·프로세스 종료와 보존할 파일을 확인하고, 이번에 만든 일회성 계정에 한해 `sudo userdel -r defenseuser`를 사용한다. `-r`은 홈 등 데이터를 삭제한다. `evaluating`도 이번에 만들었고 다른 사용처가 없을 때만 `sudo groupdel evaluating`로 정리한다. 기존 계정·그룹은 삭제하지 않는다.
+**원복:** SSH·sudo·monitoring 시연까지 끝낸 뒤에만 정리한다. 해당 계정의 로그아웃·프로세스 종료와 보존할 파일을 확인하고, 이번에 만든 일회성 계정에 한해 `sudo userdel -r defenseuser`를 사용한다. `-r`은 홈 등 데이터를 삭제한다. `evaluating`도 이번에 만들었고 다른 사용처가 없을 때만 `sudo groupdel evaluating`로 정리한다. 기존 계정·그룹은 삭제하지 않는다.
 
 ## 3. sudo 정책과 로그
+
+**평가 흐름 연결:** 앞에서 만든 같은 계정에 `sudo usermod -aG sudo defenseuser`를 실행하고 `id defenseuser`로 확인한다. SSH·monitoring까지 이 계정을 유지한다.
 
 | 종류·핵심 경로 | 역할 |
 |---|---|
@@ -180,8 +182,8 @@ ssh -p 4242 defenseuser@127.42.42.42
 # 접속 성공 후 게스트·defenseuser 셸에서
 whoami
 id
-exit
-# 다시 호스트: root 로그인은 거절되어야 한다
+# 이 세션은 monitoring 수신용으로 유지한다
+# 호스트의 다른 터미널: root 로그인은 거절되어야 한다
 ssh -p 4242 root@127.42.42.42
 ```
 
@@ -229,10 +231,10 @@ sudo cat /usr/local/sbin/monitoring.sh
 |---|---|
 | 매분 시연 | 기존 `*/10` 주기 줄만 `* * * * * /bin/bash /usr/local/sbin/monitoring.sh`로 교체. 기존 10분 줄을 함께 남기지 않음. 분 경계를 두 번 관찰하고 콘솔·SSH에서 수신 및 값의 원자료를 대조 |
 | 중단 | monitoring 주기 줄과 `@reboot` 줄 **둘 다** 줄 앞에 `#`를 넣음. 스크립트 수정·이동·chmod나 crond 전체 중지로 대신하지 않음. 이미 시작한 작업을 종료하는 명령은 아님 |
-| 중단 후 재부팅 | 주석 조회 후 `sudo reboot`. 재로그인해 같은 `stat`·`sha256sum`으로 위치·소유자·권한·내용 유지 확인. `sudo journalctl -b -t CROND --no-pager`에서 monitoring 호출 부재와 다음 분 경계의 상태를 함께 관찰 |
+| 중단 후 재부팅 | 주석 조회 후 `sudo reboot`. 재로그인해 같은 `stat`·`sha256sum`으로 위치·소유자·권한·내용 유지 확인. `sudo journalctl -b`로 이번 부팅만 보고 `/monitoring.sh`로 검색. 호출 부재와 다음 분 경계의 상태를 함께 관찰 |
 | 원복 | 원래 PATH와 위 10분·`@reboot` 두 줄을 활성화. 매분 줄·중복이 없어야 함. 다음 10분 경계의 실제 방송까지 확인 |
 
-조용한 화면만으로 실행 중단을 증명하지 않는다. 부팅 때 수신 터미널이 없을 수 있으므로 `@reboot` 실행 기록과 로그인 후 방송 수신은 별도 근거다. 불필요한 로그 전체를 공유하지 말고 해당 작업·시각만 대조한다.
+조용한 화면만으로 실행 중단을 증명하지 않는다. 부팅 때 수신 터미널이 없을 수 있다. cron의 CMD·END 기록은 호출·종료 근거이지 12개 지표의 성공이나 터미널 수신 증거는 아니다. 불필요한 로그 전체를 공유하지 말고 해당 작업·시각만 대조한다.
 
 ## 7. 제출·서명·VDI 보존
 

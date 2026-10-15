@@ -14,7 +14,7 @@
 
 - [명령어 중심 참조](docs/commands.md): 명령 이름별 문법·옵션·인수·출력 해석과 비교, 명령 색인
 - [과제 필수 경로·명령](docs/essentials.md): 목적별 조회·기대값과 평가 변경·원복 빠른 참조
-- [디펜스 핵심 정리](docs/defense.md): 첨부 평가 순서별 답변·시연·복구와 미확인 준비 항목
+- [평가 진행본](docs/defense.md#평가-자리에서-따라갈-진행-순서): 평가 자리에서 말할 핵심 → 최소 시연 → 요청 변경 → 원복. 상세 근거는 같은 문서 아래에서 확인
 
 - [공식 과제 원문](en.subject.pdf)
 - [한국어 전체 번역](docs/ko/Born2beRoot-v5.2-ko-full.md) · [PDF](docs/ko/Born2beRoot-v5.2-ko-full.pdf)
