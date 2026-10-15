@@ -2,6 +2,8 @@
 
 **목적별로 경로 → 조회 → 판단 → 평가 변경·원복을 찾는 문서다.** 신규 구축 순서는 [스피드런](speedrun.md), 설정 원문·전체 코드는 [치트시트](cheatsheet.md), 평가 순서와 설명은 [디펜스](defense.md), 디렉터리 원리는 [디렉터리 지도](directories.md)를 따른다.
 
+명령 자체의 뜻이나 옵션을 찾으려면 [명령어 중심 참조](commands.md)를 읽는다. 특히 [systemctl](commands.md#systemctl), [usermod](commands.md#usermod), [firewall-cmd](commands.md#firewall-cmd), [crontab](commands.md#crontab)은 조회와 변경의 차이를 먼저 확인한다.
+
 근거는 [과제 v5.2](../en.subject.pdf) 인쇄 p.7~10·12~13·16~17과 [디펜스가 대조한 첨부 평가지](defense.md#먼저-확인할-준비-공백) p.1~4다. **필수**는 평상시 과제 조건, **시연**은 평가 때 요청받을 변경이다. 아래 값은 기존 b2br 구성 기준이며 명령은 이번에 VM에서 실행한 결과가 아니다. 실제 완료·미확인은 [학습 기록](learning-log.md)이 기준이다.
 
 **실행 위치:** 별도 표시가 없으면 **게스트·jungblee 일반 셸**이다. `sudo`가 붙은 줄만 관리자 권한으로 실행한다. **호스트** 블록은 VM 밖 터미널에서 실행한다. **조회**와 **변경** 블록을 한꺼번에 실행하지 않는다. `defenseuser`, `reviewer42`, `ZONE`, `ID`는 설명용 이름이며 안내에 맞게 바꾼다. 경로 표의 **디렉터리**와 **파일**은 역할을 구분한 것이며 실제 링크일 수도 있다.
