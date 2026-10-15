@@ -990,3 +990,20 @@ sudo whoami
 ```
 
 새 셸의 wheel 미소속, 실제 허용 정책, sudo whoami의 root 출력을 함께 대조한다. 이 접속·조회·실행 결과는 아직 받지 않았다. 이번 작업은 사용자 출력의 문서 반영이며 VM·계정·sudoers·디스크를 직접 변경하지 않았다.
+
+
+## 2026-10-15 — 현재 셸의 wheel 미소속과 sudo 실행 확인
+
+앞선 확인 요청에 이어 사용자가 `id`, `sudo -l`, `sudo whoami` 결과를 전달했다. `id`는 uid 1000 jungblee·기본 gid 1000 jungblee와 jungblee·user42·sudo 그룹을 표시했고 wheel은 없었다. 계정 DB뿐 아니라 이번 출력의 현재 셸에서도 wheel 미소속을 확인했다. unconfined 컨텍스트도 표시되었으나 이를 SELinux 비활성화의 증거로 해석하지 않는다.
+
+`sudo -l`은 비밀번호 입력 한 번 실패 후 인증에 성공했다. 표시된 Defaults는 `secure_path=/sbin:/bin:/usr/sbin:/usr/bin`, `passwd_tries=3`, 사용자 지정 `badpass_message`, `requiretty`, `log_input`, `log_output`, `iolog_dir=/var/log/sudo`이며 허용 범위는 `(ALL : ALL) ALL`이었다. 이 한 번의 인증 실패를 3회 제한 동작 시험으로 기록하지 않는다.
+
+`sudo whoami`는 `root`를 반환했다. 따라서 앞선 현재 셸의 그룹·허용 정책·sudo 실행 결과 대기는 해소한다. 다만 이 출력은 `%sudo ALL=(ALL:ALL) ALL` 줄 자체나 그 줄이 들어 있는 파일을 보여 주지 않는다. wheel 없이 실행에 성공했다는 사실과 sudo 그룹 규칙이 권한의 출처라는 판정은 구분한다.
+
+다음 확인은 아래 목록에서 jungblee의 해당 whoami 실행 기록을 대조하는 것이다.
+
+```bash
+sudo sudoreplay -d /var/log/sudo -l
+```
+
+이 조회 결과는 아직 받지 않았다. Defaults의 입출력 기록 설정 표시를 해당 명령의 실제 로그 확인으로 대신하지 않는다. 평가용 새 사용자의 sudo 가입·실행 시연도 별도 미확인이다. 이번 작업은 전달된 실행 결과의 문서 반영이며 VM·계정·sudoers·디스크를 직접 변경하지 않았다.
