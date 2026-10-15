@@ -172,8 +172,6 @@ sudo crontab -e
 
 ## 7. Guest · root crontab
 
-현재 root crontab은 PATH 명시 줄 없이 `*/10`과 `@reboot` 두 예약을 사용하는 구성이다(사용자 적용 확인). cron이 제공하는 실행 환경의 PATH를 사용하며 `/bin/bash`와 스크립트는 절대경로로 호출한다. 스크립트 내부의 경로 없는 명령은 cron 환경의 PATH로 검색한다. 실제 cron PATH 값은 출력으로 확인하지 않았으므로 단정하지 않는다. sudo의 `secure_path`와는 별개이며 그 설정은 변경하지 않는다.
-
 ```cron
 */10 * * * * /bin/bash /usr/local/sbin/monitoring.sh
 @reboot /bin/bash /usr/local/sbin/monitoring.sh
