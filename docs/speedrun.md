@@ -122,6 +122,8 @@ vi monitoring.sh
 
 `monitoring.sh`
 
+새 권장 코드는 used/total·사용률에 available을 추가해 원문 예시와 가용량 문구를 함께 반영한다. 실제 설치·실행 결과는 아직 받지 않았으며, 마지막으로 확인한 설치본에는 available 표시가 없다.
+
 ```bash
 #!/bin/bash
 export LC_ALL=C
@@ -129,8 +131,8 @@ export LC_ALL=C
 architecture=$(uname -a)
 physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
 virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
-memory=$(free -m | awk '$1 == "Mem:" {printf "%s/%sMiB (%.2f%%)", $3, $2, $3 / $2 * 100}')
-disk=$(df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "%s/%sMiB (%.0f%%)", $3, $2, $3 / $2 * 100}')
+memory=$(free -m | awk '$1 == "Mem:" {printf "%s/%sMiB (%.2f%%), available: %sMiB", $3, $2, $3 / $2 * 100, $7}')
+disk=$(df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "%s/%sMiB (%.0f%%), available: %sMiB", $3, $2, $3 / $2 * 100, $4}')
 cpu_load=$(vmstat 1 2 | awk 'END {printf "%.1f", 100 - $15}')
 last_boot=$(uptime -s | cut -c 1-16)
 

@@ -453,13 +453,13 @@ cron의 사용자·환경·경로와 wall의 수신 대상을 구분한다. 사�
 
 ### monitoring 메모리·디스크의 계산과 awk
 
-원문에 계산식이 없으므로 이 부분 구현은 두 지표 모두 **used/total × 100**을 선택한다. 이는 구현의 선택이며 원문의 명시 조건이 아니다. `free -m`과 `df -m`의 정수 출력값을 계산 입력으로 쓴다. 현재 승인 버전은 메모리·디스크의 used와 total을 모두 MiB로 표시한다. 디스크 total을 GiB로 환산하지 않으며 df의 Use%를 채택하지도 않는다. 퍼센트는 메모리 소수 둘째 자리, 디스크 정수로 표시한다. 도구 자체의 MiB 표시 정밀도와 printf의 표시 반올림을 구분한다.
+원문에 계산식이 없으므로 이 부분 구현은 두 지표 모두 **used/total × 100**을 선택한다. 이는 구현의 선택이며 원문의 명시 조건이 아니다. `free -m`과 `df -m`의 정수 출력값을 계산 입력으로 쓴다. 새 권장 버전은 메모리·디스크의 used와 total을 모두 MiB로 표시하고, `free -m` Mem 행의 `$7`(available)과 `df -m --total` total 행의 `$4`(Avail)를 각각 MiB로 덧붙인다. 원문 예시의 used/total과 본문의 가용량 요구를 함께 반영하려는 선택이다. 이 변경의 실제 설치·실행 결과는 아직 받지 않았다. 디스크 total을 GiB로 환산하지 않으며 df의 Use%를 채택하지도 않는다. 퍼센트는 메모리 소수 둘째 자리, 디스크 정수로 표시한다. 도구 자체의 MiB 표시 정밀도와 printf의 표시 반올림을 구분한다.
 
 [GNU df 매뉴얼](https://www.gnu.org/software/coreutils/manual/html_node/df-invocation.html)의 `-m`·`--total`·`-x`와 `--output` 필드만 읽는다. 웹 페이지 접근이 안 되면 [공식 매뉴얼 원본](https://github.com/coreutils/coreutils/blob/master/doc/coreutils.texi)의 `df invocation`을 찾는다. 매뉴얼은 `pcent`를 used/size로 요약하지만, [실제 src/df.c](https://github.com/coreutils/coreutils/blob/master/src/df.c)의 `PCENT_FIELD` 계산은 일반적인 비음수 값에서 `used / (used + available) × 100`을 올림한다. reserved 공간 등의 영향으로 이 분모는 전체 size와 다를 수 있다. 소스에서는 이 계산 블록만 대조하며 전체 C 구현을 공부할 필요는 없다. 설치된 버전의 매뉴얼·출력도 함께 확인한다.
 
 awk는 이번 두 행을 읽는 데 필요한 범위만 익힌다. 기본적으로 공백으로 나눈 첫 필드가 `$1`이며 `$2`·`$3`는 total·used다. `$1 == "Mem:"` 또는 `$1 == "total"`이라는 조건이 맞는 행에만 `{...}` 동작을 적용한다. `printf`의 `%s`는 문자열, `%.2f`·`%.0f`는 표시 소수 자릿수, `%%`는 문자 `%`다. 작은따옴표는 셸이 `$1` 등을 먼저 확장하지 않도록 awk 프로그램을 감싼다. [GNU awk 매뉴얼](https://www.gnu.org/software/gawk/manual/gawk.html)의 `Fields`·`Patterns`·`Printf` 해당 항목이나 설치된 `man awk`에서 이 요소만 찾는다.
 
-`memory=$(...)`·`disk=$(...)`는 awk가 작성한 표시 문자열을 저장한다. awk는 항목 이름이나 마지막 개행 없이 `사용량/전체MiB (퍼센트)`를 만들고, 마지막 Bash printf가 `#Memory Usage`·`#Disk Usage` 이름과 개행을 붙인다. 따라서 변수에 원시 숫자만 저장한다고 설명하지 않는다.
+`memory=$(...)`·`disk=$(...)`는 awk가 작성한 표시 문자열을 저장한다. awk는 항목 이름이나 마지막 개행 없이 `사용량/전체MiB (퍼센트), available: 가용량MiB`를 만들고, 마지막 Bash printf가 `#Memory Usage`·`#Disk Usage` 이름과 개행을 붙인다. 따라서 변수에 원시 숫자만 저장한다고 설명하지 않는다.
 
 스크립트 시작의 `export LC_ALL=C`는 free의 `Mem:`·df의 `total`을 문자열로 선택하기 위해 로케일을 고정하며, 자식 명령인 free·df와 파이프 뒤 awk에도 환경으로 전파된다. vmstat는 행 이름을 선택하지 않고 마지막 행의 숫자 열을 읽는다. 일반 `bash monitoring.sh` 실행은 부모 셸·다른 cron 작업·시스템 전체의 로케일을 바꾸지 않는다. 반면 `source monitoring.sh`는 현재 셸에서 실행하므로 설정이 그 셸에 남는다. 개별 `LC_ALL=C 명령` 접두사는 그 명령에만 적용된다는 점과 구분한다.
 

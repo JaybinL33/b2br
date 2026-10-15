@@ -250,7 +250,7 @@ monitoring의 `lsblk -rn -o TYPE`은 TYPE 값만 받아 lvm 행 존재를 검사
 
 ### free
 
-**수집 · 조회.** `free [옵션]`는 메모리·swap 집계를 보여 준다. `-m`은 MiB, `-h`는 사람이 읽는 단위다. total·used·free·available은 다르며 available은 회수 가능한 캐시 등을 고려한 새 작업용 추정치다. b2br은 스크립트 앞의 `export LC_ALL=C`를 물려받은 `free -m`의 Mem 행에서 used/total을 계산해 `memory` 표시 문자열에 담는다. 출력 열·used 정의는 설치된 procps 버전과 대조하며 free가 작다고 즉시 고갈이라고 하지 않는다. [free(1)](https://man7.org/linux/man-pages/man1/free.1.html).
+**수집 · 조회.** `free [옵션]`는 메모리·swap 집계를 보여 준다. `-m`은 MiB, `-h`는 사람이 읽는 단위다. total·used·free·available은 다르며 available은 회수 가능한 캐시 등을 고려한 새 작업용 추정치다. b2br은 스크립트 앞의 `export LC_ALL=C`를 물려받은 `free -m`의 Mem 행에서 used/total을 계산해 `memory` 표시 문자열에 담으며, 새 권장 코드는 available 열도 MiB로 덧붙인다. 출력 열·used 정의는 설치된 procps 버전과 대조하며 free가 작다고 즉시 고갈이라고 하지 않는다. [free(1)](https://man7.org/linux/man-pages/man1/free.1.html).
 
 ### lscpu
 

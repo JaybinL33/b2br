@@ -483,7 +483,7 @@ df -BM --total -x tmpfs -x devtmpfs
 
 전체 코드의 해당 부분은 [34절](#34-전체-출력을-wall-한-번으로-전달)에 모았다.
 
-메모리는 Mem 행, 디스크는 total 행의 used/total로 사용률을 계산한다. 사용량과 전체 용량은 둘 다 MiB로 표시한다. `memory`·`disk`는 단일 수치가 아니라 awk가 만든 사용량/전체·단위·퍼센트의 표시 문자열이며 최종 printf가 항목 이름을 붙인다. `df`의 Use%와 동일한 값일 필요는 없다. [계산 선택과 awk 읽기 범위](targets.md#monitoring-메모리디스크의-계산과-awk).
+메모리는 Mem 행, 디스크는 total 행의 used/total로 사용률을 계산한다. 사용량과 전체 용량은 둘 다 MiB로 표시한다. `memory`·`disk`는 단일 수치가 아니라 awk가 만든 사용량/전체·단위·퍼센트·available의 표시 문자열이며 최종 printf가 항목 이름을 붙인다. `df`의 Use%와 동일한 값일 필요는 없다. [계산 선택과 awk 읽기 범위](targets.md#monitoring-메모리디스크의-계산과-awk).
 
 ## 26. monitoring CPU·부팅 시각 조회와 부분 출력
 
@@ -571,6 +571,8 @@ sudo sudoreplay -d /var/log/sudo -l | tail -n 5
 
 아래는 기존 코드를 **수집 → 변수 → 출력** 순서로 통일한 승인 버전의 `monitoring.sh`다. 모든 수집은 방송 그룹 앞에서 하고, 그룹 안에서는 항목 이름과 변수 값만 출력한다. 문서의 재현 기준을 갱신한 것이며 사용자 VM의 설치본이 바뀌었다는 뜻은 아니다. 오류 처리와 남은 평가 검증의 범위는 targets·학습 기록을 따른다. 대상 NIC는 `enp0s3`·IPv4 하나이며, 지표 해석과 한계는 위 단위 및 targets에서 확인한다. 기존 파일이 있으면 내용을 대조하고 **조각을 중복 추가하지 않는다.**
 
+새 권장 코드는 used/total·사용률에 available을 추가해 원문 예시와 가용량 문구를 함께 반영한다. 실제 설치·실행 결과는 아직 받지 않았으며, 마지막으로 확인한 설치본에는 available 표시가 없다.
+
 ```bash
 #!/bin/bash
 export LC_ALL=C
@@ -578,8 +580,8 @@ export LC_ALL=C
 architecture=$(uname -a)
 physical=$(lscpu -p=SOCKET | grep -v '^#' | sort -u | wc -l)
 virtual=$(lscpu -p=CPU | grep -v '^#' | wc -l)
-memory=$(free -m | awk '$1 == "Mem:" {printf "%s/%sMiB (%.2f%%)", $3, $2, $3 / $2 * 100}')
-disk=$(df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "%s/%sMiB (%.0f%%)", $3, $2, $3 / $2 * 100}')
+memory=$(free -m | awk '$1 == "Mem:" {printf "%s/%sMiB (%.2f%%), available: %sMiB", $3, $2, $3 / $2 * 100, $7}')
+disk=$(df -m --total -x tmpfs -x devtmpfs | awk '$1 == "total" {printf "%s/%sMiB (%.0f%%), available: %sMiB", $3, $2, $3 / $2 * 100, $4}')
 cpu_load=$(vmstat 1 2 | awk 'END {printf "%.1f", 100 - $15}')
 last_boot=$(uptime -s | cut -c 1-16)
 

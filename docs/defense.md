@@ -165,7 +165,7 @@ ssh -p 4242 defenseuser@127.42.42.42
 
 ### 진행 9 — monitoring 설명 → 매분 → 중단·재부팅 → 복구
 
-**말하기:** “관리자가 매번 여러 조회 명령을 입력하지 않아도 자원 사용량과 접속 상태를 한 보고서로 볼 수 있게 했습니다. 스크립트는 실행할 때마다 값을 모아 변수에 담고, 마지막 printf 그룹에서 보고서를 만들어 wall로 로그인한 터미널에 보냅니다. memory·disk에는 MiB의 사용량/전체와 비율을 담습니다. `export LC_ALL=C`는 출력 언어가 달라져 `Mem:`·`total` 행을 못 찾는 문제를 피하려는 설정입니다.”
+**말하기:** “관리자가 매번 여러 조회 명령을 입력하지 않아도 자원 사용량과 접속 상태를 한 보고서로 볼 수 있게 했습니다. 스크립트는 실행할 때마다 값을 모아 변수에 담고, 마지막 printf 그룹에서 보고서를 만들어 wall로 로그인한 터미널에 보냅니다. memory·disk에는 MiB의 사용량/전체와 비율을 담습니다. 새 권장 변경은 available을 함께 표시하며 아직 VM 적용 결과를 받지 않았습니다. `export LC_ALL=C`는 출력 언어가 달라져 `Mem:`·`total` 행을 못 찾는 문제를 피하려는 설정입니다.”
 
 **예약과 연결:** “스크립트는 보고서를 만들고, cron은 언제 실행할지를 맡습니다. root crontab의 `*/10`은 매시 0·10·20…분이며 등록한 때부터 10분을 세는 방식은 아닙니다. `@reboot`는 서버 시작 시 실행을 위한 별도 예약입니다. 평가에서 실행 간격을 바꾸거나 중단할 때는 보고서 코드를 고치지 않고 예약만 바꾸므로, 다시 켤 때 같은 코드를 그대로 사용할 수 있습니다.”
 
@@ -437,7 +437,7 @@ sha256sum /usr/local/sbin/monitoring.sh
 | 출력 | 이 구현의 원자료·해석 |
 |---|---|
 | Architecture / CPU physical / vCPU | `uname -a`; `lscpu -p`의 고유 온라인 소켓 수·온라인 CPU 행 수. 호스트 물리 CPU를 직접 센 값은 아님 |
-| Memory / Disk | `free -m`, `df -m --total`의 used/total. 사용량·전체 모두 MiB, df Use%와 산식 차이 및 tmpfs/devtmpfs 제외 설명 |
+| Memory / Disk | `free -m`, `df -m --total`의 used/total. 사용량·전체 모두 MiB. 새 권장 코드는 available도 MiB로 추가하며 적용 결과 대기. df Use%와 산식 차이 및 tmpfs/devtmpfs 제외 설명 |
 | CPU load / Last boot | `vmstat 1 2` 마지막 표본의 `100-id`(직전 1초, 순수 계산 시간만은 아님), `uptime -s` |
 | LVM / TCP | `lsblk` TYPE에 lvm 존재; `ss`의 ESTABLISHED TCP 소켓 행 수 |
 | User log / Network | `who`의 고유 사용자명 수; enp0s3의 IPv4·MAC. 세션 수와 사용자 수 구별 |
