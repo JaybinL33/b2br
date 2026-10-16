@@ -31,10 +31,9 @@ getenforce
 sudo /bin/bash /usr/local/sbin/monitoring.sh
 ```
 
-모니터링은 root crontab에 부팅 시와 10분 간격으로 등록되어 있다. 스크립트는 시스템 정보 12항목을 모아 `wall`로 방송한다.
+모니터링은 root crontab에 부팅 시와 10분 간격으로 등록되어 있다. 스크립트는 시스템 정보 12항목을 모아 `wall`로 방송한다. crontab에 PATH를 명시하지 않고 cron이 제공하는 실행 환경을 사용한다. `/bin/bash`와 스크립트는 절대경로로 호출하며 내부의 경로 없는 명령은 cron PATH로 검색한다.
 
 ```cron
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 */10 * * * * /bin/bash /usr/local/sbin/monitoring.sh
 @reboot /bin/bash /usr/local/sbin/monitoring.sh
 ```
@@ -69,7 +68,7 @@ VG에는 약 8 GiB를 미할당으로 남겨 필요한 볼륨을 확장할 수 �
 
 ### 사용자와 보안 정책
 
-일반 작업 계정은 `jungblee`이며 `user42`, `sudo`, Rocky 관리자 그룹 `wheel`에 속한다. 관리 작업은 sudo로 수행한다. SSH root 로그인은 금지하고 일반 계정으로 접속한다.
+일반 작업 계정은 `jungblee`이며 `user42`, `sudo` 그룹에 속하고 `wheel`에는 속하지 않는다. 이 계정은 sudo로 관리 작업을 수행하며 `(ALL : ALL) ALL` 허용과 root 권한 실행을 확인했다. SSH root 로그인은 금지하고 일반 계정으로 접속한다.
 
 비밀번호 기간은 최소 2일·최대 30일·만료 경고 7일이다. libpwquality에 길이 10 이상, 대문자·소문자·숫자 포함, 동일 문자 연속 최대 3, 사용자명 제외, `difok=7`을 설정했다. `enforce_for_root`로 root에도 품질 검사를 적용하며 이전 비밀번호 비교의 root 예외를 구분한다.
 
@@ -81,7 +80,7 @@ sudo는 인증 실패 최대 3회, 사용자 정의 실패 메시지, TTY 요구
 - `firewalld`: 활성 인터페이스의 접근 포트를 제한한다.
 - `crond`: root의 모니터링 예약을 실행한다.
 
-세 서비스는 부팅 시 실행되도록 설정했다. SELinux는 접근 제어 계층이며 별도의 원격 서비스가 아니다. 모니터링은 OS·커널, 물리·논리 CPU, 메모리, 디스크, CPU 사용률, 부팅 시각, LVM, TCP 연결, 사용자, IP·MAC, sudo 기록을 출력한다. sudo 값은 현재 보관된 I/O 세션 수이므로 삭제된 과거 기록까지 포함하는 영구 누적값은 아니다.
+세 서비스는 부팅 시 실행되도록 설정했다. SELinux는 접근 제어 계층이며 별도의 원격 서비스가 아니다. 모니터링은 OS·커널, 물리·논리 CPU, 메모리, 디스크, CPU 사용률, 부팅 시각, LVM, TCP 연결, 사용자, IP·MAC, sudo 기록을 출력한다. 메모리·디스크는 MiB 단위의 사용량/전체, 사용률과 available을 함께 표시한다. sudo 값은 현재 보관된 I/O 세션 수이므로 삭제된 과거 기록까지 포함하는 영구 누적값은 아니다.
 
 ## Resources
 
