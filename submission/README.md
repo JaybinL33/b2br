@@ -106,9 +106,21 @@ sudo에 인증 시도 최대 3회, 사용자 정의 실패 메시지, TTY 요구
 | firewalld | 필요한 관리 포트만 허용하고 재부팅 뒤에도 방화벽 정책 적용 |
 | crond | 주기·부팅 작업으로 모니터링 실행 |
 
-세 서비스가 부팅 시 실행되도록 설정함. 모니터링 스크립트에서 값을 수집한 뒤 보고서를 `wall`에 한 번 전달하도록 작성함. `wall`에 전달된 내용은 로그인한 터미널에 방송된다. 출력 항목은 OS·커널, 물리 CPU 수, vCPU 수, 메모리, 디스크, CPU 사용률, 마지막 부팅 시각, LVM 여부, TCP 연결, 로그인 사용자, IP·MAC, sudo 기록이다.
+세 서비스가 부팅 시 실행되도록 설정함. 모니터링 스크립트에서 값을 수집한 뒤 보고서를 `wall`에 한 번 전달하도록 작성함. `wall`에 전달된 내용은 로그인한 터미널에 방송된다.
 
-메모리·디스크의 사용량과 전체 용량, 사용률, 가용량(available)을 표시하도록 작성함. 용량 단위는 MiB를 사용 중. 디스크 집계 대상은 tmpfs·devtmpfs를 제외한 마운트된 파일시스템이다. CPU 값은 `vmstat`의 유휴 비율을 100에서 뺀 값이다. 연결 수는 ESTABLISHED 상태의 TCP 소켓 수이며, 사용자 수는 중복을 제외한 로그인명 수다. sudo 값은 현재 보관된 I/O 세션 수다.
+| 출력 항목 | 표시 내용·집계 기준 |
+|---|---|
+| Architecture | OS·호스트명·커널·아키텍처 정보 |
+| CPU physical / vCPU | 게스트에 할당된 CPU 소켓 수 / 논리 CPU 수 |
+| Memory Usage | 사용량·전체 용량·사용률·가용량(available), 용량 단위 MiB |
+| Disk Usage | 마운트된 파일시스템의 사용량·전체 용량·사용률·가용량, 용량 단위 MiB. tmpfs·devtmpfs 제외 |
+| CPU load | `100 − vmstat의 idle 비율(%)` |
+| Last boot | 마지막 부팅 시각 |
+| LVM use | LVM 볼륨 사용 여부 |
+| Connections TCP | ESTABLISHED 상태의 TCP 소켓 개수 |
+| User log | 현재 로그인한 사용자 수, 같은 로그인명은 한 번만 집계 |
+| Network | `enp0s3`의 IPv4·MAC 주소 |
+| Sudo | `/var/log/sudo/`에 보관된 I/O 세션 개수 |
 
 ## Resources
 
